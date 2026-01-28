@@ -14,7 +14,11 @@
     "yes": "Sim",
     "no": "Não",
     "confirm": "Confirmar",
-    "back": "Voltar"
+    "back": "Voltar",
+    "close": "Fechar",
+    "none": "Nenhum",
+    "confirmDelete": "Confirmar exclus?o",
+    "create": "Criar"
   },
   "auth": {
     "login": "Entrar",
@@ -122,7 +126,19 @@
     "people": "Pessoas",
     "actions": "Ações",
     "viewList": "Lista",
-    "viewTree": "Árvore"
+    "viewTree": "Árvore",
+    "description": "Estrutura organizacional da empresa",
+    "editSector": "Editar Setor",
+    "viewOrg": "Organograma",
+    "treeCounts": "{{cargos}} cargos, {{pessoas}} pessoas",
+    "deleteConfirm": "Deseja remover {{name}}?",
+    "placeholders": {
+      "name": "Ex.: Administrativo"
+    },
+    "validation": {
+      "requiredName": "Informe o nome do setor.",
+      "saveFailed": "N?o foi poss?vel salvar o setor."
+    }
   },
   "positions": {
     "title": "Cargos",
@@ -132,7 +148,30 @@
     "parentPosition": "Cargo Pai",
     "people": "Pessoas",
     "attributions": "Atribuições",
-    "actions": "Ações"
+    "actions": "Ações",
+    "description": "Estrutura de cargos e fun??es",
+    "editPosition": "Editar Cargo",
+    "viewOrg": "Organograma",
+    "viewTable": "Tabela",
+    "viewTree": "?rvore",
+    "selectSector": "Selecione um setor",
+    "selectParentPosition": "Selecione um cargo pai",
+    "selectSectorFirst": "Selecione um setor primeiro",
+    "deleteConfirm": "Deseja remover {{name}}?",
+    "countInSector_one": "{{count}} cargo",
+    "countInSector_other": "{{count}} cargos",
+    "parentLabel": "Pai: {{name}}",
+    "personMovedToast": "Pessoa trocada de setor: {{name}} -> {{sector}}",
+    "personFallback": "Pessoa",
+    "sectorFallback": "Setor",
+    "placeholders": {
+      "name": "Ex.: Analista"
+    },
+    "validation": {
+      "requiredName": "Informe o nome do cargo.",
+      "requiredSector": "Selecione um setor.",
+      "saveFailed": "N?o foi poss?vel salvar o cargo."
+    }
   },
   "attributions": {
     "title": "Atribuições",
@@ -146,7 +185,58 @@
     "eligible": "elegíveis",
     "selectAttribution": "Selecione uma atribuição para ver as pessoas elegíveis",
     "noEligible": "Nenhuma pessoa elegível para esta atribuição",
-    "linkType": "Tipo de Vínculo"
+    "linkType": "Tipo de Vínculo",
+    "pageDescription": "Organize atribui??es por categorias e gerencie vincula??es.",
+    "editAttribution": "Editar Atribui??o",
+    "newCategory": "Nova Categoria",
+    "editCategory": "Editar Categoria",
+    "categoriesAndAttributions": "Categorias e Atribui??es",
+    "details": "Detalhes",
+    "noCategories": "Nenhuma categoria encontrada.",
+    "noCategory": "Sem categoria",
+    "category": "Categoria",
+    "categoryName": "Nome",
+    "parentCategory": "Categoria Pai",
+    "noParentCategory": "Sem pai",
+    "categoryLabel": "Categoria: {{name}}",
+    "descriptionLabel": "Descri??o",
+    "selectAttributionPrompt": "Selecione uma atribui??o para gerenciar pessoas e setores.",
+    "linkedPeople": "Pessoas vinculadas",
+    "sectorsAndPositions": "Setores e cargos",
+    "allSectors": "Todos os setores",
+    "selectPerson": "Selecione uma pessoa",
+    "selectPosition": "Selecione um cargo",
+    "viewDetails": "Ver detalhes",
+    "expandCategory": "Expandir categoria",
+    "shortAttribution": "Atrib.",
+    "removePerson": "Remover pessoa",
+    "removePosition": "Remover cargo",
+    "noPeopleAdded": "Nenhuma pessoa adicionada.",
+    "noPositionsAdded": "Nenhum cargo adicionado.",
+    "countPeople_one": "{{count}} pessoa",
+    "countPeople_other": "{{count}} pessoas",
+    "countPositions_one": "{{count}} cargo",
+    "countPositions_other": "{{count}} cargos",
+    "countExceptions_one": "{{count}} exce??o",
+    "countExceptions_other": "{{count}} exce??es",
+    "countEligible_one": "{{count}} eleg?vel",
+    "countEligible_other": "{{count}} eleg?veis",
+    "deleteConfirm": "Tem certeza que deseja remover {{name}}? Esta a??o n?o pode ser desfeita.",
+    "placeholders": {
+      "name": "Nome da atribui??o",
+      "description": "Descreva a atribui??o",
+      "categoryName": "Nome da categoria"
+    },
+    "validation": {
+      "requiredName": "Informe o nome da atribui??o.",
+      "requiredCategoryName": "Informe o nome da categoria.",
+      "parentCategorySelf": "A categoria pai n?o pode ser a pr?pria categoria.",
+      "parentCategoryChild": "A categoria pai n?o pode ser uma categoria filha.",
+      "saveFailed": "N?o foi poss?vel salvar a atribui??o.",
+      "categorySaveFailed": "N?o foi poss?vel salvar a categoria.",
+      "selectPerson": "Selecione uma pessoa.",
+      "selectPosition": "Selecione um cargo."
+    }
   },
   "links": {
     "title": "Vínculos Pessoa-Setor-Cargo",
@@ -166,5 +256,18 @@
     "ptBR": "Português (Brasil)",
     "enUS": "English (US)",
     "esES": "Español"
+  },
+  "table": {
+    "records": "Registros",
+    "itemFound_one": "{{count}} item encontrado",
+    "itemFound_other": "{{count}} itens encontrados",
+    "searchPlaceholder": "Buscar...",
+    "emptyTitle": "Nenhum registro encontrado",
+    "emptyDescription": "Tente ajustar os filtros de busca",
+    "pagination": {
+      "showing": "Mostrando {{from}} a {{to}} de {{total}} resultados",
+      "zeroResults": "0 resultados"
+    },
+    "pageSize": "{{size}} por p?gina"
   }
 }

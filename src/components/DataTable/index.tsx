@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   flexRender, 
   getCoreRowModel, 
@@ -33,12 +34,14 @@ export function DataTable<TData>({
   isServerSide = false,
   totalCount = 0,
 }: DataTableProps<TData>) {
+  const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 20,
   });
+  const totalRecords = isServerSide ? totalCount : data.length;
 
   const table = useReactTable({
     data,
@@ -88,9 +91,9 @@ export function DataTable<TData>({
       {/* Header com busca */}
       <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--table-border)' }}>
         <div>
-          <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Registros</h2>
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>{t('table.records')}</h2>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
-            {isServerSide ? totalCount : data.length} {(isServerSide ? totalCount : data.length) === 1 ? 'item' : 'itens'} encontrados
+            {t('table.itemFound', { count: totalRecords })}
           </p>
         </div>
         <div className="relative">
@@ -98,7 +101,7 @@ export function DataTable<TData>({
           <input
             value={searchTerm}
             onChange={handleSearchChange}
-            placeholder="Buscar..."
+            placeholder={t('table.searchPlaceholder')}
             className="pl-10 pr-4 py-2 w-64 glass-input table-search-input"
           />
         </div>
@@ -110,7 +113,7 @@ export function DataTable<TData>({
           <div className="absolute inset-0 flex items-center justify-center z-10" style={{ backgroundColor: 'var(--card-bg)', opacity: 0.9 }}>
             <div className="flex flex-col items-center space-y-3">
               <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: 'var(--border-color)', borderTopColor: 'var(--accent-primary)' }}></div>
-              <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Carregando...</span>
+              <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('common.loading')}</span>
             </div>
           </div>
         )}
@@ -178,8 +181,8 @@ export function DataTable<TData>({
                     <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: 'var(--bg-secondary)' }}>
                       <Search className="w-6 h-6" style={{ color: 'var(--text-muted)' }} />
                     </div>
-                    <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>Nenhum registro encontrado</p>
-                    <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Tente ajustar os filtros de busca</p>
+                    <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>{t('table.emptyTitle')}</p>
+                    <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>{t('table.emptyDescription')}</p>
                   </div>
                 </td>
               </tr>
@@ -194,24 +197,14 @@ export function DataTable<TData>({
         style={{ borderTop: '1px solid var(--table-border)', backgroundColor: 'var(--table-header-bg)' }}
       >
         <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          {(isServerSide ? totalCount : data.length) > 0 ? (
-            <>
-              Mostrando{' '}
-              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {pagination.pageIndex * pagination.pageSize + 1}
-              </span>
-              {' '}a{' '}
-              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {Math.min((pagination.pageIndex + 1) * pagination.pageSize, isServerSide ? totalCount : data.length)}
-              </span>
-              {' '}de{' '}
-              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {isServerSide ? totalCount : data.length}
-              </span>
-              {' '}resultados
-            </>
+          {totalRecords > 0 ? (
+            t('table.pagination.showing', {
+              from: pagination.pageIndex * pagination.pageSize + 1,
+              to: Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalRecords),
+              total: totalRecords,
+            })
           ) : (
-            <span>0 resultados</span>
+            <span>{t('table.pagination.zeroResults')}</span>
           )}
         </div>
         
@@ -279,9 +272,9 @@ export function DataTable<TData>({
             className="ml-2 data-table-page-size"
             options={[10, 20, 50, 100].map((size) => ({
               value: size,
-              label: `${size} por pagina`
+              label: t('table.pageSize', { size })
             })) as SearchSelectOption[]}
-            value={{ value: pagination.pageSize, label: `${pagination.pageSize} por pagina` }}
+            value={{ value: pagination.pageSize, label: t('table.pageSize', { size: pagination.pageSize }) }}
             onChange={(option) => {
               if (!option) return;
               table.setPageSize(Number(option.value));

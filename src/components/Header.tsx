@@ -1,6 +1,7 @@
 import { useAuth } from '../contexts/AuthContext';
 import { Bell, HelpCircle, Settings, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import LanguageSelector from './LanguageSelector';
 
 interface HeaderProps {
   isSidebarCollapsed: boolean;
@@ -16,7 +17,7 @@ export default function Header({ isSidebarCollapsed, onToggleSidebar }: HeaderPr
       <div className="header-left">
         <Link to="/admin" className="header-logo">
           <div className="header-logo-icon">
-            <img src="/logo_ziggy.png" alt="Ziggy" className="h-9 w-auto" />
+            <img src="/logo_ziggy.png" alt="Ziggy" width="64" height="64" />
           </div>
           {!isSidebarCollapsed && <span className="header-logo-text">Ziggy</span>}
         </Link>
@@ -39,6 +40,7 @@ export default function Header({ isSidebarCollapsed, onToggleSidebar }: HeaderPr
         <button className="header-icon-btn">
           <Settings className="w-5 h-5" />
         </button>
+        <LanguageSelector />
         
         {/* User Avatar */}
         <div className="header-avatar">

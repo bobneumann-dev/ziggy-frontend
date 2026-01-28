@@ -14,7 +14,11 @@
     "yes": "Yes",
     "no": "No",
     "confirm": "Confirm",
-    "back": "Back"
+    "back": "Back",
+    "close": "Close",
+    "none": "None",
+    "confirmDelete": "Confirm delete",
+    "create": "Create"
   },
   "auth": {
     "login": "Login",
@@ -122,7 +126,19 @@
     "people": "People",
     "actions": "Actions",
     "viewList": "List",
-    "viewTree": "Tree"
+    "viewTree": "Tree",
+    "description": "Company organizational structure",
+    "editSector": "Edit Sector",
+    "viewOrg": "Org Chart",
+    "treeCounts": "{{cargos}} positions, {{pessoas}} people",
+    "deleteConfirm": "Remove {{name}}?",
+    "placeholders": {
+      "name": "Ex.: Administrative"
+    },
+    "validation": {
+      "requiredName": "Enter the sector name.",
+      "saveFailed": "Unable to save the sector."
+    }
   },
   "positions": {
     "title": "Positions",
@@ -132,7 +148,30 @@
     "parentPosition": "Parent Position",
     "people": "People",
     "attributions": "Attributions",
-    "actions": "Actions"
+    "actions": "Actions",
+    "description": "Position and role structure",
+    "editPosition": "Edit Position",
+    "viewOrg": "Org Chart",
+    "viewTable": "Table",
+    "viewTree": "Tree",
+    "selectSector": "Select a sector",
+    "selectParentPosition": "Select a parent position",
+    "selectSectorFirst": "Select a sector first",
+    "deleteConfirm": "Remove {{name}}?",
+    "countInSector_one": "{{count}} position",
+    "countInSector_other": "{{count}} positions",
+    "parentLabel": "Parent: {{name}}",
+    "personMovedToast": "Person moved to sector: {{name}} -> {{sector}}",
+    "personFallback": "Person",
+    "sectorFallback": "Sector",
+    "placeholders": {
+      "name": "Ex.: Analyst"
+    },
+    "validation": {
+      "requiredName": "Enter the position name.",
+      "requiredSector": "Select a sector.",
+      "saveFailed": "Unable to save the position."
+    }
   },
   "attributions": {
     "title": "Attributions",
@@ -146,7 +185,58 @@
     "eligible": "eligible",
     "selectAttribution": "Select an attribution to see eligible people",
     "noEligible": "No eligible people for this attribution",
-    "linkType": "Link Type"
+    "linkType": "Link Type",
+    "pageDescription": "Organize attributions by categories and manage links.",
+    "editAttribution": "Edit Attribution",
+    "newCategory": "New Category",
+    "editCategory": "Edit Category",
+    "categoriesAndAttributions": "Categories and Attributions",
+    "details": "Details",
+    "noCategories": "No categories found.",
+    "noCategory": "No category",
+    "category": "Category",
+    "categoryName": "Name",
+    "parentCategory": "Parent Category",
+    "noParentCategory": "No parent",
+    "categoryLabel": "Category: {{name}}",
+    "descriptionLabel": "Description",
+    "selectAttributionPrompt": "Select an attribution to manage people and sectors.",
+    "linkedPeople": "Linked people",
+    "sectorsAndPositions": "Sectors and positions",
+    "allSectors": "All sectors",
+    "selectPerson": "Select a person",
+    "selectPosition": "Select a position",
+    "viewDetails": "View details",
+    "expandCategory": "Expand category",
+    "shortAttribution": "Attr.",
+    "removePerson": "Remove person",
+    "removePosition": "Remove position",
+    "noPeopleAdded": "No people added.",
+    "noPositionsAdded": "No positions added.",
+    "countPeople_one": "{{count}} person",
+    "countPeople_other": "{{count}} people",
+    "countPositions_one": "{{count}} position",
+    "countPositions_other": "{{count}} positions",
+    "countExceptions_one": "{{count}} exception",
+    "countExceptions_other": "{{count}} exceptions",
+    "countEligible_one": "{{count}} eligible",
+    "countEligible_other": "{{count}} eligible",
+    "deleteConfirm": "Are you sure you want to remove {{name}}? This action cannot be undone.",
+    "placeholders": {
+      "name": "Attribution name",
+      "description": "Describe the attribution",
+      "categoryName": "Category name"
+    },
+    "validation": {
+      "requiredName": "Enter the attribution name.",
+      "requiredCategoryName": "Enter the category name.",
+      "parentCategorySelf": "The parent category cannot be the category itself.",
+      "parentCategoryChild": "The parent category cannot be a child category.",
+      "saveFailed": "Unable to save the attribution.",
+      "categorySaveFailed": "Unable to save the category.",
+      "selectPerson": "Select a person.",
+      "selectPosition": "Select a position."
+    }
   },
   "links": {
     "title": "Person-Sector-Position Links",
@@ -166,5 +256,18 @@
     "ptBR": "Português (Brasil)",
     "enUS": "English (US)",
     "esES": "Español"
+  },
+  "table": {
+    "records": "Records",
+    "itemFound_one": "{{count}} record found",
+    "itemFound_other": "{{count}} records found",
+    "searchPlaceholder": "Search...",
+    "emptyTitle": "No records found",
+    "emptyDescription": "Try adjusting the search filters",
+    "pagination": {
+      "showing": "Showing {{from}} to {{to}} of {{total}} results",
+      "zeroResults": "0 results"
+    },
+    "pageSize": "{{size}} per page"
   }
 }

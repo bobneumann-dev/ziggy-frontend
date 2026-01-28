@@ -64,13 +64,15 @@ export default function Layout({ children }: LayoutProps) {
         >
           {/* Menu Title */}
           <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
-            <div className="flex items-center gap-2">
-              <Settings className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-              {!isSidebarCollapsed && (
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                  Menu Principal
-                </span>
-              )}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+                {!isSidebarCollapsed && (
+                  <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                    Menu Principal
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -114,7 +116,6 @@ export default function Layout({ children }: LayoutProps) {
           <div className="p-3" style={{ borderTop: '1px solid var(--border-color)' }}>
             <div className="flex items-center justify-center gap-2">
               <ThemeToggle />
-              {!isSidebarCollapsed && <LanguageSelector />}
             </div>
           </div>
 

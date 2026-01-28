@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import type { FormEvent } from 'react';
 import { Plus, Edit, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api';
 import CargoOrgChart from '../components/CargoOrgChart';
 import { DataTable } from '../components/DataTable';
@@ -10,12 +11,13 @@ import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import type { PagedResult, PaginationParams } from '../types/pagination';
 
 export default function Cargos() {
+  const { t } = useTranslation();
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [allCargos, setAllCargos] = useState<Cargo[]>([]);
   const [setores, setSetores] = useState<Setor[]>([]);
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
   const [vinculos, setVinculos] = useState<PessoaSetorCargo[]>([]);
-  const [viewMode, setViewMode] = useState<'list' | 'org' | 'tree'>('org');
+  const [viewMode, setViewMode] = useState<'list' | 'org' | 'tree'>('tree');
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<PaginationParams>({
     pageNumber: 1,
@@ -26,6 +28,9 @@ export default function Cargos() {
   const [totalCount, setTotalCount] = useState(0);
   const [selectedSetorId, setSelectedSetorId] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [draggingCargoId, setDraggingCargoId] = useState<string | null>(null);
+  const [draggingCargoSetorId, setDraggingCargoSetorId] = useState<string | null>(null);
+  const [dropTargetKey, setDropTargetKey] = useState<string | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCargoId, setEditingCargoId] = useState<string | null>(null);
@@ -179,8 +184,8 @@ export default function Cargos() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
-    if (!formData.nome.trim()) errors.nome = 'Informe o nome do cargo.';
-    if (!formData.setorId) errors.setorId = 'Selecione um setor.';
+    if (!formData.nome.trim()) errors.nome = t('positions.validation.requiredName');
+    if (!formData.setorId) errors.setorId = t('positions.validation.requiredSector');
     if (Object.keys(errors).length) {
       setFormErrors(errors);
       return;
@@ -206,7 +211,7 @@ export default function Cargos() {
       console.error('Erro ao salvar cargo:', error);
       setFormErrors(prev => ({
         ...prev,
-        geral: 'Não foi possível salvar o cargo.'
+        geral: t('positions.validation.saveFailed')
       }));
     } finally {
       setLoading(false);
@@ -273,6 +278,59 @@ export default function Cargos() {
     });
   };
 
+  const isCargoDescendant = useCallback((rootId: string, possibleChildId: string) => {
+    const childrenMap = new Map<string, string[]>();
+    allCargos.forEach(cargo => {
+      if (!cargo.cargoPaiId) return;
+      const list = childrenMap.get(cargo.cargoPaiId) || [];
+      list.push(cargo.id);
+      childrenMap.set(cargo.cargoPaiId, list);
+    });
+
+    const stack = [...(childrenMap.get(rootId) || [])];
+    while (stack.length) {
+      const current = stack.pop();
+      if (!current) continue;
+      if (current === possibleChildId) return true;
+      const nextChildren = childrenMap.get(current);
+      if (nextChildren?.length) {
+        stack.push(...nextChildren);
+      }
+    }
+    return false;
+  }, [allCargos]);
+
+  const handleMoveCargo = async (cargoId: string, setorId: string, cargoPaiId: string | null) => {
+    if (cargoPaiId && cargoId === cargoPaiId) return;
+    if (cargoPaiId && isCargoDescendant(cargoId, cargoPaiId)) return;
+
+    try {
+      setLoading(true);
+      await api.put(`/cargos/${cargoId}`, {
+        setorId,
+        cargoPaiId,
+      });
+      await Promise.all([fetchPaginatedCargos(), fetchAllCargos(), fetchPessoasEVinculos()]);
+    } catch (error) {
+      console.error('Erro ao mover cargo:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDragLeaveRow = (event: React.DragEvent<HTMLElement>) => {
+    if (event.currentTarget.contains(event.relatedTarget as Node)) return;
+    setDropTargetKey(null);
+  };
+
+  const handleDragOverRow = (key: string, canDrop: boolean) => (event: React.DragEvent<HTMLElement>) => {
+    if (!canDrop) return;
+    event.preventDefault();
+    if (dropTargetKey !== key) {
+      setDropTargetKey(key);
+    }
+  };
+
   const cargosPaiOptions = allCargos.filter(cargo =>
     cargo.setorId === formData.setorId && cargo.id !== editingCargoId
   );
@@ -328,11 +386,11 @@ export default function Cargos() {
 
   const showMovedMessage = (pessoaId: string, cargo: Cargo) => {
     const pessoa = pessoas.find(p => p.id === pessoaId);
-    const nomeCompleto = pessoa?.nomeCompleto?.trim() || 'Pessoa';
+    const nomeCompleto = pessoa?.nomeCompleto?.trim() || t('positions.personFallback');
     const nome =
       nomeCompleto.length > 35 ? `${nomeCompleto.slice(0, 35)}...` : nomeCompleto;
-    const setorNome = setores.find(s => s.id === cargo.setorId)?.nome || 'Setor';
-    setToastMessage(`Pessoa trocada de setor: ${nome} → ${setorNome}`);
+    const setorNome = setores.find(s => s.id === cargo.setorId)?.nome || t('positions.sectorFallback');
+    setToastMessage(t('positions.personMovedToast', { name: nome, sector: setorNome }));
     setTimeout(() => setToastMessage(null), 2500);
   };
 
@@ -352,32 +410,32 @@ export default function Cargos() {
   const columns = useMemo<ColumnDef<Cargo, any>[]>(() => [
     {
       accessorKey: 'nome',
-      header: 'Nome',
+      header: t('positions.name'),
       cell: info => <div className="text-sm font-medium text-primary">{info.getValue()}</div>
     },
     {
       accessorKey: 'setorNome',
-      header: 'Setor',
+      header: t('positions.sector'),
       cell: info => <div className="text-sm text-primary">{info.getValue()}</div>
     },
     {
       accessorKey: 'cargoPaiNome',
-      header: 'Cargo Pai',
+      header: t('positions.parentPosition'),
       cell: info => <div className="text-sm text-primary">{info.getValue() || '-'}</div>
     },
     {
       accessorKey: 'quantidadePessoas',
-      header: 'Pessoas',
+      header: t('positions.people'),
       cell: info => <div className="text-sm text-primary">{info.getValue()}</div>
     },
     {
       accessorKey: 'quantidadeAtribuicoes',
-      header: 'Atribuições',
+      header: t('positions.attributions'),
       cell: info => <div className="text-sm text-primary">{info.getValue()}</div>
     },
     {
       id: 'actions',
-      header: () => <div className="text-right">Ações</div>,
+      header: () => <div className="text-right">{t('common.actions')}</div>,
       cell: info => {
         const cargo = info.row.original;
         return (
@@ -392,7 +450,7 @@ export default function Cargos() {
         );
       }
     }
-  ], []);
+  ], [t]);
 
   const cargosPorSetor = useMemo(() => {
     return setores.map(setor => ({
@@ -404,15 +462,56 @@ export default function Cargos() {
   const renderCargoTree = (cargo: Cargo, level: number, setorId: string, cargoMap: Map<string, Cargo[]>) => {
     const children = cargoMap.get(cargo.id) || [];
     const isExpanded = expandedCargos.has(cargo.id);
+    const isDropTarget = dropTargetKey === `cargo:${cargo.id}`;
+    const canDropHere = Boolean(
+      draggingCargoId &&
+      draggingCargoSetorId === setorId &&
+      draggingCargoId !== cargo.id &&
+      !isCargoDescendant(draggingCargoId, cargo.id)
+    );
+
+    const handleCargoDragStart = (event: React.DragEvent) => {
+      event.dataTransfer.setData('application/x-ziggy-cargo', cargo.id);
+      event.dataTransfer.setData('application/x-ziggy-cargo-setor', setorId);
+      event.dataTransfer.setData('text/plain', cargo.id);
+      event.dataTransfer.effectAllowed = 'move';
+      setDraggingCargoId(cargo.id);
+      setDraggingCargoSetorId(setorId);
+      const preview = document.createElement('div');
+      preview.className = 'atribuicao-drag-preview';
+      preview.textContent = cargo.nome;
+      document.body.appendChild(preview);
+      event.dataTransfer.setDragImage(preview, 12, 12);
+      setTimeout(() => {
+        if (preview.parentNode) preview.parentNode.removeChild(preview);
+      }, 0);
+    };
 
     return (
       <div key={cargo.id}>
         <div
-          className="flex items-center py-2 px-4 cursor-pointer"
+          className={`atribuicao-row flex items-center py-2 px-4 cursor-pointer ${isDropTarget ? 'atribuicao-drop-target' : ''}`}
           style={{ paddingLeft: `${level * 24 + 16}px` }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-row-hover)'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          onClick={() => children.length > 0 ? toggleCargo(cargo.id) : null}
+          draggable
+          onDragOver={handleDragOverRow(`cargo:${cargo.id}`, canDropHere)}
+          onDragEnter={handleDragOverRow(`cargo:${cargo.id}`, canDropHere)}
+          onDragLeave={handleDragLeaveRow}
+          onDrop={(event) => {
+            event.preventDefault();
+            const draggedCargoId =
+              event.dataTransfer.getData('application/x-ziggy-cargo') ||
+              event.dataTransfer.getData('text/plain');
+            if (draggedCargoId && canDropHere) {
+              handleMoveCargo(draggedCargoId, setorId, cargo.id);
+            }
+            setDropTargetKey(null);
+          }}
+          onDragStart={handleCargoDragStart}
+          onDragEnd={() => {
+            setDraggingCargoId(null);
+            setDraggingCargoSetorId(null);
+            setDropTargetKey(null);
+          }}
         >
           {children.length > 0 ? (
             <button
@@ -432,20 +531,28 @@ export default function Cargos() {
             <div className="w-6 mr-2" />
           )}
           <div className="flex-1 flex items-center justify-between">
-            <div>
-              <span className="font-medium text-primary">{cargo.nome}</span>
-              <span className="ml-3 text-sm text-secondary">
-                {cargo.cargoPaiNome ? `Pai: ${cargo.cargoPaiNome}` : 'Sem pai'}
+            <div
+              className="flex-1"
+              draggable
+              onDragStart={handleCargoDragStart}
+            >
+              <span className="font-medium text-primary" draggable onDragStart={handleCargoDragStart}>
+                {cargo.nome}
               </span>
+          {cargo.cargoPaiNome && (
+                <span className="ml-3 text-sm text-secondary" draggable onDragStart={handleCargoDragStart}>
+                  {t('positions.parentLabel', { name: cargo.cargoPaiNome })}
+                </span>
+              )}
             </div>
             <div className="flex space-x-2">
-              <button className="text-indigo-600 hover:text-indigo-900" onClick={() => handleOpenModal(cargo)}>
+              <button className="text-indigo-600 hover:text-indigo-900" draggable={false} onClick={() => handleOpenModal(cargo)}>
                 <Edit className="w-4 h-4" />
               </button>
-              <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(cargo)}>
+              <button className="text-red-600 hover:text-red-900" draggable={false} onClick={() => handleDelete(cargo)}>
                 <Trash2 className="w-4 h-4" />
               </button>
-              <button className="text-emerald-600 hover:text-emerald-700" onClick={() => handleOpenModal(undefined, setorId, cargo.id)}>
+              <button className="text-emerald-600 hover:text-emerald-700" draggable={false} onClick={() => handleOpenModal(undefined, setorId, cargo.id)}>
                 <Plus className="w-4 h-4" />
               </button>
             </div>
@@ -465,7 +572,7 @@ export default function Cargos() {
       <div className="flex items-center justify-center h-64">
         <div className="flex flex-col items-center space-y-3">
           <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: 'var(--border-color)', borderTopColor: 'var(--accent-primary)' }}></div>
-          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Carregando...</span>
+          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('common.loading')}</span>
         </div>
       </div>
     );
@@ -476,9 +583,9 @@ export default function Cargos() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="page-title">Cargos</h1>
+          <h1 className="page-title">{t('positions.title')}</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-            Estrutura de cargos e funções
+            {t('positions.description')}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -487,9 +594,9 @@ export default function Cargos() {
             style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
           >
             {[
-              { mode: 'org', label: 'Organograma' },
-              { mode: 'list', label: 'Tabela' },
-              { mode: 'tree', label: 'Árvore' }
+              { mode: 'org', label: t('positions.viewOrg') },
+              { mode: 'list', label: t('positions.viewTable') },
+              { mode: 'tree', label: t('positions.viewTree') }
             ].map((tab) => (
               <button
                 key={tab.mode}
@@ -507,7 +614,7 @@ export default function Cargos() {
           </div>
           <button onClick={() => handleOpenModal()} className="glass-button flex items-center gap-2 px-4 py-2.5">
             <Plus className="w-4 h-4" />
-            <span>Novo Cargo</span>
+            <span>{t('positions.newPosition')}</span>
           </button>
         </div>
       </div>
@@ -546,9 +653,28 @@ export default function Cargos() {
             return (
               <div key={setor.id}>
                 <div
-                  className="flex items-center py-2 px-4 cursor-pointer"
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-row-hover)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  className={`atribuicao-row flex items-center py-2 px-4 cursor-pointer ${
+                    dropTargetKey === `setor:${setor.id}` ? 'atribuicao-drop-target' : ''
+                  }`}
+                  onDragOver={handleDragOverRow(
+                    `setor:${setor.id}`,
+                    Boolean(draggingCargoId)
+                  )}
+                  onDragEnter={handleDragOverRow(
+                    `setor:${setor.id}`,
+                    Boolean(draggingCargoId)
+                  )}
+                  onDragLeave={handleDragLeaveRow}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    const draggedCargoId =
+                      event.dataTransfer.getData('application/x-ziggy-cargo') ||
+                      event.dataTransfer.getData('text/plain');
+                    if (draggedCargoId) {
+                      handleMoveCargo(draggedCargoId, setor.id, null);
+                    }
+                    setDropTargetKey(null);
+                  }}
                   onClick={() => toggleSetor(setor.id)}
                 >
                   {rootCargos.length > 0 ? (
@@ -572,7 +698,7 @@ export default function Cargos() {
                     <div>
                       <span className="font-medium text-primary">{setor.nome}</span>
                       <span className="ml-3 text-sm text-secondary">
-                        {cargosDoSetor.length} cargos
+                        {t('positions.countInSector', { count: cargosDoSetor.length })}
                       </span>
                     </div>
                     <button
@@ -614,9 +740,9 @@ export default function Cargos() {
           <div className="glass-modal" onClick={e => e.stopPropagation()}>
             <div className="glass-modal-header">
               <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {editingCargoId ? 'Editar Cargo' : 'Novo Cargo'}
+                {editingCargoId ? t('positions.editPosition') : t('positions.newPosition')}
               </h2>
-              <button className="glass-modal-close" onClick={handleCloseModal} aria-label="Fechar">
+              <button className="glass-modal-close" onClick={handleCloseModal} aria-label={t('common.close')}>
                 <span aria-hidden="true">x</span>
               </button>
             </div>
@@ -625,14 +751,14 @@ export default function Cargos() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="glass-modal-label">
-                    Nome <span className="glass-modal-required">*</span>
+                    {t('positions.name')} <span className="glass-modal-required">*</span>
                   </label>
                   <input
                     name="nome"
                     value={formData.nome}
                     onChange={e => setFormData(prev => ({ ...prev, nome: e.target.value }))}
                     className={`glass-modal-input ${formErrors.nome ? 'glass-modal-input-error' : ''}`}
-                    placeholder="Ex.: Analista"
+                    placeholder={t('positions.placeholders.name')}
                     ref={nomeInputRef}
                     required
                   />
@@ -640,26 +766,28 @@ export default function Cargos() {
                 </div>
                 <div>
                   <label className="glass-modal-label">
-                    Setor <span className="glass-modal-required">*</span>
+                    {t('positions.sector')} <span className="glass-modal-required">*</span>
                   </label>
                   <SearchSelect
                     options={setorOptions}
                     value={setorOptions.find(option => option.value === formData.setorId) ?? null}
                     onChange={(option) => handleSetorChange(option ? String(option.value) : '')}
-                    placeholder="Selecione um setor"
+                    placeholder={t('positions.selectSector')}
                     hasError={Boolean(formErrors.setorId)}
                   />
                   {formErrors.setorId && <p className="glass-modal-error">{formErrors.setorId}</p>}
                 </div>
                 <div className="md:col-span-2">
-                  <label className="glass-modal-label">Cargo Pai</label>
+                  <label className="glass-modal-label">{t('positions.parentPosition')}</label>
                   <SearchSelect
                     options={cargoPaiSelectOptions}
                     value={cargoPaiSelectOptions.find(option => option.value === formData.cargoPaiId) ?? null}
                     onChange={(option) =>
                       setFormData(prev => ({ ...prev, cargoPaiId: option ? String(option.value) : '' }))
                     }
-                    placeholder={formData.setorId ? 'Selecione um cargo pai' : 'Selecione um setor primeiro'}
+                    placeholder={
+                      formData.setorId ? t('positions.selectParentPosition') : t('positions.selectSectorFirst')
+                    }
                     isDisabled={!formData.setorId}
                   />
                 </div>
@@ -669,10 +797,10 @@ export default function Cargos() {
 
               <div className="glass-modal-footer">
                 <button type="button" onClick={handleCloseModal} className="glass-modal-button-secondary">
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" className="glass-modal-button-primary">
-                  Salvar
+                  {t('common.save')}
                 </button>
               </div>
             </form>
@@ -685,22 +813,22 @@ export default function Cargos() {
           <div className="glass-modal glass-modal-confirm" onClick={e => e.stopPropagation()}>
             <div className="glass-modal-header">
               <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-                Confirmar exclusão
+                {t('common.confirmDelete')}
               </h2>
-              <button className="glass-modal-close" onClick={handleCloseDelete} aria-label="Fechar">
+              <button className="glass-modal-close" onClick={handleCloseDelete} aria-label={t('common.close')}>
                 <span aria-hidden="true">x</span>
               </button>
             </div>
             <div className="glass-modal-body">
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Deseja remover {deleteTarget.nome}?
+                {t('positions.deleteConfirm', { name: deleteTarget.nome })}
               </p>
               <div className="glass-modal-footer">
                 <button type="button" onClick={handleCloseDelete} className="glass-modal-button-secondary">
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
                 <button type="button" onClick={handleConfirmDelete} className="glass-modal-button-primary">
-                  Excluir
+                  {t('common.delete')}
                 </button>
               </div>
             </div>

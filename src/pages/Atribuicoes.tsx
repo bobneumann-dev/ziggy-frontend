@@ -11,6 +11,7 @@ import {
   Briefcase,
   X
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api';
 import SearchSelect, { type SearchSelectOption } from '../components/SearchSelect';
 import type {
@@ -25,6 +26,7 @@ import type {
 } from '../types';
 
 export default function Atribuicoes() {
+  const { t } = useTranslation();
   const [atribuicoesLoading, setAtribuicoesLoading] = useState(true);
   const [atribuicoes, setAtribuicoes] = useState<Atribuicao[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -42,6 +44,7 @@ export default function Atribuicoes() {
   const [atribCargos, setAtribCargos] = useState<AtribuicaoCargo[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [draggingAtribuicaoId, setDraggingAtribuicaoId] = useState<string | null>(null);
+  const [draggingCategoriaId, setDraggingCategoriaId] = useState<string | null>(null);
   const [dropTargetCategoriaId, setDropTargetCategoriaId] = useState<string | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,6 +61,7 @@ export default function Atribuicoes() {
   const [deleteTarget, setDeleteTarget] = useState<Atribuicao | null>(null);
 
   const [isCategoriaModalOpen, setIsCategoriaModalOpen] = useState(false);
+  const [editingCategoriaId, setEditingCategoriaId] = useState<string | null>(null);
   const [categoriaForm, setCategoriaForm] = useState({ nome: '', categoriaPaiId: '' });
   const [categoriaErrors, setCategoriaErrors] = useState<Record<string, string>>({});
 
@@ -180,21 +184,65 @@ export default function Atribuicoes() {
   };
 
   const handleOpenCategoriaModal = (parentId?: string) => {
+    setEditingCategoriaId(null);
     setCategoriaForm({ nome: '', categoriaPaiId: parentId || '' });
+    setCategoriaErrors({});
+    setIsCategoriaModalOpen(true);
+  };
+
+  const handleOpenCategoriaEdit = (categoria: CategoriaTree) => {
+    setEditingCategoriaId(categoria.id);
+    setCategoriaForm({
+      nome: categoria.nome || '',
+      categoriaPaiId: categoria.categoriaPaiId || ''
+    });
     setCategoriaErrors({});
     setIsCategoriaModalOpen(true);
   };
 
   const handleCloseCategoriaModal = () => {
     setIsCategoriaModalOpen(false);
+    setEditingCategoriaId(null);
     setCategoriaForm({ nome: '', categoriaPaiId: '' });
     setCategoriaErrors({});
   };
 
+  const findCategoriaNode = useCallback((node: CategoriaTree | null, id: string): CategoriaTree | null => {
+    if (!node) return null;
+    if (node.id === id) return node;
+    for (const child of node.filhas || []) {
+      const found = findCategoriaNode(child, id);
+      if (found) return found;
+    }
+    return null;
+  }, []);
+
+  const isCategoriaDescendant = useCallback((rootId: string, possibleChildId: string) => {
+    const root = findCategoriaNode(categoriaTree, rootId);
+    if (!root) return false;
+    const stack = [...(root.filhas || [])];
+    while (stack.length) {
+      const current = stack.pop();
+      if (!current) continue;
+      if (current.id === possibleChildId) return true;
+      if (current.filhas?.length) {
+        stack.push(...current.filhas);
+      }
+    }
+    return false;
+  }, [categoriaTree, findCategoriaNode]);
+
   const handleSubmitCategoria = async (e: FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
-    if (!categoriaForm.nome.trim()) errors.nome = 'Informe o nome da categoria.';
+    if (!categoriaForm.nome.trim()) errors.nome = t('attributions.validation.requiredCategoryName');
+    if (editingCategoriaId && categoriaForm.categoriaPaiId) {
+      if (categoriaForm.categoriaPaiId === editingCategoriaId) {
+        errors.categoriaPaiId = t('attributions.validation.parentCategorySelf');
+      } else if (isCategoriaDescendant(editingCategoriaId, categoriaForm.categoriaPaiId)) {
+        errors.categoriaPaiId = t('attributions.validation.parentCategoryChild');
+      }
+    }
     if (Object.keys(errors).length) {
       setCategoriaErrors(errors);
       return;
@@ -202,17 +250,22 @@ export default function Atribuicoes() {
 
     try {
       setAtribuicoesLoading(true);
-      await api.post('/categorias', {
+      const payload = {
         nome: categoriaForm.nome,
         categoriaPaiId: categoriaForm.categoriaPaiId || null
-      });
+      };
+      if (editingCategoriaId) {
+        await api.put(`/categorias/${editingCategoriaId}`, payload);
+      } else {
+        await api.post('/categorias', payload);
+      }
       await fetchCategorias();
       handleCloseCategoriaModal();
     } catch (error) {
       console.error('Erro ao salvar categoria:', error);
       setCategoriaErrors(prev => ({
         ...prev,
-        geral: 'Nao foi possivel salvar a categoria.'
+        geral: t('attributions.validation.categorySaveFailed')
       }));
     } finally {
       setAtribuicoesLoading(false);
@@ -222,7 +275,7 @@ export default function Atribuicoes() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
-    if (!formData.nome.trim()) errors.nome = 'Informe o nome da atribuicao.';
+    if (!formData.nome.trim()) errors.nome = t('attributions.validation.requiredName');
     if (Object.keys(errors).length) {
       setFormErrors(errors);
       return;
@@ -248,7 +301,7 @@ export default function Atribuicoes() {
       console.error('Erro ao salvar atribuicao:', error);
       setFormErrors(prev => ({
         ...prev,
-        geral: 'Nao foi possivel salvar a atribuicao.'
+        geral: t('attributions.validation.saveFailed')
       }));
     } finally {
       setAtribuicoesLoading(false);
@@ -288,7 +341,7 @@ export default function Atribuicoes() {
   const handleAddPessoa = async () => {
     if (!selectedAtribuicao) return;
     if (!addPessoaId) {
-      setActionErrors(prev => ({ ...prev, pessoa: 'Selecione uma pessoa.' }));
+      setActionErrors(prev => ({ ...prev, pessoa: t('attributions.validation.selectPerson') }));
       return;
     }
 
@@ -324,7 +377,7 @@ export default function Atribuicoes() {
   const handleAddCargo = async () => {
     if (!selectedAtribuicao) return;
     const errors: Record<string, string> = {};
-    if (!addCargoId) errors.cargo = 'Selecione um cargo.';
+    if (!addCargoId) errors.cargo = t('attributions.validation.selectPosition');
     if (Object.keys(errors).length) {
       setActionErrors(prev => ({ ...prev, ...errors }));
       return;
@@ -368,6 +421,33 @@ export default function Atribuicoes() {
       console.error('Erro ao mover atribuicao:', error);
     } finally {
       setAtribuicoesLoading(false);
+    }
+  };
+
+  const handleMoveCategoria = async (categoriaId: string, categoriaPaiId: string) => {
+    if (categoriaId === categoriaPaiId) return;
+    if (isCategoriaDescendant(categoriaId, categoriaPaiId)) return;
+
+    try {
+      setAtribuicoesLoading(true);
+      await api.put(`/categorias/${categoriaId}`, { categoriaPaiId });
+      await fetchCategorias();
+    } catch (error) {
+      console.error('Erro ao mover categoria:', error);
+    } finally {
+      setAtribuicoesLoading(false);
+    }
+  };
+
+  const handleDragLeaveRow = (event: React.DragEvent<HTMLElement>) => {
+    if (event.currentTarget.contains(event.relatedTarget as Node)) return;
+    setDropTargetCategoriaId(null);
+  };
+
+  const handleDragOverRow = (id: string) => (event: React.DragEvent<HTMLElement>) => {
+    event.preventDefault();
+    if (dropTargetCategoriaId !== id) {
+      setDropTargetCategoriaId(id);
     }
   };
 
@@ -452,6 +532,7 @@ export default function Atribuicoes() {
       style={{ paddingLeft: `${level * 24 + 16}px` }}
       draggable
       onDragStart={(event) => {
+        event.dataTransfer.setData('application/x-ziggy-atribuicao', atrib.id);
         event.dataTransfer.setData('text/plain', atrib.id);
         event.dataTransfer.effectAllowed = 'move';
         setDraggingAtribuicaoId(atrib.id);
@@ -474,9 +555,9 @@ export default function Atribuicoes() {
         <div className="text-sm font-medium text-primary">{atrib.nome}</div>
         {atrib.descricao && <p className="text-xs text-muted mt-1">{atrib.descricao}</p>}
         <div className="flex items-center space-x-3 mt-2 text-xs text-muted">
-          <span>{atrib.quantidadeCargos} cargos</span>
-          <span>{atrib.quantidadePessoasExcecao} excecoes</span>
-          <span>{atrib.totalPessoasElegiveis} elegiveis</span>
+          <span>{t('attributions.countPositions', { count: atrib.quantidadeCargos })}</span>
+          <span>{t('attributions.countExceptions', { count: atrib.quantidadePessoasExcecao })}</span>
+          <span>{t('attributions.countEligible', { count: atrib.totalPessoasElegiveis })}</span>
         </div>
       </div>
       <div className="flex space-x-2 ml-4">
@@ -486,7 +567,7 @@ export default function Atribuicoes() {
             handleSelectAtribuicao(atrib);
           }}
           className="text-indigo-600 hover:text-indigo-900"
-          aria-label="Ver detalhes"
+          aria-label={t('attributions.viewDetails')}
         >
           <Users className="w-4 h-4" />
         </button>
@@ -496,7 +577,7 @@ export default function Atribuicoes() {
             handleOpenModal(atrib);
           }}
           className="text-indigo-600 hover:text-indigo-900"
-          aria-label="Editar atribuicao"
+          aria-label={t('common.edit')}
         >
           <Edit className="w-4 h-4" />
         </button>
@@ -506,7 +587,7 @@ export default function Atribuicoes() {
             handleDelete(atrib);
           }}
           className="text-red-600 hover:text-red-900"
-          aria-label="Excluir atribuicao"
+          aria-label={t('common.delete')}
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -528,18 +609,42 @@ export default function Atribuicoes() {
             isDropTarget ? 'atribuicao-drop-target' : ''
           }`}
           style={{ paddingLeft: `${level * 24 + 16}px` }}
-          onDragOver={(event) => event.preventDefault()}
+          draggable
+          onDragOver={handleDragOverRow(node.id)}
           onDrop={(event) => {
             event.preventDefault();
-            const atribId = event.dataTransfer.getData('text/plain');
+            const categoriaId = event.dataTransfer.getData('application/x-ziggy-categoria');
+            const atribId =
+              event.dataTransfer.getData('application/x-ziggy-atribuicao') ||
+              event.dataTransfer.getData('text/plain');
+            if (categoriaId) {
+              handleMoveCategoria(categoriaId, node.id);
+            }
             if (atribId) {
               handleDropCategoria(node.id, atribId);
             }
             setDropTargetCategoriaId(null);
           }}
-          onDragEnter={() => setDropTargetCategoriaId(node.id)}
-          onDragLeave={() => setDropTargetCategoriaId(null)}
+          onDragEnter={handleDragOverRow(node.id)}
+          onDragLeave={handleDragLeaveRow}
           onClick={() => hasChildren ? toggleCategoria(node.id) : null}
+          onDragStart={(event) => {
+            event.dataTransfer.setData('application/x-ziggy-categoria', node.id);
+            event.dataTransfer.effectAllowed = 'move';
+            setDraggingCategoriaId(node.id);
+            const preview = document.createElement('div');
+            preview.className = 'atribuicao-drag-preview';
+            preview.textContent = node.nome;
+            document.body.appendChild(preview);
+            event.dataTransfer.setDragImage(preview, 12, 12);
+            setTimeout(() => {
+              if (preview.parentNode) preview.parentNode.removeChild(preview);
+            }, 0);
+          }}
+          onDragEnd={() => {
+            setDraggingCategoriaId(null);
+            setDropTargetCategoriaId(null);
+          }}
         >
           <div className="flex items-center">
             {hasChildren ? (
@@ -549,7 +654,7 @@ export default function Atribuicoes() {
                   toggleCategoria(node.id);
                 }}
                 className="mr-2"
-                aria-label="Expandir categoria"
+                aria-label={t('attributions.expandCategory')}
               >
                 {isExpanded ? (
                   <ChevronDown className="w-4 h-4 text-muted" />
@@ -570,10 +675,21 @@ export default function Atribuicoes() {
                 e.stopPropagation();
                 handleOpenModal(undefined, node.id);
               }}
-              aria-label="Nova atribuicao"
+              aria-label={t('attributions.newAttribution')}
             >
               <Plus className="w-4 h-4" />
-              <span className="text-xs font-semibold">Atrib.</span>
+              <span className="text-xs font-semibold">{t('attributions.shortAttribution')}</span>
+            </button>
+            <button
+              className="text-slate-600 hover:text-slate-900 flex items-center space-x-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenCategoriaEdit(node);
+              }}
+              aria-label={t('attributions.editCategory')}
+            >
+              <Edit className="w-4 h-4" />
+              <span className="text-xs font-semibold">{t('common.edit')}</span>
             </button>
             <button
               className="text-emerald-600 hover:text-emerald-800 flex items-center space-x-1"
@@ -581,10 +697,10 @@ export default function Atribuicoes() {
                 e.stopPropagation();
                 handleOpenCategoriaModal(node.id);
               }}
-              aria-label="Nova categoria"
+              aria-label={t('attributions.newCategory')}
             >
               <Plus className="w-4 h-4" />
-              <span className="text-xs font-semibold">Categoria</span>
+              <span className="text-xs font-semibold">{t('attributions.category')}</span>
             </button>
           </div>
         </div>
@@ -602,16 +718,16 @@ export default function Atribuicoes() {
   const semCategoria = atribuicoesByCategoria.get('sem-categoria') || [];
 
   if (atribuicoesLoading) {
-    return <div className="flex items-center justify-center h-64">Carregando...</div>;
+    return <div className="flex items-center justify-center h-64">{t('common.loading')}</div>;
   }
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="page-title">Atribuicoes</h1>
+          <h1 className="page-title">{t('attributions.title')}</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-            Organize atribuicoes por categorias e gerencie vinculacoes.
+            {t('attributions.pageDescription')}
           </p>
         </div>
         <div className="flex items-center space-x-3">
@@ -620,14 +736,14 @@ export default function Atribuicoes() {
             onClick={() => handleOpenCategoriaModal()}
           >
             <Plus className="w-4 h-4" />
-            <span>Categoria</span>
+            <span>{t('attributions.newCategory')}</span>
           </button>
           <button
             className="glass-button flex items-center space-x-2 px-4 py-2 rounded-xl font-semibold"
             onClick={() => handleOpenModal()}
           >
             <Plus className="w-4 h-4" />
-            <span>Nova Atribuicao</span>
+            <span>{t('attributions.newAttribution')}</span>
           </button>
         </div>
       </div>
@@ -635,7 +751,7 @@ export default function Atribuicoes() {
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] gap-6">
         <div className="glass-card overflow-hidden">
           <div className="section-header">
-            <h2 className="text-lg font-semibold text-primary">Categorias e Atribuicoes</h2>
+            <h2 className="text-lg font-semibold text-primary">{t('attributions.categoriesAndAttributions')}</h2>
           </div>
           <div className="divide-y divide-gray-200">
             {categoriaTree?.filhas?.length ? (
@@ -644,11 +760,11 @@ export default function Atribuicoes() {
               </div>
             ) : (
               <div className="p-6 text-sm text-muted flex items-center justify-between">
-                <span>Nenhuma categoria encontrada.</span>
+                <span>{t('attributions.noCategories')}</span>
                 <button
                   className="text-indigo-600 hover:text-indigo-900"
                   onClick={() => handleOpenCategoriaModal()}
-                  aria-label="Nova categoria"
+                  aria-label={t('attributions.newCategory')}
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -660,7 +776,7 @@ export default function Atribuicoes() {
                   className={`flex items-center justify-between py-2 px-4 ${
                     dropTargetCategoriaId === 'sem-categoria' ? 'atribuicao-drop-target' : ''
                   }`}
-                  onDragOver={(event) => event.preventDefault()}
+                  onDragOver={handleDragOverRow('sem-categoria')}
                   onDrop={(event) => {
                     event.preventDefault();
                     const atribId = event.dataTransfer.getData('text/plain');
@@ -669,14 +785,14 @@ export default function Atribuicoes() {
                     }
                     setDropTargetCategoriaId(null);
                   }}
-                  onDragEnter={() => setDropTargetCategoriaId('sem-categoria')}
-                  onDragLeave={() => setDropTargetCategoriaId(null)}
+                  onDragEnter={handleDragOverRow('sem-categoria')}
+                  onDragLeave={handleDragLeaveRow}
                 >
-                  <span className="text-sm font-semibold text-primary">Sem categoria</span>
+                  <span className="text-sm font-semibold text-primary">{t('attributions.noCategory')}</span>
                   <button
                     className="text-indigo-600 hover:text-indigo-900"
                     onClick={() => handleOpenModal(undefined, '')}
-                    aria-label="Nova atribuicao"
+                    aria-label={t('attributions.newAttribution')}
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -689,11 +805,11 @@ export default function Atribuicoes() {
 
         <div className="glass-card overflow-hidden">
           <div className="section-header">
-            <h2 className="text-lg font-semibold text-primary">Detalhes</h2>
+            <h2 className="text-lg font-semibold text-primary">{t('attributions.details')}</h2>
           </div>
           {!selectedAtribuicao ? (
             <div className="p-8 text-center text-muted">
-              Selecione uma atribuicao para gerenciar pessoas e setores.
+              {t('attributions.selectAttributionPrompt')}
             </div>
           ) : (
             <div>
@@ -705,21 +821,23 @@ export default function Atribuicoes() {
                       <p className="text-sm text-muted mt-1">{selectedAtribuicao.descricao}</p>
                     )}
                     <div className="text-xs text-muted mt-2">
-                      Categoria: {selectedAtribuicao.categoriaNome || 'Sem categoria'}
+                      {t('attributions.categoryLabel', {
+                        name: selectedAtribuicao.categoriaNome || t('attributions.noCategory')
+                      })}
                     </div>
                   </div>
                   <div className="flex space-x-2">
                     <button
                       className="text-indigo-600 hover:text-indigo-900"
                       onClick={() => handleOpenModal(selectedAtribuicao)}
-                      aria-label="Editar atribuicao"
+                      aria-label={t('common.edit')}
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
                       className="text-red-600 hover:text-red-900"
                       onClick={() => handleDelete(selectedAtribuicao)}
-                      aria-label="Excluir atribuicao"
+                      aria-label={t('common.delete')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -728,20 +846,22 @@ export default function Atribuicoes() {
               </div>
 
               {loadingDetails ? (
-                <div className="flex items-center justify-center h-64 text-muted">Carregando...</div>
+                <div className="flex items-center justify-center h-64 text-muted">{t('common.loading')}</div>
               ) : (
                 <div className="p-6 space-y-6">
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-semibold text-primary">Pessoas vinculadas</h4>
-                      <span className="text-xs text-muted">{atribPessoas.length} pessoas</span>
+                      <h4 className="text-sm font-semibold text-primary">{t('attributions.linkedPeople')}</h4>
+                      <span className="text-xs text-muted">
+                        {t('attributions.countPeople', { count: atribPessoas.length })}
+                      </span>
                     </div>
                     <div className="flex items-center space-x-2 mb-3">
                       <SearchSelect
                         options={pessoaOptions}
                         value={pessoaOptions.find(option => option.value === addPessoaId) ?? null}
                         onChange={(option) => setAddPessoaId(option ? String(option.value) : '')}
-                        placeholder="Selecione uma pessoa"
+                        placeholder={t('attributions.selectPerson')}
                         hasError={Boolean(actionErrors.pessoa)}
                       />
                       <button
@@ -749,13 +869,13 @@ export default function Atribuicoes() {
                         onClick={handleAddPessoa}
                       >
                         <UserPlus className="w-4 h-4" />
-                        <span>Adicionar</span>
+                        <span>{t('common.add')}</span>
                       </button>
                     </div>
                     {actionErrors.pessoa && <p className="glass-modal-error">{actionErrors.pessoa}</p>}
                     <div className="space-y-2">
                       {atribPessoas.length === 0 ? (
-                        <div className="text-sm text-muted">Nenhuma pessoa adicionada.</div>
+                        <div className="text-sm text-muted">{t('attributions.noPeopleAdded')}</div>
                       ) : (
                         atribPessoas.map(pessoa => (
                           <div key={pessoa.id} className="atribuicao-detail-card flex items-center justify-between px-3 py-2 rounded-xl">
@@ -766,7 +886,7 @@ export default function Atribuicoes() {
                             <button
                               className="text-red-600 hover:text-red-900"
                               onClick={() => handleRemovePessoa(pessoa.id)}
-                              aria-label="Remover pessoa"
+                              aria-label={t('attributions.removePerson')}
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -778,8 +898,10 @@ export default function Atribuicoes() {
 
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-semibold text-primary">Setores e cargos</h4>
-                      <span className="text-xs text-muted">{atribCargos.length} cargos</span>
+                      <h4 className="text-sm font-semibold text-primary">{t('attributions.sectorsAndPositions')}</h4>
+                      <span className="text-xs text-muted">
+                        {t('attributions.countPositions', { count: atribCargos.length })}
+                      </span>
                     </div>
                     <div className="grid grid-cols-1 gap-2 mb-3">
                       <SearchSelect
@@ -789,14 +911,14 @@ export default function Atribuicoes() {
                           setAddSetorId(option ? String(option.value) : '');
                           setAddCargoId('');
                         }}
-                        placeholder="Todos os setores"
+                        placeholder={t('attributions.allSectors')}
                       />
                       <div className="flex items-center space-x-2">
                         <SearchSelect
                           options={cargoOptions}
                           value={cargoOptions.find(option => option.value === addCargoId) ?? null}
                           onChange={(option) => setAddCargoId(option ? String(option.value) : '')}
-                          placeholder="Selecione um cargo"
+                          placeholder={t('attributions.selectPosition')}
                           hasError={Boolean(actionErrors.cargo)}
                         />
                         <button
@@ -804,14 +926,14 @@ export default function Atribuicoes() {
                           onClick={handleAddCargo}
                         >
                           <Briefcase className="w-4 h-4" />
-                          <span>Adicionar</span>
+                          <span>{t('common.add')}</span>
                         </button>
                       </div>
                       {actionErrors.cargo && <p className="glass-modal-error">{actionErrors.cargo}</p>}
                     </div>
                     <div className="space-y-2">
                       {atribCargos.length === 0 ? (
-                        <div className="text-sm text-muted">Nenhum cargo adicionado.</div>
+                        <div className="text-sm text-muted">{t('attributions.noPositionsAdded')}</div>
                       ) : (
                         atribCargos.map(cargo => (
                           <div key={cargo.id} className="atribuicao-detail-card flex items-center justify-between px-3 py-2 rounded-xl">
@@ -822,7 +944,7 @@ export default function Atribuicoes() {
                             <button
                               className="text-red-600 hover:text-red-900"
                               onClick={() => handleRemoveCargo(cargo.id)}
-                              aria-label="Remover cargo"
+                              aria-label={t('attributions.removePosition')}
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -843,9 +965,9 @@ export default function Atribuicoes() {
           <div className="glass-modal" onClick={e => e.stopPropagation()}>
             <div className="glass-modal-header">
               <h2 className="text-2xl font-bold">
-                {editingAtribuicaoId ? 'Editar Atribuicao' : 'Nova Atribuicao'}
+                {editingAtribuicaoId ? t('attributions.editAttribution') : t('attributions.newAttribution')}
               </h2>
-              <button className="glass-modal-close" onClick={handleCloseModal} aria-label="Fechar">
+              <button className="glass-modal-close" onClick={handleCloseModal} aria-label={t('common.close')}>
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -854,7 +976,7 @@ export default function Atribuicoes() {
               <div className="space-y-4">
                 <div>
                   <label className="glass-modal-label">
-                    Nome <span className="glass-modal-required">*</span>
+                    {t('attributions.name')} <span className="glass-modal-required">*</span>
                   </label>
                   <input
                     ref={nomeInputRef}
@@ -862,28 +984,28 @@ export default function Atribuicoes() {
                     value={formData.nome}
                     onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
                     className={`glass-modal-input ${formErrors.nome ? 'glass-modal-input-error' : ''}`}
-                    placeholder="Nome da atribuicao"
+                    placeholder={t('attributions.placeholders.name')}
                   />
                   {formErrors.nome && <p className="glass-modal-error">{formErrors.nome}</p>}
                 </div>
 
                 <div>
-                  <label className="glass-modal-label">Descricao</label>
+                  <label className="glass-modal-label">{t('attributions.descriptionLabel')}</label>
                   <textarea
                     value={formData.descricao}
                     onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
                     className="glass-modal-input min-h-[90px]"
-                    placeholder="Descreva a atribuicao"
+                    placeholder={t('attributions.placeholders.description')}
                   />
                 </div>
 
                 <div>
-                  <label className="glass-modal-label">Categoria</label>
+                  <label className="glass-modal-label">{t('attributions.category')}</label>
                   <SearchSelect
                     options={categoriaSelectOptions}
                     value={categoriaSelectOptions.find(option => option.value === formData.categoriaId) ?? null}
                     onChange={(option) => setFormData(prev => ({ ...prev, categoriaId: option ? String(option.value) : '' }))}
-                    placeholder="Sem categoria"
+                    placeholder={t('attributions.noCategory')}
                   />
                 </div>
               </div>
@@ -892,10 +1014,10 @@ export default function Atribuicoes() {
 
               <div className="glass-modal-footer">
                 <button type="button" onClick={handleCloseModal} className="glass-modal-button-secondary">
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" className="glass-modal-button-primary">
-                  {editingAtribuicaoId ? 'Salvar' : 'Criar'}
+                  {editingAtribuicaoId ? t('common.save') : t('common.create')}
                 </button>
               </div>
             </form>
@@ -907,21 +1029,21 @@ export default function Atribuicoes() {
         <div className="glass-modal-backdrop" onClick={handleCloseDelete}>
           <div className="glass-modal glass-modal-confirm" onClick={e => e.stopPropagation()}>
             <div className="glass-modal-header">
-              <h2 className="text-xl font-bold">Confirmar exclusao</h2>
-              <button className="glass-modal-close" onClick={handleCloseDelete} aria-label="Fechar">
+              <h2 className="text-xl font-bold">{t('common.confirmDelete')}</h2>
+              <button className="glass-modal-close" onClick={handleCloseDelete} aria-label={t('common.close')}>
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="glass-modal-body">
               <p className="text-sm text-secondary">
-                Tem certeza que deseja remover "{deleteTarget.nome}"? Esta acao nao pode ser desfeita.
+                {t('attributions.deleteConfirm', { name: deleteTarget.nome })}
               </p>
               <div className="glass-modal-footer">
                 <button type="button" onClick={handleCloseDelete} className="glass-modal-button-secondary">
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
                 <button type="button" onClick={handleConfirmDelete} className="glass-modal-button-primary">
-                  Excluir
+                  {t('common.delete')}
                 </button>
               </div>
             </div>
@@ -933,8 +1055,10 @@ export default function Atribuicoes() {
         <div className="glass-modal-backdrop" onClick={handleCloseCategoriaModal}>
           <div className="glass-modal" onClick={e => e.stopPropagation()}>
             <div className="glass-modal-header">
-              <h2 className="text-2xl font-bold">Nova Categoria</h2>
-              <button className="glass-modal-close" onClick={handleCloseCategoriaModal} aria-label="Fechar">
+              <h2 className="text-2xl font-bold">
+                {editingCategoriaId ? t('attributions.editCategory') : t('attributions.newCategory')}
+              </h2>
+              <button className="glass-modal-close" onClick={handleCloseCategoriaModal} aria-label={t('common.close')}>
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -943,26 +1067,27 @@ export default function Atribuicoes() {
               <div className="space-y-4">
                 <div>
                   <label className="glass-modal-label">
-                    Nome <span className="glass-modal-required">*</span>
+                    {t('attributions.categoryName')} <span className="glass-modal-required">*</span>
                   </label>
                   <input
                     type="text"
                     value={categoriaForm.nome}
                     onChange={(e) => setCategoriaForm(prev => ({ ...prev, nome: e.target.value }))}
                     className={`glass-modal-input ${categoriaErrors.nome ? 'glass-modal-input-error' : ''}`}
-                    placeholder="Nome da categoria"
+                    placeholder={t('attributions.placeholders.categoryName')}
                   />
                   {categoriaErrors.nome && <p className="glass-modal-error">{categoriaErrors.nome}</p>}
                 </div>
 
                 <div>
-                  <label className="glass-modal-label">Categoria Pai</label>
+                  <label className="glass-modal-label">{t('attributions.parentCategory')}</label>
                   <SearchSelect
                     options={categoriaSelectOptions}
                     value={categoriaSelectOptions.find(option => option.value === categoriaForm.categoriaPaiId) ?? null}
                     onChange={(option) => setCategoriaForm(prev => ({ ...prev, categoriaPaiId: option ? String(option.value) : '' }))}
-                    placeholder="Sem pai"
+                    placeholder={t('attributions.noParentCategory')}
                   />
+                  {categoriaErrors.categoriaPaiId && <p className="glass-modal-error">{categoriaErrors.categoriaPaiId}</p>}
                 </div>
               </div>
 
@@ -970,10 +1095,10 @@ export default function Atribuicoes() {
 
               <div className="glass-modal-footer">
                 <button type="button" onClick={handleCloseCategoriaModal} className="glass-modal-button-secondary">
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" className="glass-modal-button-primary">
-                  Criar
+                  {editingCategoriaId ? t('common.save') : t('common.create')}
                 </button>
               </div>
             </form>

@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import type { FormEvent } from 'react';
 import { Plus, Edit, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api';
 import SetorOrgChart from '../components/SetorOrgChart';
 import { DataTable } from '../components/DataTable';
@@ -10,12 +11,15 @@ import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import type { PagedResult, PaginationParams } from '../types/pagination';
 
 export default function Setores() {
+  const { t } = useTranslation();
   const [setores, setSetores] = useState<Setor[]>([]);
   const [allSetores, setAllSetores] = useState<Setor[]>([]);
   const [tree, setTree] = useState<SetorTree | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'tree' | 'org'>('tree');
   const [loading, setLoading] = useState(true);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [draggingSetorId, setDraggingSetorId] = useState<string | null>(null);
+  const [dropTargetSetorId, setDropTargetSetorId] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationParams>({
     pageNumber: 1,
     pageSize: 20,
@@ -129,6 +133,59 @@ export default function Setores() {
     setExpandedNodes(newExpanded);
   };
 
+  const findSetorNode = useCallback((node: SetorTree | null, id: string): SetorTree | null => {
+    if (!node) return null;
+    if (node.id === id) return node;
+    for (const child of node.filhos || []) {
+      const found = findSetorNode(child, id);
+      if (found) return found;
+    }
+    return null;
+  }, []);
+
+  const isSetorDescendant = useCallback((rootId: string, possibleChildId: string) => {
+    const root = findSetorNode(tree, rootId);
+    if (!root) return false;
+    const stack = [...(root.filhos || [])];
+    while (stack.length) {
+      const current = stack.pop();
+      if (!current) continue;
+      if (current.id === possibleChildId) return true;
+      if (current.filhos?.length) {
+        stack.push(...current.filhos);
+      }
+    }
+    return false;
+  }, [findSetorNode, tree]);
+
+  const handleMoveSetor = async (setorId: string, setorPaiId: string) => {
+    if (setorId === setorPaiId) return;
+    if (isSetorDescendant(setorId, setorPaiId)) return;
+
+    try {
+      setLoading(true);
+      await api.put(`/setores/${setorId}`, { setorPaiId });
+      await Promise.all([fetchPaginatedSetores(), fetchAllSetores(), fetchTree()]);
+    } catch (error) {
+      console.error('Erro ao mover setor:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDragLeaveRow = (event: React.DragEvent<HTMLElement>) => {
+    if (event.currentTarget.contains(event.relatedTarget as Node)) return;
+    setDropTargetSetorId(null);
+  };
+
+  const handleDragOverRow = (id: string, canDrop: boolean) => (event: React.DragEvent<HTMLElement>) => {
+    if (!canDrop) return;
+    event.preventDefault();
+    if (dropTargetSetorId !== id) {
+      setDropTargetSetorId(id);
+    }
+  };
+
   const handleOpenModal = (setor?: Setor, parentId?: string) => {
     if (setor) {
       setEditingSetorId(setor.id);
@@ -163,7 +220,7 @@ export default function Setores() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
-    if (!formData.nome.trim()) errors.nome = 'Informe o nome do setor.';
+    if (!formData.nome.trim()) errors.nome = t('sectors.validation.requiredName');
     if (Object.keys(errors).length) {
       setFormErrors(errors);
       return;
@@ -188,7 +245,7 @@ export default function Setores() {
       console.error('Erro ao salvar setor:', error);
       setFormErrors(prev => ({
         ...prev,
-        geral: 'Não foi possível salvar o setor.'
+        geral: t('sectors.validation.saveFailed')
       }));
     } finally {
       setLoading(false);
@@ -223,14 +280,50 @@ export default function Setores() {
   const renderTreeNode = (node: SetorTree, level: number = 0) => {
     const hasChildren = node.filhos && node.filhos.length > 0;
     const isExpanded = expandedNodes.has(node.id);
+    const isDropTarget = dropTargetSetorId === node.id;
+    const canDropHere = Boolean(
+      draggingSetorId &&
+      draggingSetorId !== node.id &&
+      !isSetorDescendant(draggingSetorId, node.id)
+    );
 
     return (
       <div key={node.id}>
         <div 
-          className="flex items-center py-2 px-4 cursor-pointer"
+          className={`atribuicao-row flex items-center py-2 px-4 cursor-pointer ${isDropTarget ? 'atribuicao-drop-target' : ''}`}
           style={{ paddingLeft: `${level * 24 + 16}px` }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-row-hover)'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          draggable
+          onDragOver={handleDragOverRow(node.id, canDropHere)}
+          onDragEnter={handleDragOverRow(node.id, canDropHere)}
+          onDragLeave={handleDragLeaveRow}
+          onDrop={(event) => {
+            event.preventDefault();
+            const draggedSetorId =
+              event.dataTransfer.getData('application/x-ziggy-setor') ||
+              event.dataTransfer.getData('text/plain');
+            if (draggedSetorId && canDropHere) {
+              handleMoveSetor(draggedSetorId, node.id);
+            }
+            setDropTargetSetorId(null);
+          }}
+          onDragStart={(event) => {
+            event.dataTransfer.setData('application/x-ziggy-setor', node.id);
+            event.dataTransfer.setData('text/plain', node.id);
+            event.dataTransfer.effectAllowed = 'move';
+            setDraggingSetorId(node.id);
+            const preview = document.createElement('div');
+            preview.className = 'atribuicao-drag-preview';
+            preview.textContent = node.nome;
+            document.body.appendChild(preview);
+            event.dataTransfer.setDragImage(preview, 12, 12);
+            setTimeout(() => {
+              if (preview.parentNode) preview.parentNode.removeChild(preview);
+            }, 0);
+          }}
+          onDragEnd={() => {
+            setDraggingSetorId(null);
+            setDropTargetSetorId(null);
+          }}
           onClick={() => hasChildren ? toggleNode(node.id) : null}
         >
           {hasChildren ? (
@@ -254,7 +347,7 @@ export default function Setores() {
             <div>
               <span className="font-medium text-primary">{node.nome}</span>
               <span className="ml-3 text-sm text-secondary">
-                {node.quantidadeCargos} cargos, {node.quantidadePessoas} pessoas
+                {t('sectors.treeCounts', { cargos: node.quantidadeCargos, pessoas: node.quantidadePessoas })}
               </span>
             </div>
             <div className="flex space-x-2">
@@ -304,27 +397,27 @@ export default function Setores() {
   const columns = useMemo<ColumnDef<Setor, any>[]>(() => [
     {
       accessorKey: 'nome',
-      header: 'Nome',
+      header: t('sectors.name'),
       cell: info => <div className="text-sm font-medium text-primary">{info.getValue()}</div>
     },
     {
       accessorKey: 'setorPaiNome',
-      header: 'Setor Pai',
+      header: t('sectors.parentSector'),
       cell: info => <div className="text-sm text-primary">{info.getValue() || '-'}</div>
     },
     {
       accessorKey: 'quantidadeCargos',
-      header: 'Cargos',
+      header: t('sectors.positions'),
       cell: info => <div className="text-sm text-primary">{info.getValue()}</div>
     },
     {
       accessorKey: 'quantidadePessoas',
-      header: 'Pessoas',
+      header: t('sectors.people'),
       cell: info => <div className="text-sm text-primary">{info.getValue()}</div>
     },
     {
       id: 'actions',
-      header: () => <div className="text-right">Ações</div>,
+      header: () => <div className="text-right">{t('common.actions')}</div>,
       cell: info => {
         const setor = info.row.original;
         return (
@@ -339,7 +432,7 @@ export default function Setores() {
         );
       }
     }
-  ], [handleDelete, handleOpenModal]);
+  ], [handleDelete, handleOpenModal, t]);
 
   const setoresPaiOptions = allSetores.filter(setor => setor.id !== editingSetorId);
 
@@ -353,9 +446,9 @@ export default function Setores() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="page-title">Setores</h1>
+          <h1 className="page-title">{t('sectors.title')}</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-            Estrutura organizacional da empresa
+            {t('sectors.description')}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -364,9 +457,9 @@ export default function Setores() {
             style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
           >
             {[
-              { mode: 'org', label: 'Organograma' },
-              { mode: 'list', label: 'Lista' },
-              { mode: 'tree', label: 'Árvore' }
+              { mode: 'org', label: t('sectors.viewOrg') },
+              { mode: 'list', label: t('sectors.viewList') },
+              { mode: 'tree', label: t('sectors.viewTree') }
             ].map((tab) => (
               <button
                 key={tab.mode}
@@ -384,7 +477,7 @@ export default function Setores() {
           </div>
           <button onClick={() => handleOpenModal()} className="glass-button flex items-center gap-2 px-4 py-2.5">
             <Plus className="w-4 h-4" />
-            <span>Novo Setor</span>
+            <span>{t('sectors.newSector')}</span>
           </button>
         </div>
       </div>
@@ -420,9 +513,9 @@ export default function Setores() {
           <div className="glass-modal" onClick={e => e.stopPropagation()}>
             <div className="glass-modal-header">
               <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {editingSetorId ? 'Editar Setor' : 'Novo Setor'}
+                {editingSetorId ? t('sectors.editSector') : t('sectors.newSector')}
               </h2>
-              <button className="glass-modal-close" onClick={handleCloseModal} aria-label="Fechar">
+              <button className="glass-modal-close" onClick={handleCloseModal} aria-label={t('common.close')}>
                 <span aria-hidden="true">x</span>
               </button>
             </div>
@@ -431,26 +524,26 @@ export default function Setores() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="glass-modal-label">
-                    Nome <span className="glass-modal-required">*</span>
+                    {t('sectors.name')} <span className="glass-modal-required">*</span>
                   </label>
                   <input
                     name="nome"
                     value={formData.nome}
                     onChange={e => setFormData(prev => ({ ...prev, nome: e.target.value }))}
                     className={`glass-modal-input ${formErrors.nome ? 'glass-modal-input-error' : ''}`}
-                    placeholder="Ex.: Administrativo"
+                    placeholder={t('sectors.placeholders.name')}
                     ref={nomeInputRef}
                     required
                   />
                   {formErrors.nome && <p className="glass-modal-error">{formErrors.nome}</p>}
                 </div>
                 <div>
-                  <label className="glass-modal-label">Setor Pai</label>
+                  <label className="glass-modal-label">{t('sectors.parentSector')}</label>
                   <SearchSelect
                     options={setorPaiSelectOptions}
                     value={setorPaiSelectOptions.find(option => option.value === formData.setorPaiId) ?? null}
                     onChange={(option) => setFormData(prev => ({ ...prev, setorPaiId: option ? String(option.value) : '' }))}
-                    placeholder="Nenhum"
+                    placeholder={t('common.none')}
                   />
                 </div>
               </div>
@@ -459,10 +552,10 @@ export default function Setores() {
 
               <div className="glass-modal-footer">
                 <button type="button" onClick={handleCloseModal} className="glass-modal-button-secondary">
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" className="glass-modal-button-primary">
-                  Salvar
+                  {t('common.save')}
                 </button>
               </div>
             </form>
@@ -475,22 +568,22 @@ export default function Setores() {
           <div className="glass-modal glass-modal-confirm" onClick={e => e.stopPropagation()}>
             <div className="glass-modal-header">
               <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-                Confirmar exclusão
+                {t('common.confirmDelete')}
               </h2>
-              <button className="glass-modal-close" onClick={handleCloseDelete} aria-label="Fechar">
+              <button className="glass-modal-close" onClick={handleCloseDelete} aria-label={t('common.close')}>
                 <span aria-hidden="true">x</span>
               </button>
             </div>
             <div className="glass-modal-body">
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Deseja remover {deleteTarget.nome}?
+                {t('sectors.deleteConfirm', { name: deleteTarget.nome })}
               </p>
               <div className="glass-modal-footer">
                 <button type="button" onClick={handleCloseDelete} className="glass-modal-button-secondary">
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
                 <button type="button" onClick={handleConfirmDelete} className="glass-modal-button-primary">
-                  Excluir
+                  {t('common.delete')}
                 </button>
               </div>
             </div>
