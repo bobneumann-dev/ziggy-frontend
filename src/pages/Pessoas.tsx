@@ -22,6 +22,9 @@ export default function Pessoas() {
   const [pageCount, setPageCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPessoaId, setEditingPessoaId] = useState<string | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Pessoa | null>(null);
   const [formData, setFormData] = useState({
     nomeCompleto: '',
     email: '',
@@ -35,6 +38,16 @@ export default function Pessoas() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const toDateInputValue = (value?: string | Date | null) => {
+    if (!value) return '';
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const fetchPaginatedPessoas = async () => {
     setLoading(true);
@@ -115,22 +128,22 @@ export default function Pessoas() {
     {
       accessorKey: 'nomeCompleto',
       header: t('people.name'),
-      cell: info => <div className="text-sm font-medium text-gray-900">{info.getValue()}</div>
+      cell: info => <div className="text-sm font-medium text-primary">{info.getValue()}</div>
     },
     {
       accessorKey: 'email',
       header: t('people.email'),
-      cell: info => <div className="text-sm text-gray-900">{info.getValue()}</div>
+      cell: info => <div className="text-sm text-primary">{info.getValue()}</div>
     },
     {
       accessorKey: 'cargoAtualNome',
       header: t('people.currentPosition'),
-      cell: info => <div className="text-sm text-gray-900">{info.getValue() || '-'}</div>
+      cell: info => <div className="text-sm text-primary">{info.getValue() || '-'}</div>
     },
     {
       accessorKey: 'setorAtualNome',
       header: t('people.currentSector'),
-      cell: info => <div className="text-sm text-gray-900">{info.getValue() || '-'}</div>
+      cell: info => <div className="text-sm text-primary">{info.getValue() || '-'}</div>
     },
     {
       accessorKey: 'status',
@@ -151,10 +164,16 @@ export default function Pessoas() {
         const pessoa = info.row.original;
         return (
           <div className="text-right">
-            <button className="text-indigo-600 hover:text-indigo-900 mr-3">
+            <button
+              className="text-indigo-600 hover:text-indigo-900 mr-3"
+              onClick={() => handleOpenModal(pessoa)}
+            >
               <Edit className="w-4 h-4" />
             </button>
-            <button className="text-red-600 hover:text-red-900">
+            <button
+              className="text-red-600 hover:text-red-900"
+              onClick={() => handleDelete(pessoa)}
+            >
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
@@ -163,9 +182,39 @@ export default function Pessoas() {
     }
   ], [t]);
 
-  const handleOpenModal = () => setIsModalOpen(true);
+  const handleOpenModal = (pessoa?: Pessoa) => {
+    if (pessoa) {
+      setEditingPessoaId(pessoa.id);
+      setFormData({
+        nomeCompleto: pessoa.nomeCompleto || '',
+        email: pessoa.email || '',
+        telefone: pessoa.telefone || '',
+        documento: pessoa.documento || '',
+        dataNascimento: toDateInputValue(pessoa.dataNascimento),
+        status: pessoa.status ?? StatusPessoa.Ativo,
+      });
+      setPhotoPreview(pessoa.foto || null);
+      setPhotoFile(null);
+    } else {
+      setEditingPessoaId(null);
+      setFormData({
+        nomeCompleto: '',
+        email: '',
+        telefone: '',
+        documento: '',
+        dataNascimento: '',
+        status: StatusPessoa.Ativo,
+      });
+      setPhotoPreview(null);
+      setPhotoFile(null);
+    }
+    setIsDragActive(false);
+    setFormErrors({});
+    setIsModalOpen(true);
+  };
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setEditingPessoaId(null);
     setFormData({
       nomeCompleto: '',
       email: '',
@@ -192,7 +241,7 @@ export default function Pessoas() {
     }
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
     if (!formData.nomeCompleto.trim()) errors.nomeCompleto = t('people.validation.requiredName');
@@ -206,7 +255,46 @@ export default function Pessoas() {
       setFormErrors(errors);
       return;
     }
-    handleCloseModal();
+
+    try {
+      setLoading(true);
+      let foto: string | undefined;
+      if (photoFile) {
+        foto = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(new Error('file_read_error'));
+          reader.readAsDataURL(photoFile);
+        });
+      }
+
+      const payload = {
+        nomeCompleto: formData.nomeCompleto,
+        email: formData.email,
+        telefone: formData.telefone || null,
+        dataNascimento: formData.dataNascimento || null,
+        documento: formData.documento || null,
+        foto: foto ?? null,
+        status: formData.status,
+      };
+
+      if (editingPessoaId) {
+        await api.put(`/pessoas/${editingPessoaId}`, payload);
+      } else {
+        await api.post('/pessoas', payload);
+      }
+
+      await fetchPaginatedPessoas();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Erro ao salvar pessoa:', error);
+      setFormErrors(prev => ({
+        ...prev,
+        geral: t('people.validation.createFailed'),
+      }));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -237,6 +325,31 @@ export default function Pessoas() {
 
   const handleDragLeave = () => setIsDragActive(false);
 
+  const handleDelete = async (pessoa: Pessoa) => {
+    setDeleteTarget(pessoa);
+    setIsDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      setLoading(true);
+      await api.delete(`/pessoas/${deleteTarget.id}`);
+      await fetchPaginatedPessoas();
+    } catch (error) {
+      console.error('Erro ao deletar pessoa:', error);
+    } finally {
+      setLoading(false);
+      setIsDeleteOpen(false);
+      setDeleteTarget(null);
+    }
+  };
+
+  const handleCloseDelete = () => {
+    setIsDeleteOpen(false);
+    setDeleteTarget(null);
+  };
+
   return (
     <div className="animate-fadeIn">
       {/* Header da página */}
@@ -247,7 +360,8 @@ export default function Pessoas() {
             {t('people.description')}
           </p>
         </div>
-        <button onClick={handleOpenModal} className="glass-button flex items-center gap-2 px-4 py-2.5">
+        <button onClick={() => handleOpenModal()} className="glass-button flex items-center gap-2 px-4 py-2.5">
+          <Plus className="w-4 h-4" />
           <span>{t('people.newPersonWithPlus')}</span>
         </button>
       </div>
@@ -269,7 +383,9 @@ export default function Pessoas() {
         <div className="glass-modal-backdrop" onClick={handleCloseModal}>
           <div className="glass-modal" onClick={e => e.stopPropagation()}>
             <div className="glass-modal-header">
-              <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>{t('people.newPerson')}</h2>
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {editingPessoaId ? t('people.editPerson') : t('people.newPerson')}
+              </h2>
               <button className="glass-modal-close" onClick={handleCloseModal} aria-label={t('common.cancel')}>
                 <span aria-hidden="true">x</span>
               </button>
@@ -386,6 +502,7 @@ export default function Pessoas() {
                     )}
                   </div>
                   {formErrors.foto && <p className="glass-modal-error">{formErrors.foto}</p>}
+                  {formErrors.geral && <p className="glass-modal-error">{formErrors.geral}</p>}
                 </div>
               </div>
 
@@ -398,6 +515,34 @@ export default function Pessoas() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {isDeleteOpen && deleteTarget && (
+        <div className="glass-modal-backdrop" onClick={handleCloseDelete}>
+          <div className="glass-modal glass-modal-confirm" onClick={e => e.stopPropagation()}>
+            <div className="glass-modal-header">
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {t('people.deleteTitle')}
+              </h2>
+              <button className="glass-modal-close" onClick={handleCloseDelete} aria-label={t('common.cancel')}>
+                <span aria-hidden="true">x</span>
+              </button>
+            </div>
+            <div className="glass-modal-body">
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                {t('people.deleteConfirm', { name: deleteTarget.nomeCompleto })}
+              </p>
+              <div className="glass-modal-footer">
+                <button type="button" onClick={handleCloseDelete} className="glass-modal-button-secondary">
+                  {t('common.cancel')}
+                </button>
+                <button type="button" onClick={handleConfirmDelete} className="glass-modal-button-primary">
+                  {t('common.delete')}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

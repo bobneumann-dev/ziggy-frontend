@@ -137,6 +137,22 @@ body {
   font-size: 0.875rem;
 }
 
+.table-search-input {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .table-search-input {
+  background-color: #1a1a1a;
+  color: #f5f5f0;
+  border-color: #333333;
+}
+
+:root[data-theme="light"] .table-search-input {
+  background-color: #ffffff;
+  color: #1a1a1a;
+}
+
 .glass-input::placeholder {
   color: var(--text-muted);
 }
@@ -292,6 +308,10 @@ body {
   border-radius: 1.25rem;
   box-shadow: 0 20px 40px rgba(15, 15, 15, 0.2);
   padding: 1.5rem;
+}
+
+.glass-modal-confirm {
+  max-width: 440px;
 }
 
 :root[data-theme="dark"] .glass-modal {

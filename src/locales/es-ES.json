@@ -66,6 +66,7 @@
     "description": "Administre los colaboradores de la organización",
     "newPerson": "Nueva Persona",
     "newPersonWithPlus": "+ Nueva Persona",
+    "editPerson": "Editar Persona",
     "name": "Nombre",
     "fullName": "Nombre completo",
     "email": "Email",
@@ -84,6 +85,8 @@
     "dropzoneTitle": "Arrastra y suelta una imagen aquí",
     "dropzoneHint": "o haz clic para elegir",
     "photoPreviewAlt": "Vista previa de la foto",
+    "deleteTitle": "Confirmar eliminación",
+    "deleteConfirm": "¿Eliminar a {{name}}?",
     "placeholders": {
       "fullName": "Ej.: Maria Oliveira",
       "email": "maria@empresa.com",
@@ -96,7 +99,8 @@
       "requiredBirthDate": "Informe la fecha de nacimiento.",
       "requiredStatus": "Seleccione un estado.",
       "invalidEmail": "Email inválido.",
-      "invalidPhoto": "El archivo debe ser una imagen."
+      "invalidPhoto": "El archivo debe ser una imagen.",
+      "createFailed": "No se pudo guardar la persona."
     }
   },
   "sectors": {

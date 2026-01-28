@@ -98,7 +98,7 @@ export function DataTable<TData>({
             value={searchTerm}
             onChange={handleSearchChange}
             placeholder="Buscar..."
-            className="pl-10 pr-4 py-2 w-64 glass-input"
+            className="pl-10 pr-4 py-2 w-64 glass-input table-search-input"
           />
         </div>
       </div>

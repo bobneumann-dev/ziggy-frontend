@@ -66,6 +66,7 @@
     "description": "Manage the organization's employees",
     "newPerson": "New Person",
     "newPersonWithPlus": "+ New Person",
+    "editPerson": "Edit Person",
     "name": "Name",
     "fullName": "Full name",
     "email": "Email",
@@ -84,6 +85,8 @@
     "dropzoneTitle": "Drag and drop an image here",
     "dropzoneHint": "or click to choose",
     "photoPreviewAlt": "Photo preview",
+    "deleteTitle": "Confirm delete",
+    "deleteConfirm": "Remove {{name}}?",
     "placeholders": {
       "fullName": "Ex.: Maria Oliveira",
       "email": "maria@empresa.com",
@@ -96,7 +99,8 @@
       "requiredBirthDate": "Enter the birth date.",
       "requiredStatus": "Select a status.",
       "invalidEmail": "Invalid email.",
-      "invalidPhoto": "File must be an image."
+      "invalidPhoto": "File must be an image.",
+      "createFailed": "Unable to save the person."
     }
   },
   "sectors": {
