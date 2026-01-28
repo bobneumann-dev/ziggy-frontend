@@ -88,53 +88,53 @@ export default function Setores() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Carregando...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: 'var(--border-color)', borderTopColor: 'var(--accent-primary)' }}></div>
+          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Carregando...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold" style={{
-          background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text'
-        }}>Setores</h1>
-        <div className="flex space-x-3">
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('org')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'org'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Organograma
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Lista
-            </button>
-            <button
-              onClick={() => setViewMode('tree')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'tree'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Árvore
-            </button>
+    <div className="animate-fadeIn">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="page-title">Setores</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+            Estrutura organizacional da empresa
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Tabs de visualização */}
+          <div 
+            className="flex rounded-lg p-1" 
+            style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
+          >
+            {[
+              { mode: 'org', label: 'Organograma' },
+              { mode: 'list', label: 'Lista' },
+              { mode: 'tree', label: 'Árvore' }
+            ].map((tab) => (
+              <button
+                key={tab.mode}
+                onClick={() => setViewMode(tab.mode as 'org' | 'list' | 'tree')}
+                className="px-4 py-2 rounded-md text-sm font-medium transition-all"
+                style={{
+                  backgroundColor: viewMode === tab.mode ? 'var(--card-bg)' : 'transparent',
+                  color: viewMode === tab.mode ? 'var(--text-primary)' : 'var(--text-muted)',
+                  boxShadow: viewMode === tab.mode ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
-          <button className="glass-button flex items-center space-x-2 px-5 py-3 rounded-xl font-semibold">
-            <Plus className="w-5 h-5" />
+          <button className="glass-button flex items-center gap-2 px-4 py-2.5">
+            <Plus className="w-4 h-4" />
             <span>Novo Setor</span>
           </button>
         </div>
@@ -145,46 +145,52 @@ export default function Setores() {
       ) : (
         <div className="glass-card overflow-hidden">
         {viewMode === 'list' ? (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-white/50">
+          <table className="min-w-full">
+            <thead style={{ backgroundColor: 'var(--table-header-bg)' }}>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--table-border)' }}>
                   Nome
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--table-border)' }}>
                   Setor Pai
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--table-border)' }}>
                   Cargos
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--table-border)' }}>
                   Pessoas
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--table-border)' }}>
                   Ações
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {setores.map((setor) => (
-                <tr key={setor.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{setor.nome}</div>
+            <tbody>
+              {setores.map((setor, index) => (
+                <tr 
+                  key={setor.id} 
+                  className="transition-colors"
+                  style={{ backgroundColor: index % 2 === 0 ? 'transparent' : 'var(--bg-secondary)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-row-hover)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? 'transparent' : 'var(--bg-secondary)'}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap" style={{ borderBottom: '1px solid var(--table-border)' }}>
+                    <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{setor.nome}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{setor.setorPaiNome || '-'}</div>
+                  <td className="px-6 py-4 whitespace-nowrap" style={{ borderBottom: '1px solid var(--table-border)' }}>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{setor.setorPaiNome || '-'}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{setor.quantidadeCargos}</div>
+                  <td className="px-6 py-4 whitespace-nowrap" style={{ borderBottom: '1px solid var(--table-border)' }}>
+                    <div className="text-sm" style={{ color: 'var(--text-primary)' }}>{setor.quantidadeCargos}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{setor.quantidadePessoas}</div>
+                  <td className="px-6 py-4 whitespace-nowrap" style={{ borderBottom: '1px solid var(--table-border)' }}>
+                    <div className="text-sm" style={{ color: 'var(--text-primary)' }}>{setor.quantidadePessoas}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-indigo-600 hover:text-indigo-900 mr-3">
+                  <td className="px-6 py-4 whitespace-nowrap text-right" style={{ borderBottom: '1px solid var(--table-border)' }}>
+                    <button className="p-1.5 rounded-md transition-colors mr-1" style={{ color: 'var(--accent-primary)' }}>
                       <Edit className="w-4 h-4" />
                     </button>
-                    <button className="text-red-600 hover:text-red-900">
+                    <button className="p-1.5 rounded-md transition-colors" style={{ color: '#ef4444' }}>
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </td>

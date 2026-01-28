@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import api from '../lib/api';
 import type { Pessoa } from '../types';
@@ -46,15 +46,15 @@ export default function Pessoas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.pageNumber, pagination.pageSize, pagination.sortBy, pagination.sortDesc, pagination.searchTerm]);
 
-  const handlePaginationChange = (pageIndex: number, pageSize: number) => {
+  const handlePaginationChange = useCallback((pageIndex: number, pageSize: number) => {
     setPagination(prev => ({
       ...prev,
       pageNumber: pageIndex + 1, // API is 1-indexed, TanStack Table is 0-indexed
       pageSize
     }));
-  };
+  }, []);
 
-  const handleSortingChange = (sorting: SortingState) => {
+  const handleSortingChange = useCallback((sorting: SortingState) => {
     if (!sorting.length) {
       setPagination(prev => ({ ...prev, sortBy: undefined, sortDesc: false }));
       return;
@@ -66,15 +66,15 @@ export default function Pessoas() {
       sortBy: column.id,
       sortDesc: column.desc
     }));
-  };
+  }, []);
 
-  const handleSearchChange = (searchTerm: string) => {
+  const handleSearchChange = useCallback((searchTerm: string) => {
     setPagination(prev => ({
       ...prev,
       searchTerm,
       pageNumber: 1 // Reset to first page on new search
     }));
-  };
+  }, []);
 
   const getStatusLabel = (status: number) => {
     switch (status) {
@@ -147,15 +147,22 @@ export default function Pessoas() {
   ], []);
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Pessoas</h1>
-        <button className="glass-button flex items-center space-x-2 px-5 py-3 rounded-xl font-semibold">
-          <Plus className="w-5 h-5" />
+    <div className="animate-fadeIn">
+      {/* Header da página */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="page-title">Pessoas</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+            Gerencie os colaboradores da organização
+          </p>
+        </div>
+        <button className="glass-button flex items-center gap-2 px-4 py-2.5">
+          <Plus className="w-4 h-4" />
           <span>Nova Pessoa</span>
         </button>
       </div>
 
+      {/* Tabela de dados */}
       <DataTable 
         columns={columns}
         data={pessoas}

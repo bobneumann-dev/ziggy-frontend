@@ -51,77 +51,103 @@ export default function Dashboard() {
   }, []);
 
   const cards = [
-    { icon: Users, label: t('menu.users'), value: stats.usuarios, color: 'bg-blue-500' },
-    { icon: UserCircle, label: t('menu.people'), value: stats.pessoas, color: 'bg-green-500' },
-    { icon: Building2, label: t('menu.sectors'), value: stats.setores, color: 'bg-purple-500' },
-    { icon: Briefcase, label: t('menu.positions'), value: stats.cargos, color: 'bg-orange-500' },
-    { icon: ClipboardList, label: t('menu.attributions'), value: stats.atribuicoes, color: 'bg-pink-500' },
+    { icon: Users, label: t('menu.users'), value: stats.usuarios, color: '#3b82f6' },
+    { icon: UserCircle, label: t('menu.people'), value: stats.pessoas, color: '#10b981' },
+    { icon: Building2, label: t('menu.sectors'), value: stats.setores, color: '#8b5cf6' },
+    { icon: Briefcase, label: t('menu.positions'), value: stats.cargos, color: '#f97316' },
+    { icon: ClipboardList, label: t('menu.attributions'), value: stats.atribuicoes, color: '#ec4899' },
   ];
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">{t('common.loading')}</div>
+        <div className="flex flex-col items-center space-y-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: 'var(--border-color)', borderTopColor: 'var(--accent-primary)' }}></div>
+          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('common.loading')}</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1 className="text-4xl font-bold mb-8" style={{
-        background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text'
-      }}>
-        {t('dashboard.title')}
-      </h1>
+    <div className="animate-fadeIn">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="page-title">{t('dashboard.title')}</h1>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+          Visão geral do sistema de gestão
+        </p>
+      </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+      {/* Cards de estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
         {cards.map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.label} className="glass-card p-6 hover:scale-105 transition-transform duration-300">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`${card.color} p-3 rounded-xl shadow-lg`}>
-                  <Icon className="w-6 h-6 text-white" />
+            <div 
+              key={card.label} 
+              className="stat-card group cursor-pointer"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div 
+                  className="p-2.5 rounded-lg transition-transform group-hover:scale-110"
+                  style={{ backgroundColor: `${card.color}15` }}
+                >
+                  <Icon className="w-5 h-5" style={{ color: card.color }} />
                 </div>
               </div>
-              <div className="text-3xl font-bold text-gray-800 mb-1">
-                {card.value}
-              </div>
-              <div className="text-sm text-gray-600 font-medium">{card.label}</div>
+              <div className="stat-card-value">{card.value}</div>
+              <div className="stat-card-label">{card.label}</div>
             </div>
           );
         })}
       </div>
 
-      <div className="mt-8 glass-card p-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">{t('dashboard.welcome')}</h2>
-        <p className="text-gray-700 mb-6 leading-relaxed">
+      {/* Card de boas-vindas */}
+      <div className="glass-card p-6">
+        <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+          {t('dashboard.welcome')}
+        </h2>
+        <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--text-secondary)' }}>
           {t('dashboard.description')}
         </p>
-        <div className="space-y-3 text-sm text-gray-700">
-          <p className="flex items-start">
-            <span className="text-indigo-600 font-bold mr-2">•</span>
-            <span><strong className="text-gray-800">{t('menu.users')}:</strong> {t('dashboard.usersDescription')}</span>
-          </p>
-          <p className="flex items-start">
-            <span className="text-purple-600 font-bold mr-2">•</span>
-            <span><strong className="text-gray-800">{t('menu.people')}:</strong> {t('dashboard.peopleDescription')}</span>
-          </p>
-          <p className="flex items-start">
-            <span className="text-pink-600 font-bold mr-2">•</span>
-            <span><strong className="text-gray-800">{t('menu.sectors')}:</strong> {t('dashboard.sectorsDescription')}</span>
-          </p>
-          <p className="flex items-start">
-            <span className="text-indigo-600 font-bold mr-2">•</span>
-            <span><strong className="text-gray-800">{t('menu.positions')}:</strong> {t('dashboard.positionsDescription')}</span>
-          </p>
-          <p className="flex items-start">
-            <span className="text-purple-600 font-bold mr-2">•</span>
-            <span><strong className="text-gray-800">{t('menu.attributions')}:</strong> {t('dashboard.attributionsDescription')}</span>
-          </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="flex items-start gap-3 p-3 rounded-lg" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+            <div className="p-2 rounded-md" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+              <Users className="w-4 h-4" style={{ color: '#3b82f6' }} />
+            </div>
+            <div>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{t('menu.users')}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{t('dashboard.usersDescription')}</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 p-3 rounded-lg" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+            <div className="p-2 rounded-md" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+              <UserCircle className="w-4 h-4" style={{ color: '#10b981' }} />
+            </div>
+            <div>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{t('menu.people')}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{t('dashboard.peopleDescription')}</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 p-3 rounded-lg" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+            <div className="p-2 rounded-md" style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)' }}>
+              <Building2 className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+            </div>
+            <div>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{t('menu.sectors')}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{t('dashboard.sectorsDescription')}</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 p-3 rounded-lg" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+            <div className="p-2 rounded-md" style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)' }}>
+              <Briefcase className="w-4 h-4" style={{ color: '#f97316' }} />
+            </div>
+            <div>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{t('menu.positions')}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{t('dashboard.positionsDescription')}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
