@@ -250,6 +250,15 @@ export default function Setores() {
               </span>
             </div>
             <div className="flex space-x-2">
+              <button
+                className="text-emerald-600 hover:text-emerald-700"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleOpenModal(undefined, node.id);
+                }}
+              >
+                <Plus className="w-4 h-4" />
+              </button>
               <button className="text-indigo-600 hover:text-indigo-900" onClick={() => handleOpenModal({
                 id: node.id,
                 nome: node.nome,

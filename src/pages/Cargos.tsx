@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import type { FormEvent } from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
 import api from '../lib/api';
 import CargoOrgChart from '../components/CargoOrgChart';
 import { DataTable } from '../components/DataTable';
@@ -12,7 +12,7 @@ export default function Cargos() {
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [allCargos, setAllCargos] = useState<Cargo[]>([]);
   const [setores, setSetores] = useState<Setor[]>([]);
-  const [viewMode, setViewMode] = useState<'list' | 'org' | 'group'>('org');
+  const [viewMode, setViewMode] = useState<'list' | 'org' | 'tree'>('org');
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<PaginationParams>({
     pageNumber: 1,
@@ -34,6 +34,8 @@ export default function Cargos() {
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Cargo | null>(null);
+  const [expandedSetores, setExpandedSetores] = useState<Set<string>>(new Set());
+  const [expandedCargos, setExpandedCargos] = useState<Set<string>>(new Set());
 
   const fetchPaginatedCargos = async () => {
     setLoading(true);
@@ -222,6 +224,30 @@ export default function Cargos() {
     }
   };
 
+  const toggleSetor = (id: string) => {
+    setExpandedSetores(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleCargo = (id: string) => {
+    setExpandedCargos(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   const cargosPaiOptions = allCargos.filter(cargo =>
     cargo.setorId === formData.setorId && cargo.id !== editingCargoId
   );
@@ -278,6 +304,58 @@ export default function Cargos() {
     }));
   }, [setores, allCargos]);
 
+  const renderCargoTree = (cargo: Cargo, level: number, setorId: string, cargoMap: Map<string, Cargo[]>) => {
+    const children = cargoMap.get(cargo.id) || [];
+    const isExpanded = expandedCargos.has(cargo.id);
+
+    return (
+      <div key={cargo.id}>
+        <div
+          className="flex items-center py-2 px-4 cursor-pointer"
+          style={{ paddingLeft: `${level * 24 + 16}px` }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-row-hover)'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+        >
+          {children.length > 0 ? (
+            <button onClick={() => toggleCargo(cargo.id)} className="mr-2">
+              {isExpanded ? (
+                <ChevronDown className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+              ) : (
+                <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+              )}
+            </button>
+          ) : (
+            <div className="w-6 mr-2" />
+          )}
+          <div className="flex-1 flex items-center justify-between">
+            <div>
+              <span className="font-medium text-primary">{cargo.nome}</span>
+              <span className="ml-3 text-sm text-secondary">
+                {cargo.cargoPaiNome ? `Pai: ${cargo.cargoPaiNome}` : 'Sem pai'}
+              </span>
+            </div>
+            <div className="flex space-x-2">
+              <button className="text-indigo-600 hover:text-indigo-900" onClick={() => handleOpenModal(cargo)}>
+                <Edit className="w-4 h-4" />
+              </button>
+              <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(cargo)}>
+                <Trash2 className="w-4 h-4" />
+              </button>
+              <button className="text-emerald-600 hover:text-emerald-700" onClick={() => handleOpenModal(undefined, setorId, cargo.id)}>
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+        {children.length > 0 && isExpanded && (
+          <div>
+            {children.map(child => renderCargoTree(child, level + 1, setorId, cargoMap))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (loading && cargos.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -307,11 +385,11 @@ export default function Cargos() {
             {[
               { mode: 'org', label: 'Organograma' },
               { mode: 'list', label: 'Tabela' },
-              { mode: 'group', label: 'Por Setor' }
+              { mode: 'tree', label: 'Árvore' }
             ].map((tab) => (
               <button
                 key={tab.mode}
-                onClick={() => setViewMode(tab.mode as 'org' | 'list' | 'group')}
+                onClick={() => setViewMode(tab.mode as 'org' | 'list' | 'tree')}
                 className="px-4 py-2 rounded-md text-sm font-medium transition-all"
                 style={{
                   backgroundColor: viewMode === tab.mode ? 'var(--card-bg)' : 'transparent',
@@ -340,40 +418,71 @@ export default function Cargos() {
           onDelete={(cargo) => handleDelete(cargo)}
           onHierarchyUpdate={() => fetchAllCargos()}
         />
-      ) : viewMode === 'group' ? (
-        <div className="space-y-4">
-          {cargosPorSetor.map(({ setor, cargos: cargosDoSetor }) => (
-            <div key={setor.id} className="glass-card p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>{setor.nome}</h2>
-                <button className="text-indigo-600 hover:text-indigo-900" onClick={() => handleOpenModal(undefined, setor.id)}>
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-              {cargosDoSetor.length === 0 ? (
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Nenhum cargo cadastrado</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {cargosDoSetor.map(cargo => (
-                    <div key={cargo.id} className="flex items-center justify-between rounded-lg px-4 py-3" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-                      <div>
-                        <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{cargo.nome}</div>
-                        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{cargo.cargoPaiNome || 'Sem cargo pai'}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button className="text-indigo-600 hover:text-indigo-900" onClick={() => handleOpenModal(cargo)}>
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(cargo)}>
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+      ) : viewMode === 'tree' ? (
+        <div className="glass-card overflow-hidden py-4">
+          {cargosPorSetor.map(({ setor, cargos: cargosDoSetor }) => {
+            const cargoMap = new Map<string, Cargo[]>();
+            cargosDoSetor.forEach(cargo => {
+              const parentId = cargo.cargoPaiId || '__root__';
+              const list = cargoMap.get(parentId) || [];
+              list.push(cargo);
+              cargoMap.set(parentId, list);
+            });
+
+            const rootCargos = cargoMap.get('__root__') || [];
+            const isExpanded = expandedSetores.has(setor.id);
+
+            return (
+              <div key={setor.id}>
+                <div
+                  className="flex items-center py-2 px-4 cursor-pointer"
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-row-hover)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  onClick={() => toggleSetor(setor.id)}
+                >
+                  {rootCargos.length > 0 ? (
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        toggleSetor(setor.id);
+                      }}
+                      className="mr-2"
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                      )}
+                    </button>
+                  ) : (
+                    <div className="w-6 mr-2" />
+                  )}
+                  <div className="flex-1 flex items-center justify-between">
+                    <div>
+                      <span className="font-medium text-primary">{setor.nome}</span>
+                      <span className="ml-3 text-sm text-secondary">
+                        {cargosDoSetor.length} cargos
+                      </span>
                     </div>
-                  ))}
+                    <button
+                      className="text-emerald-600 hover:text-emerald-700"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleOpenModal(undefined, setor.id);
+                      }}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
+                {isExpanded && rootCargos.length > 0 && (
+                  <div>
+                    {rootCargos.map(cargo => renderCargoTree(cargo, 1, setor.id, cargoMap))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       ) : (
         <DataTable
