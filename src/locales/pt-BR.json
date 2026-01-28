@@ -63,16 +63,41 @@
   },
   "people": {
     "title": "Pessoas",
+    "description": "Gerencie os colaboradores da organização",
     "newPerson": "Nova Pessoa",
+    "newPersonWithPlus": "+ Nova Pessoa",
     "name": "Nome",
+    "fullName": "Nome completo",
     "email": "Email",
+    "phone": "Telefone",
+    "document": "Documento",
+    "birthDate": "Data de nascimento",
+    "photo": "Foto",
     "currentPosition": "Cargo Atual",
     "currentSector": "Setor Atual",
     "status": "Status",
     "actions": "Ações",
     "statusActive": "Ativo",
     "statusAway": "Afastado",
-    "statusTerminated": "Desligado"
+    "statusTerminated": "Desligado",
+    "changePhoto": "Trocar imagem",
+    "dropzoneTitle": "Arraste e solte uma imagem aqui",
+    "dropzoneHint": "ou clique para escolher",
+    "photoPreviewAlt": "Preview da foto",
+    "placeholders": {
+      "fullName": "Ex.: Maria Oliveira",
+      "email": "maria@empresa.com",
+      "phone": "(11) 99999-0000",
+      "document": "CPF ou RG"
+    },
+    "validation": {
+      "requiredName": "Informe o nome completo.",
+      "requiredEmail": "Informe o email.",
+      "requiredBirthDate": "Informe a data de nascimento.",
+      "requiredStatus": "Informe o status.",
+      "invalidEmail": "Email inválido.",
+      "invalidPhoto": "Arquivo deve ser uma imagem."
+    }
   },
   "sectors": {
     "title": "Setores",

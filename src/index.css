@@ -271,6 +271,213 @@ body {
   animation: fadeIn 0.3s ease-out;
 }
 
+/* ===== MODAL STYLES ===== */
+.glass-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 15, 15, 0.35), rgba(15, 15, 15, 0.55));
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 50;
+}
+
+.glass-modal {
+  width: 100%;
+  max-width: 720px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.65));
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 1.25rem;
+  box-shadow: 0 20px 40px rgba(15, 15, 15, 0.2);
+  padding: 1.5rem;
+}
+
+:root[data-theme="dark"] .glass-modal {
+  background: linear-gradient(135deg, rgba(26, 26, 26, 0.85), rgba(26, 26, 26, 0.7));
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.glass-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+:root[data-theme="dark"] .glass-modal-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.glass-modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--text-primary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.glass-modal-close:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(15, 15, 15, 0.15);
+}
+
+.glass-modal-body {
+  padding-top: 1.25rem;
+}
+
+.glass-modal-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.glass-modal-required {
+  color: var(--accent-danger);
+  margin-left: 0.15rem;
+}
+
+.glass-modal-input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text-primary);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+:root[data-theme="dark"] .glass-modal-input {
+  background: rgba(26, 26, 26, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.glass-modal-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.2);
+}
+
+.glass-modal-input-error {
+  border-color: rgba(239, 68, 68, 0.7);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.glass-modal-error {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--accent-danger);
+}
+
+.glass-modal-dropzone {
+  position: relative;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  border: 1px dashed rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+:root[data-theme="dark"] .glass-modal-dropzone {
+  background: rgba(26, 26, 26, 0.5);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.glass-modal-dropzone.is-dragging {
+  border-color: var(--accent-primary);
+  box-shadow: 0 10px 20px rgba(201, 162, 39, 0.2);
+}
+
+.glass-modal-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.glass-modal-dropzone-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.glass-modal-dropzone-content small {
+  color: var(--text-muted);
+}
+
+.glass-modal-photo-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.glass-modal-photo-preview img {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+}
+
+.glass-modal-photo-preview span {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.glass-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.glass-modal-button-secondary {
+  padding: 0.7rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--text-primary);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.glass-modal-button-secondary:hover {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.glass-modal-button-primary {
+  padding: 0.7rem 1.6rem;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 10px 20px rgba(201, 162, 39, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-modal-button-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 24px rgba(201, 162, 39, 0.35);
+}
+
 /* ===== HEADER STYLES ===== */
 .header {
   display: flex;

@@ -63,16 +63,41 @@
   },
   "people": {
     "title": "People",
+    "description": "Manage the organization's employees",
     "newPerson": "New Person",
+    "newPersonWithPlus": "+ New Person",
     "name": "Name",
+    "fullName": "Full name",
     "email": "Email",
+    "phone": "Phone",
+    "document": "Document",
+    "birthDate": "Birth date",
+    "photo": "Photo",
     "currentPosition": "Current Position",
     "currentSector": "Current Sector",
     "status": "Status",
     "actions": "Actions",
     "statusActive": "Active",
     "statusAway": "Away",
-    "statusTerminated": "Terminated"
+    "statusTerminated": "Terminated",
+    "changePhoto": "Change photo",
+    "dropzoneTitle": "Drag and drop an image here",
+    "dropzoneHint": "or click to choose",
+    "photoPreviewAlt": "Photo preview",
+    "placeholders": {
+      "fullName": "Ex.: Maria Oliveira",
+      "email": "maria@empresa.com",
+      "phone": "(11) 99999-0000",
+      "document": "CPF or RG"
+    },
+    "validation": {
+      "requiredName": "Enter the full name.",
+      "requiredEmail": "Enter the email.",
+      "requiredBirthDate": "Enter the birth date.",
+      "requiredStatus": "Select a status.",
+      "invalidEmail": "Invalid email.",
+      "invalidPhoto": "File must be an image."
+    }
   },
   "sectors": {
     "title": "Sectors",
