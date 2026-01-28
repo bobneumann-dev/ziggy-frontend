@@ -603,6 +603,91 @@ body {
   background: rgba(251, 191, 36, 0.28);
 }
 
+.org-canvas-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(148, 163, 184, 0.12);
+  color: #e2e8f0;
+  font-weight: 600;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.org-canvas-secondary:hover {
+  transform: translateY(-1px);
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.org-canvas-undo {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(148, 163, 184, 0.12);
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.org-canvas-undo:hover {
+  transform: translateY(-1px);
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.org-canvas-undo.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ===== ORG CARGO / SETOR ===== */
+.org-sector-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  min-width: 200px;
+  border-radius: 12px;
+  border: 1px dashed rgba(148, 163, 184, 0.7);
+  color: #e2e8f0;
+  background: rgba(30, 41, 59, 0.35);
+  font-weight: 600;
+}
+
+.org-sector-add {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(148, 163, 184, 0.15);
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.org-sector-add:hover {
+  transform: translateY(-1px);
+  background: rgba(148, 163, 184, 0.25);
+}
+
+.org-cargo-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  min-width: 190px;
+  color: #f8fafc;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
 /* ===== HEADER STYLES ===== */
 .header {
   display: flex;

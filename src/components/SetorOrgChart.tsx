@@ -1,4 +1,4 @@
-﻿import { useCallback, useMemo, useState } from 'react';
+﻿import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import ReactFlow, {
   type Node,
   type Edge,
@@ -15,7 +15,7 @@ import ReactFlow, {
 } from 'reactflow';
 import type { Connection } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Building2, Save, Plus, Edit, Trash2 } from 'lucide-react';
+import { Building2, Save, Plus, Edit, Trash2, Undo2, RefreshCcw } from 'lucide-react';
 import type { Setor } from '../types';
 import api from '../lib/api';
 
@@ -38,6 +38,9 @@ export default function SetorOrgChart({
   onEdit,
   onDelete,
 }: SetorOrgChartProps) {
+  const addChildRef = useRef<(setor: Setor) => void>();
+  const editRef = useRef<(setor: Setor) => void>();
+  const deleteRef = useRef<(setor: Setor) => void>();
   const buildHierarchy = useCallback(() => {
     const nodes: Node[] = [];
     const edges: Edge[] = [];
@@ -76,7 +79,7 @@ export default function SetorOrgChart({
                     className="org-node-icon"
                     onClick={(event) => {
                       event.stopPropagation();
-                      onEdit?.(setor);
+                      editRef.current?.(setor);
                     }}
                     title="Editar setor"
                   >
@@ -86,20 +89,20 @@ export default function SetorOrgChart({
                     className="org-node-icon org-node-icon-danger"
                     onClick={(event) => {
                       event.stopPropagation();
-                      onDelete?.(setor);
+                      deleteRef.current?.(setor);
                     }}
                     title="Excluir setor"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
-                  <button
-                    className="org-node-icon org-node-add"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onAddChild?.(setor);
-                    }}
-                    title="Adicionar setor filho"
-                  >
+                <button
+                  className="org-node-icon org-node-add"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    addChildRef.current?.(setor);
+                  }}
+                  title="Adicionar setor filho"
+                >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -156,12 +159,43 @@ export default function SetorOrgChart({
     });
     
     return { nodes, edges };
-  }, [setores, onAddChild]);
+  }, [setores]);
 
   const { nodes: initialNodes, edges: initialEdges } = useMemo(() => buildHierarchy(), [buildHierarchy]);
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [isModified, setIsModified] = useState(false);
+  const [lastRemovedEdge, setLastRemovedEdge] = useState<Edge | null>(null);
+
+  useEffect(() => {
+    const { nodes: nextNodes, edges: nextEdges } = buildHierarchy();
+    setNodes(nextNodes);
+    setEdges(nextEdges);
+    setIsModified(false);
+    setLastRemovedEdge(null);
+  }, [setores, setNodes, setEdges]);
+
+  const handleUndoRemove = useCallback(() => {
+    if (!lastRemovedEdge) return;
+    setEdges(current => {
+      if (current.some(e => e.id === lastRemovedEdge.id)) return current;
+      return [...current, lastRemovedEdge];
+    });
+    setIsModified(true);
+    setLastRemovedEdge(null);
+  }, [lastRemovedEdge, setEdges]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const isUndo = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z';
+      if (!isUndo) return;
+      if (!lastRemovedEdge) return;
+      event.preventDefault();
+      handleUndoRemove();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndoRemove, lastRemovedEdge]);
   
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -231,7 +265,7 @@ export default function SetorOrgChart({
     }
   }, [setores, onNodeClick]);
 
-  const saveHierarchy = useCallback(async () => {
+  async function saveHierarchy() {
     try {
       // Extract parent-child relationships from edges
       const hierarchyUpdates = edges.map(edge => {
@@ -260,11 +294,38 @@ export default function SetorOrgChart({
       }
       
       alert('Hierarquia atualizada com sucesso!');
+      return true;
     } catch (error) {
       console.error('Erro ao salvar hierarquia:', error);
       alert('Ocorreu um erro ao salvar a hierarquia.');
+      return false;
     }
-  }, [edges, nodes, onHierarchyUpdate]);
+  }
+
+  async function requestSaveIfModified() {
+    if (!isModified) return true;
+    const shouldSave = window.confirm('Há alterações pendentes. Deseja salvar antes de adicionar um setor?');
+    if (!shouldSave) return false;
+    return await saveHierarchy();
+  }
+
+  async function handleAddRoot() {
+    const canProceed = await requestSaveIfModified();
+    if (!canProceed) return;
+    onAddRoot?.();
+  }
+
+  async function handleAddChild(setor: Setor) {
+    const canProceed = await requestSaveIfModified();
+    if (!canProceed) return;
+    onAddChild?.(setor);
+  }
+
+  useEffect(() => {
+    addChildRef.current = handleAddChild;
+    editRef.current = (setor: Setor) => onEdit?.(setor);
+    deleteRef.current = (setor: Setor) => onDelete?.(setor);
+  }, [handleAddChild, onEdit, onDelete]);
 
   return (
     <div className="h-[600px] w-full rounded-xl overflow-hidden border border-slate-700 bg-slate-900">
@@ -274,6 +335,11 @@ export default function SetorOrgChart({
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onEdgeClick={(_event, edge) => {
+          setEdges(current => current.filter(e => e.id !== edge.id));
+          setLastRemovedEdge(edge);
+          setIsModified(true);
+        }}
         onNodeClick={onNodeClickHandler}
         fitView
         attributionPosition="bottom-left"
@@ -300,12 +366,27 @@ export default function SetorOrgChart({
           <div className="flex items-center gap-2">
             <button 
               className="org-canvas-add"
-              onClick={onAddRoot}
+              onClick={handleAddRoot}
               title="Adicionar setor"
             >
               <Plus className="w-4 h-4" />
               <span>Novo setor</span>
             </button>
+            {isModified && (
+              <button
+                className="org-canvas-secondary"
+                onClick={() => {
+                  const { nodes: nextNodes, edges: nextEdges } = buildHierarchy();
+                  setNodes(nextNodes);
+                  setEdges(nextEdges);
+                  setIsModified(false);
+                  setLastRemovedEdge(null);
+                }}
+                title="Reiniciar alterações"
+              >
+                <RefreshCcw className="w-4 h-4" />
+              </button>
+            )}
             <button 
               className={`flex items-center space-x-2 px-3 py-2 rounded-md ${isModified ? 'bg-amber-600 hover:bg-amber-700' : 'bg-slate-700 opacity-50 cursor-not-allowed'}`}
               onClick={saveHierarchy}
@@ -316,7 +397,19 @@ export default function SetorOrgChart({
             </button>
           </div>
         </Panel>
+        <Panel position="bottom-right">
+          <button
+            className={`org-canvas-undo ${lastRemovedEdge ? '' : 'is-disabled'}`}
+            onClick={handleUndoRemove}
+            disabled={!lastRemovedEdge}
+            title="Desfazer (Ctrl+Z)"
+          >
+            <Undo2 className="w-4 h-4" />
+          </button>
+        </Panel>
       </ReactFlow>
     </div>
   );
 }
+
+

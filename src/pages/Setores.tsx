@@ -82,7 +82,8 @@ export default function Setores() {
 
   useEffect(() => {
     fetchAllSetores();
-    if (viewMode !== 'list' && !tree) {
+    fetchPaginatedSetores();
+    if (viewMode !== 'list') {
       fetchTree();
     }
   }, [viewMode]);
@@ -225,8 +226,10 @@ export default function Setores() {
     return (
       <div key={node.id}>
         <div 
-          className="flex items-center py-2 px-4 hover:bg-gray-50 cursor-pointer"
+          className="flex items-center py-2 px-4 cursor-pointer"
           style={{ paddingLeft: `${level * 24 + 16}px` }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-row-hover)'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
         >
           {hasChildren ? (
             <button onClick={() => toggleNode(node.id)} className="mr-2">
@@ -479,4 +482,3 @@ export default function Setores() {
     </div>
   );
 }
-
