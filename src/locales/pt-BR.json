@@ -1,0 +1,131 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "add": "Adicionar",
+    "search": "Buscar",
+    "actions": "Ações",
+    "status": "Status",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "yes": "Sim",
+    "no": "Não",
+    "confirm": "Confirmar",
+    "back": "Voltar"
+  },
+  "auth": {
+    "login": "Entrar",
+    "logout": "Sair",
+    "username": "Login",
+    "password": "Senha",
+    "loginPlaceholder": "Digite seu login",
+    "passwordPlaceholder": "Digite sua senha",
+    "loggingIn": "Entrando...",
+    "invalidCredentials": "Credenciais inválidas",
+    "systemTitle": "ZIG MVP",
+    "systemSubtitle": "Sistema de Gestão Organizacional"
+  },
+  "menu": {
+    "dashboard": "Dashboard",
+    "users": "Usuários",
+    "people": "Pessoas",
+    "sectors": "Setores",
+    "positions": "Cargos",
+    "attributions": "Atribuições",
+    "links": "Vínculos",
+    "adminPanel": "Painel Administrativo"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Bem-vindo ao ZIG MVP",
+    "description": "Sistema de gestão organizacional com foco em estrutura, atribuições e responsabilidades operacionais.",
+    "usersDescription": "Gerenciamento de acesso ao sistema",
+    "peopleDescription": "Cadastro de colaboradores",
+    "sectorsDescription": "Estrutura organizacional hierárquica",
+    "positionsDescription": "Posições organizacionais vinculadas a setores",
+    "attributionsDescription": "Responsabilidades operacionais com elegibilidade"
+  },
+  "users": {
+    "title": "Usuários",
+    "newUser": "Novo Usuário",
+    "login": "Login",
+    "person": "Pessoa",
+    "status": "Status",
+    "roles": "Roles",
+    "actions": "Ações",
+    "resetPassword": "Resetar Senha",
+    "statusActive": "Ativo",
+    "statusInactive": "Inativo",
+    "statusBlocked": "Bloqueado"
+  },
+  "people": {
+    "title": "Pessoas",
+    "newPerson": "Nova Pessoa",
+    "name": "Nome",
+    "email": "Email",
+    "currentPosition": "Cargo Atual",
+    "currentSector": "Setor Atual",
+    "status": "Status",
+    "actions": "Ações",
+    "statusActive": "Ativo",
+    "statusAway": "Afastado",
+    "statusTerminated": "Desligado"
+  },
+  "sectors": {
+    "title": "Setores",
+    "newSector": "Novo Setor",
+    "name": "Nome",
+    "parentSector": "Setor Pai",
+    "positions": "Cargos",
+    "people": "Pessoas",
+    "actions": "Ações",
+    "viewList": "Lista",
+    "viewTree": "Árvore"
+  },
+  "positions": {
+    "title": "Cargos",
+    "newPosition": "Novo Cargo",
+    "name": "Nome",
+    "sector": "Setor",
+    "parentPosition": "Cargo Pai",
+    "people": "Pessoas",
+    "attributions": "Atribuições",
+    "actions": "Ações"
+  },
+  "attributions": {
+    "title": "Atribuições",
+    "newAttribution": "Nova Atribuição",
+    "list": "Lista de Atribuições",
+    "eligiblePeople": "Pessoas Elegíveis",
+    "name": "Nome",
+    "description": "Descrição",
+    "positions": "cargos",
+    "exceptions": "exceções",
+    "eligible": "elegíveis",
+    "selectAttribution": "Selecione uma atribuição para ver as pessoas elegíveis",
+    "noEligible": "Nenhuma pessoa elegível para esta atribuição",
+    "linkType": "Tipo de Vínculo"
+  },
+  "links": {
+    "title": "Vínculos Pessoa-Setor-Cargo",
+    "newLink": "Novo Vínculo",
+    "person": "Pessoa",
+    "position": "Cargo",
+    "sector": "Setor",
+    "startDate": "Data Início",
+    "endDate": "Data Fim",
+    "status": "Status",
+    "actions": "Ações",
+    "active": "Ativo",
+    "inactive": "Inativo"
+  },
+  "language": {
+    "select": "Selecionar Idioma",
+    "ptBR": "Português (Brasil)",
+    "enUS": "English (US)",
+    "esES": "Español"
+  }
+}

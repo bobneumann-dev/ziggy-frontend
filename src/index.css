@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+:root[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-gradient-start: #fef3c7;
+  --bg-gradient-end: #fef9c3;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+  --accent-primary: #fbbf24;
+  --accent-secondary: #f59e0b;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --card-border: rgba(251, 191, 36, 0.2);
+  --input-bg: rgba(255, 255, 255, 0.5);
+  --input-border: rgba(251, 191, 36, 0.3);
+}
+
+:root[data-theme="dark"] {
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --bg-gradient-start: #0f0f0f;
+  --bg-gradient-end: #1a1a1a;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --border-color: #4b5563;
+  --accent-primary: #fbbf24;
+  --accent-secondary: #f59e0b;
+  --card-bg: rgba(26, 26, 26, 0.9);
+  --card-border: rgba(75, 85, 99, 0.5);
+  --input-bg: rgba(31, 41, 55, 0.5);
+  --input-border: #4b5563;
+}
+
+body {
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+  min-height: 100vh;
+  color: var(--text-primary);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.glass {
+  background-color: var(--card-bg);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.glass-card {
+  background-color: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border-radius: 1rem;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.glass-button {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: #1a1a1a;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 0 20px rgba(251, 191, 36, 0.3);
+  transform: translateY(0);
+  font-weight: 700;
+}
+
+.glass-button:hover {
+  background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 0 30px rgba(251, 191, 36, 0.5);
+  transform: translateY(-2px);
+}
+
+.glass-input {
+  background-color: var(--input-bg);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--input-border);
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  color: var(--text-primary);
+}
+
+.glass-input:focus {
+  background-color: var(--input-bg);
+  border-color: var(--accent-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.3);
+}
+
+.glass-sidebar {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.95), rgba(245, 158, 11, 0.95));
+  backdrop-filter: blur(24px);
+  border-right: 1px solid rgba(251, 191, 36, 0.2);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .glass-sidebar {
+  background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(31, 31, 31, 0.95));
+  border-right: 1px solid rgba(75, 85, 99, 0.5);
+}
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}

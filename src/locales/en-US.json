@@ -1,0 +1,131 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "actions": "Actions",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "yes": "Yes",
+    "no": "No",
+    "confirm": "Confirm",
+    "back": "Back"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "username": "Username",
+    "password": "Password",
+    "loginPlaceholder": "Enter your username",
+    "passwordPlaceholder": "Enter your password",
+    "loggingIn": "Logging in...",
+    "invalidCredentials": "Invalid credentials",
+    "systemTitle": "ZIG MVP",
+    "systemSubtitle": "Organizational Management System"
+  },
+  "menu": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "people": "People",
+    "sectors": "Sectors",
+    "positions": "Positions",
+    "attributions": "Attributions",
+    "links": "Links",
+    "adminPanel": "Admin Panel"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to ZIG MVP",
+    "description": "Organizational management system focused on structure, attributions and operational responsibilities.",
+    "usersDescription": "System access management",
+    "peopleDescription": "Employee registration",
+    "sectorsDescription": "Hierarchical organizational structure",
+    "positionsDescription": "Organizational positions linked to sectors",
+    "attributionsDescription": "Operational responsibilities with eligibility"
+  },
+  "users": {
+    "title": "Users",
+    "newUser": "New User",
+    "login": "Login",
+    "person": "Person",
+    "status": "Status",
+    "roles": "Roles",
+    "actions": "Actions",
+    "resetPassword": "Reset Password",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "statusBlocked": "Blocked"
+  },
+  "people": {
+    "title": "People",
+    "newPerson": "New Person",
+    "name": "Name",
+    "email": "Email",
+    "currentPosition": "Current Position",
+    "currentSector": "Current Sector",
+    "status": "Status",
+    "actions": "Actions",
+    "statusActive": "Active",
+    "statusAway": "Away",
+    "statusTerminated": "Terminated"
+  },
+  "sectors": {
+    "title": "Sectors",
+    "newSector": "New Sector",
+    "name": "Name",
+    "parentSector": "Parent Sector",
+    "positions": "Positions",
+    "people": "People",
+    "actions": "Actions",
+    "viewList": "List",
+    "viewTree": "Tree"
+  },
+  "positions": {
+    "title": "Positions",
+    "newPosition": "New Position",
+    "name": "Name",
+    "sector": "Sector",
+    "parentPosition": "Parent Position",
+    "people": "People",
+    "attributions": "Attributions",
+    "actions": "Actions"
+  },
+  "attributions": {
+    "title": "Attributions",
+    "newAttribution": "New Attribution",
+    "list": "Attributions List",
+    "eligiblePeople": "Eligible People",
+    "name": "Name",
+    "description": "Description",
+    "positions": "positions",
+    "exceptions": "exceptions",
+    "eligible": "eligible",
+    "selectAttribution": "Select an attribution to see eligible people",
+    "noEligible": "No eligible people for this attribution",
+    "linkType": "Link Type"
+  },
+  "links": {
+    "title": "Person-Sector-Position Links",
+    "newLink": "New Link",
+    "person": "Person",
+    "position": "Position",
+    "sector": "Sector",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "status": "Status",
+    "actions": "Actions",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "language": {
+    "select": "Select Language",
+    "ptBR": "Português (Brasil)",
+    "enUS": "English (US)",
+    "esES": "Español"
+  }
+}
