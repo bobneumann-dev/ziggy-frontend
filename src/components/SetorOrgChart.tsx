@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+﻿import { useCallback, useMemo, useState } from 'react';
 import ReactFlow, {
   type Node,
   type Edge,
@@ -15,7 +15,7 @@ import ReactFlow, {
 } from 'reactflow';
 import type { Connection } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Building2, Save } from 'lucide-react';
+import { Building2, Save, Plus, Edit, Trash2 } from 'lucide-react';
 import type { Setor } from '../types';
 import api from '../lib/api';
 
@@ -23,9 +23,21 @@ interface SetorOrgChartProps {
   setores: Setor[];
   onNodeClick?: (setor: Setor) => void;
   onHierarchyUpdate?: () => void;
+  onAddRoot?: () => void;
+  onAddChild?: (setor: Setor) => void;
+  onEdit?: (setor: Setor) => void;
+  onDelete?: (setor: Setor) => void;
 }
 
-export default function SetorOrgChart({ setores, onNodeClick, onHierarchyUpdate }: SetorOrgChartProps) {
+export default function SetorOrgChart({
+  setores,
+  onNodeClick,
+  onHierarchyUpdate,
+  onAddRoot,
+  onAddChild,
+  onEdit,
+  onDelete,
+}: SetorOrgChartProps) {
   const buildHierarchy = useCallback(() => {
     const nodes: Node[] = [];
     const edges: Edge[] = [];
@@ -54,20 +66,60 @@ export default function SetorOrgChart({ setores, onNodeClick, onHierarchyUpdate 
         position: { x, y },
         data: {
           label: (
-            <div className="px-4 py-3 flex items-center">
-              <Building2 className="w-5 h-5 mr-2 text-amber-400" />
-              <span className="font-medium text-white">{setor.nome}</span>
+            <div className="org-node-card">
+              <div className="org-node-header">
+                <div className="org-node-title">
+                  <span>{setor.nome}</span>
+                </div>
+                <div className="org-node-actions">
+                  <button
+                    className="org-node-icon"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onEdit?.(setor);
+                    }}
+                    title="Editar setor"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    className="org-node-icon org-node-icon-danger"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onDelete?.(setor);
+                    }}
+                    title="Excluir setor"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    className="org-node-icon org-node-add"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onAddChild?.(setor);
+                    }}
+                    title="Adicionar setor filho"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+              <div className="org-node-meta">
+                <span>{setor.quantidadeCargos} cargos</span>
+                <span>•</span>
+                <span>{setor.quantidadePessoas} pessoas</span>
+              </div>
             </div>
           ),
           setor: setor,
         },
         style: {
-          background: isRoot ? '#334155' : '#1e293b',
-          border: isRoot ? '2px solid #fbbf24' : '1px solid #475569',
-          borderRadius: '4px',
+          background: 'transparent',
+          border: 'none',
+          borderRadius: '12px',
           padding: 0,
-          minWidth: '150px',
-          color: '#fff',
+          minWidth: '180px',
+          color: 'inherit',
           fontSize: '14px',
         },
         sourcePosition: Position.Bottom,
@@ -104,7 +156,7 @@ export default function SetorOrgChart({ setores, onNodeClick, onHierarchyUpdate 
     });
     
     return { nodes, edges };
-  }, [setores]);
+  }, [setores, onAddChild]);
 
   const { nodes: initialNodes, edges: initialEdges } = useMemo(() => buildHierarchy(), [buildHierarchy]);
   const [nodes, , onNodesChange] = useNodesState(initialNodes);
@@ -245,14 +297,24 @@ export default function SetorOrgChart({ setores, onNodeClick, onHierarchyUpdate 
           maskColor="rgba(0, 0, 0, 0.7)"
         />
         <Panel position="top-right">
-          <button 
-            className={`flex items-center space-x-2 px-3 py-2 rounded-md ${isModified ? 'bg-amber-600 hover:bg-amber-700' : 'bg-slate-700 opacity-50 cursor-not-allowed'}`}
-            onClick={saveHierarchy}
-            disabled={!isModified}
-          >
-            <Save className="w-4 h-4" />
-            <span>Salvar Alterações</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              className="org-canvas-add"
+              onClick={onAddRoot}
+              title="Adicionar setor"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Novo setor</span>
+            </button>
+            <button 
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md ${isModified ? 'bg-amber-600 hover:bg-amber-700' : 'bg-slate-700 opacity-50 cursor-not-allowed'}`}
+              onClick={saveHierarchy}
+              disabled={!isModified}
+            >
+              <Save className="w-4 h-4" />
+              <span>Salvar Alterações</span>
+            </button>
+          </div>
         </Panel>
       </ReactFlow>
     </div>
