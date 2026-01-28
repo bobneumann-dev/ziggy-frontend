@@ -1,9 +1,9 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import type { ChangeEvent, FormEvent, DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Link2 } from 'lucide-react';
 import api from '../lib/api';
-import type { Pessoa } from '../types';
+import type { Pessoa, Setor, Cargo } from '../types';
 import { StatusPessoa } from '../types';
 import { DataTable } from '../components/DataTable';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -23,6 +23,9 @@ export default function Pessoas() {
   const [totalCount, setTotalCount] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPessoaId, setEditingPessoaId] = useState<string | null>(null);
+  const [editingPessoaVinculo, setEditingPessoaVinculo] = useState<{ setorId?: string; cargoId?: string } | null>(null);
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [assignTarget, setAssignTarget] = useState<Pessoa | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Pessoa | null>(null);
   const [formData, setFormData] = useState({
@@ -38,6 +41,13 @@ export default function Pessoas() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [setores, setSetores] = useState<Setor[]>([]);
+  const [cargos, setCargos] = useState<Cargo[]>([]);
+  const [selectedSetorId, setSelectedSetorId] = useState('');
+  const [selectedCargoId, setSelectedCargoId] = useState('');
+  const [assignSetorId, setAssignSetorId] = useState('');
+  const [assignCargoId, setAssignCargoId] = useState('');
+  const [assignErrors, setAssignErrors] = useState<Record<string, string>>({});
 
   const toDateInputValue = (value?: string | Date | null) => {
     if (!value) return '';
@@ -75,6 +85,22 @@ export default function Pessoas() {
     fetchPaginatedPessoas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.pageNumber, pagination.pageSize, pagination.sortBy, pagination.sortDesc, pagination.searchTerm]);
+
+  useEffect(() => {
+    const fetchSetoresECargos = async () => {
+      try {
+        const [setoresResponse, cargosResponse] = await Promise.all([
+          api.get<Setor[]>('/setores'),
+          api.get<Cargo[]>('/cargos'),
+        ]);
+        setSetores(setoresResponse.data);
+        setCargos(cargosResponse.data);
+      } catch (error) {
+        console.error('Erro ao carregar setores e cargos:', error);
+      }
+    };
+    fetchSetoresECargos();
+  }, []);
 
   const handlePaginationChange = useCallback((pageIndex: number, pageSize: number) => {
     setPagination(prev => ({
@@ -171,6 +197,13 @@ export default function Pessoas() {
               <Edit className="w-4 h-4" />
             </button>
             <button
+              className="text-emerald-600 hover:text-emerald-700 mr-3"
+              onClick={() => handleOpenAssign(pessoa)}
+              title={t('people.quickAssign')}
+            >
+              <Link2 className="w-4 h-4" />
+            </button>
+            <button
               className="text-red-600 hover:text-red-900"
               onClick={() => handleDelete(pessoa)}
             >
@@ -185,6 +218,10 @@ export default function Pessoas() {
   const handleOpenModal = (pessoa?: Pessoa) => {
     if (pessoa) {
       setEditingPessoaId(pessoa.id);
+      setEditingPessoaVinculo({
+        setorId: pessoa.setorAtualId,
+        cargoId: pessoa.cargoAtualId,
+      });
       setFormData({
         nomeCompleto: pessoa.nomeCompleto || '',
         email: pessoa.email || '',
@@ -195,8 +232,11 @@ export default function Pessoas() {
       });
       setPhotoPreview(pessoa.foto || null);
       setPhotoFile(null);
+      setSelectedSetorId(pessoa.setorAtualId || '');
+      setSelectedCargoId(pessoa.cargoAtualId || '');
     } else {
       setEditingPessoaId(null);
+      setEditingPessoaVinculo(null);
       setFormData({
         nomeCompleto: '',
         email: '',
@@ -207,6 +247,8 @@ export default function Pessoas() {
       });
       setPhotoPreview(null);
       setPhotoFile(null);
+      setSelectedSetorId('');
+      setSelectedCargoId('');
     }
     setIsDragActive(false);
     setFormErrors({});
@@ -215,6 +257,7 @@ export default function Pessoas() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingPessoaId(null);
+    setEditingPessoaVinculo(null);
     setFormData({
       nomeCompleto: '',
       email: '',
@@ -227,6 +270,8 @@ export default function Pessoas() {
     setPhotoFile(null);
     setPhotoPreview(null);
     setIsDragActive(false);
+    setSelectedSetorId('');
+    setSelectedCargoId('');
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -278,10 +323,29 @@ export default function Pessoas() {
         status: formData.status,
       };
 
+      let pessoaId = editingPessoaId;
       if (editingPessoaId) {
-        await api.put(`/pessoas/${editingPessoaId}`, payload);
+        const response = await api.put(`/pessoas/${editingPessoaId}`, payload);
+        pessoaId = response.data?.id ?? editingPessoaId;
       } else {
-        await api.post('/pessoas', payload);
+        const response = await api.post('/pessoas', payload);
+        pessoaId = response.data?.id;
+      }
+
+      const hasSelection = selectedSetorId && selectedCargoId && pessoaId;
+      const changedSelection = hasSelection && (
+        !editingPessoaVinculo ||
+        editingPessoaVinculo.setorId !== selectedSetorId ||
+        editingPessoaVinculo.cargoId !== selectedCargoId
+      );
+
+      if (changedSelection && pessoaId) {
+        await api.post('/pessoasetorcargo', {
+          pessoaId,
+          setorId: selectedSetorId,
+          cargoId: selectedCargoId,
+          dataInicio: new Date().toISOString(),
+        });
       }
 
       await fetchPaginatedPessoas();
@@ -325,6 +389,48 @@ export default function Pessoas() {
 
   const handleDragLeave = () => setIsDragActive(false);
 
+  const handleOpenAssign = (pessoa: Pessoa) => {
+    setAssignTarget(pessoa);
+    setAssignSetorId(pessoa.setorAtualId || '');
+    setAssignCargoId(pessoa.cargoAtualId || '');
+    setAssignErrors({});
+    setIsAssignOpen(true);
+  };
+
+  const handleCloseAssign = () => {
+    setIsAssignOpen(false);
+    setAssignTarget(null);
+    setAssignSetorId('');
+    setAssignCargoId('');
+    setAssignErrors({});
+  };
+
+  const handleConfirmAssign = async () => {
+    if (!assignTarget) return;
+    const errors: Record<string, string> = {};
+    if (!assignSetorId) errors.setor = t('people.validation.requiredSector');
+    if (!assignCargoId) errors.cargo = t('people.validation.requiredPosition');
+    if (Object.keys(errors).length) {
+      setAssignErrors(errors);
+      return;
+    }
+    try {
+      setLoading(true);
+      await api.post('/pessoasetorcargo', {
+        pessoaId: assignTarget.id,
+        setorId: assignSetorId,
+        cargoId: assignCargoId,
+        dataInicio: new Date().toISOString(),
+      });
+      await fetchPaginatedPessoas();
+      handleCloseAssign();
+    } catch (error) {
+      console.error('Erro ao vincular setor/cargo:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDelete = async (pessoa: Pessoa) => {
     setDeleteTarget(pessoa);
     setIsDeleteOpen(true);
@@ -349,6 +455,27 @@ export default function Pessoas() {
     setIsDeleteOpen(false);
     setDeleteTarget(null);
   };
+
+  const handleSetorChange = (value: string) => {
+    setSelectedSetorId(value);
+    setSelectedCargoId('');
+  };
+
+  const handleAssignSetorChange = (value: string) => {
+    setAssignSetorId(value);
+    setAssignCargoId('');
+    if (assignErrors.setor || assignErrors.cargo) {
+      setAssignErrors(prev => ({ ...prev, setor: '', cargo: '' }));
+    }
+  };
+
+  const cargosDisponiveis = selectedSetorId
+    ? cargos.filter(cargo => cargo.setorId === selectedSetorId)
+    : [];
+
+  const cargosDisponiveisAssign = assignSetorId
+    ? cargos.filter(cargo => cargo.setorId === assignSetorId)
+    : [];
 
   return (
     <div className="animate-fadeIn">
@@ -441,6 +568,39 @@ export default function Pessoas() {
                     className="glass-modal-input"
                     placeholder={t('people.placeholders.document')}
                   />
+                </div>
+                <div>
+                  <label className="glass-modal-label">{t('people.sector')}</label>
+                  <select
+                    value={selectedSetorId}
+                    onChange={e => handleSetorChange(e.target.value)}
+                    className="glass-modal-input"
+                  >
+                    <option value="">{t('people.selectSector')}</option>
+                    {setores.map(setor => (
+                      <option key={setor.id} value={setor.id}>
+                        {setor.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="glass-modal-label">{t('people.position')}</label>
+                  <select
+                    value={selectedCargoId}
+                    onChange={e => setSelectedCargoId(e.target.value)}
+                    className="glass-modal-input"
+                    disabled={!selectedSetorId}
+                  >
+                    <option value="">
+                      {selectedSetorId ? t('people.selectPosition') : t('people.selectSectorFirst')}
+                    </option>
+                    {cargosDisponiveis.map(cargo => (
+                      <option key={cargo.id} value={cargo.id}>
+                        {cargo.nome}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="md:col-span-2">
                   <label className="glass-modal-label">
@@ -540,6 +700,69 @@ export default function Pessoas() {
                 </button>
                 <button type="button" onClick={handleConfirmDelete} className="glass-modal-button-primary">
                   {t('common.delete')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isAssignOpen && assignTarget && (
+        <div className="glass-modal-backdrop" onClick={handleCloseAssign}>
+          <div className="glass-modal glass-modal-confirm" onClick={e => e.stopPropagation()}>
+            <div className="glass-modal-header">
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {t('people.assignTitle')}
+              </h2>
+              <button className="glass-modal-close" onClick={handleCloseAssign} aria-label={t('common.cancel')}>
+                <span aria-hidden="true">x</span>
+              </button>
+            </div>
+            <div className="glass-modal-body">
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="glass-modal-label">{t('people.sector')}</label>
+                  <select
+                    value={assignSetorId}
+                    onChange={e => handleAssignSetorChange(e.target.value)}
+                    className={`glass-modal-input ${assignErrors.setor ? 'glass-modal-input-error' : ''}`}
+                  >
+                    <option value="">{t('people.selectSector')}</option>
+                    {setores.map(setor => (
+                      <option key={setor.id} value={setor.id}>
+                        {setor.nome}
+                      </option>
+                    ))}
+                  </select>
+                  {assignErrors.setor && <p className="glass-modal-error">{assignErrors.setor}</p>}
+                </div>
+                <div>
+                  <label className="glass-modal-label">{t('people.position')}</label>
+                  <select
+                    value={assignCargoId}
+                    onChange={e => setAssignCargoId(e.target.value)}
+                    className={`glass-modal-input ${assignErrors.cargo ? 'glass-modal-input-error' : ''}`}
+                    disabled={!assignSetorId}
+                  >
+                    <option value="">
+                      {assignSetorId ? t('people.selectPosition') : t('people.selectSectorFirst')}
+                    </option>
+                    {cargosDisponiveisAssign.map(cargo => (
+                      <option key={cargo.id} value={cargo.id}>
+                        {cargo.nome}
+                      </option>
+                    ))}
+                  </select>
+                  {assignErrors.cargo && <p className="glass-modal-error">{assignErrors.cargo}</p>}
+                </div>
+              </div>
+
+              <div className="glass-modal-footer">
+                <button type="button" onClick={handleCloseAssign} className="glass-modal-button-secondary">
+                  {t('common.cancel')}
+                </button>
+                <button type="button" onClick={handleConfirmAssign} className="glass-modal-button-primary">
+                  {t('people.assignAction')}
                 </button>
               </div>
             </div>
