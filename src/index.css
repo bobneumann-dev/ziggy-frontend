@@ -688,6 +688,16 @@ body {
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
+.org-canvas-filter {
+  min-width: 200px;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  background: rgba(15, 23, 42, 0.8);
+  color: #e2e8f0;
+  font-size: 0.85rem;
+}
+
 /* ===== HEADER STYLES ===== */
 .header {
   display: flex;

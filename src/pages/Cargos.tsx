@@ -21,6 +21,7 @@ export default function Cargos() {
   });
   const [pageCount, setPageCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const [selectedSetorId, setSelectedSetorId] = useState('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCargoId, setEditingCargoId] = useState<string | null>(null);
@@ -86,6 +87,12 @@ export default function Cargos() {
     fetchAllCargos();
     fetchSetores();
   }, []);
+
+  useEffect(() => {
+    if (viewMode !== 'org') {
+      setSelectedSetorId('');
+    }
+  }, [viewMode]);
 
   const handlePaginationChange = useCallback((pageIndex: number, pageSize: number) => {
     setPagination(prev => ({
@@ -412,6 +419,8 @@ export default function Cargos() {
         <CargoOrgChart
           cargos={allCargos}
           setores={setores}
+          selectedSetorId={selectedSetorId}
+          onSelectedSetorChange={setSelectedSetorId}
           onAddForSetor={(setor) => handleOpenModal(undefined, setor.id)}
           onAddChild={(cargo) => handleOpenModal(undefined, cargo.setorId, cargo.id)}
           onEdit={(cargo) => handleOpenModal(cargo)}

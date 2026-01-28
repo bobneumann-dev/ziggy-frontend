@@ -22,6 +22,8 @@ import api from '../lib/api';
 interface CargoOrgChartProps {
   cargos: Cargo[];
   setores: Setor[];
+  selectedSetorId?: string;
+  onSelectedSetorChange?: (setorId: string) => void;
   onHierarchyUpdate?: () => void;
   onAddForSetor?: (setor: Setor) => void;
   onAddChild?: (cargo: Cargo) => void;
@@ -38,6 +40,8 @@ type NodeData = {
 export default function CargoOrgChart({
   cargos,
   setores,
+  selectedSetorId,
+  onSelectedSetorChange,
   onHierarchyUpdate,
   onAddForSetor,
   onAddChild,
@@ -52,9 +56,14 @@ export default function CargoOrgChart({
     const levelHeight = 140;
     const cargoSpacing = 260;
 
-    setores.forEach((setor, sectorIndex) => {
+    const setoresFiltrados = selectedSetorId
+      ? setores.filter(setor => setor.id === selectedSetorId)
+      : setores;
+
+    const baseOffset = setoresFiltrados.length === 1 ? 0 : undefined;
+    setoresFiltrados.forEach((setor, sectorIndex) => {
       const sectorNodeId = `setor-${setor.id}`;
-      const baseX = sectorIndex * sectorSpacing;
+      const baseX = baseOffset !== undefined ? baseOffset : sectorIndex * sectorSpacing;
 
       nodes.push({
         id: sectorNodeId,
@@ -200,12 +209,21 @@ export default function CargoOrgChart({
     });
 
     return { nodes, edges };
-  }, [cargos, setores, onAddForSetor, onAddChild, onEdit, onDelete]);
+  }, [cargos, setores, selectedSetorId, onAddForSetor, onAddChild, onEdit, onDelete]);
 
   const { nodes: initialNodes, edges: initialEdges } = useMemo(() => buildHierarchy(), [buildHierarchy]);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [isModified, setIsModified] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => {
+      const instance = document.querySelector('.react-flow') as any;
+      if (instance?.__reactFlowInstance?.fitView) {
+        instance.__reactFlowInstance.fitView({ padding: 0.2, duration: 300 });
+      }
+    }, 0);
+    return () => clearTimeout(id);
+  }, [selectedSetorId, nodes.length, edges.length]);
 
   useEffect(() => {
     const { nodes: nextNodes, edges: nextEdges } = buildHierarchy();
@@ -344,14 +362,26 @@ export default function CargoOrgChart({
           maskColor="rgba(0, 0, 0, 0.7)"
         />
         <Panel position="top-right">
-          <button 
-            className={`flex items-center space-x-2 px-3 py-2 rounded-md ${isModified ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-800 opacity-50 cursor-not-allowed'}`}
-            onClick={saveHierarchy}
-            disabled={!isModified}
-          >
-            <Save className="w-4 h-4" />
-            <span>Salvar Alterações</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <select
+              className="org-canvas-filter"
+              value={selectedSetorId ?? ''}
+              onChange={(event) => onSelectedSetorChange?.(event.target.value)}
+            >
+              <option value="">Todos os setores</option>
+              {setores.map(setor => (
+                <option key={setor.id} value={setor.id}>{setor.nome}</option>
+              ))}
+            </select>
+            <button 
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md ${isModified ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-800 opacity-50 cursor-not-allowed'}`}
+              onClick={saveHierarchy}
+              disabled={!isModified}
+            >
+              <Save className="w-4 h-4" />
+              <span>Salvar Alterações</span>
+            </button>
+          </div>
         </Panel>
       </ReactFlow>
     </div>
