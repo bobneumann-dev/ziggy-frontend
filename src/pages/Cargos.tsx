@@ -412,9 +412,16 @@ export default function Cargos() {
           style={{ paddingLeft: `${level * 24 + 16}px` }}
           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-row-hover)'}
           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          onClick={() => children.length > 0 ? toggleCargo(cargo.id) : null}
         >
           {children.length > 0 ? (
-            <button onClick={() => toggleCargo(cargo.id)} className="mr-2">
+            <button
+              onClick={(event) => {
+                event.stopPropagation();
+                toggleCargo(cargo.id);
+              }}
+              className="mr-2"
+            >
               {isExpanded ? (
                 <ChevronDown className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
               ) : (

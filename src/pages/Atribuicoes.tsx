@@ -607,10 +607,13 @@ export default function Atribuicoes() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-          Atribuicoes
-        </h1>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="page-title">Atribuicoes</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+            Organize atribuicoes por categorias e gerencie vinculacoes.
+          </p>
+        </div>
         <div className="flex items-center space-x-3">
           <button
             className="glass-button flex items-center space-x-2 px-4 py-2 rounded-xl font-semibold"

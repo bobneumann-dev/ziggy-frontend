@@ -231,9 +231,16 @@ export default function Setores() {
           style={{ paddingLeft: `${level * 24 + 16}px` }}
           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-row-hover)'}
           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          onClick={() => hasChildren ? toggleNode(node.id) : null}
         >
           {hasChildren ? (
-            <button onClick={() => toggleNode(node.id)} className="mr-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleNode(node.id);
+              }}
+              className="mr-2"
+            >
               {isExpanded ? (
                 <ChevronDown className="w-4 h-4 text-gray-500" />
               ) : (

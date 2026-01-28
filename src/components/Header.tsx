@@ -1,5 +1,5 @@
 import { useAuth } from '../contexts/AuthContext';
-import { Bell, HelpCircle, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Bell, HelpCircle, Settings, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface HeaderProps {
@@ -14,19 +14,19 @@ export default function Header({ isSidebarCollapsed, onToggleSidebar }: HeaderPr
     <header className="header">
       {/* Sidebar Column */}
       <div className="header-left">
-        <button
-          className="header-collapse-btn"
-          onClick={onToggleSidebar}
-          aria-label="Alternar menu"
-        >
-          {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-        </button>
         <Link to="/admin" className="header-logo">
           <div className="header-logo-icon">
             <img src="/logo_ziggy.png" alt="Ziggy" className="h-9 w-auto" />
           </div>
           {!isSidebarCollapsed && <span className="header-logo-text">Ziggy</span>}
         </Link>
+        <button
+          className="header-collapse-btn"
+          onClick={onToggleSidebar}
+          aria-label="Alternar menu"
+        >
+          <Menu className="w-4 h-4" />
+        </button>
       </div>
 
       <div className="header-right">
