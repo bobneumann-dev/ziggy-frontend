@@ -5,6 +5,7 @@ import api from '../lib/api';
 import CargoOrgChart from '../components/CargoOrgChart';
 import { DataTable } from '../components/DataTable';
 import type { Cargo, Setor, Pessoa, PessoaSetorCargo } from '../types';
+import SearchSelect, { type SearchSelectOption } from '../components/SearchSelect';
 import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import type { PagedResult, PaginationParams } from '../types/pagination';
 
@@ -274,6 +275,16 @@ export default function Cargos() {
 
   const cargosPaiOptions = allCargos.filter(cargo =>
     cargo.setorId === formData.setorId && cargo.id !== editingCargoId
+  );
+
+  const setorOptions = useMemo<SearchSelectOption[]>(
+    () => setores.map(setor => ({ value: setor.id, label: setor.nome })),
+    [setores]
+  );
+
+  const cargoPaiSelectOptions = useMemo<SearchSelectOption[]>(
+    () => cargosPaiOptions.map(cargo => ({ value: cargo.id, label: cargo.nome })),
+    [cargosPaiOptions]
   );
 
   const pessoasPorCargo = useMemo(() => {
@@ -624,33 +635,26 @@ export default function Cargos() {
                   <label className="glass-modal-label">
                     Setor <span className="glass-modal-required">*</span>
                   </label>
-                  <select
-                    value={formData.setorId}
-                    onChange={e => handleSetorChange(e.target.value)}
-                    className={`glass-modal-input ${formErrors.setorId ? 'glass-modal-input-error' : ''}`}
-                  >
-                    <option value="">Selecione um setor</option>
-                    {setores.map(setor => (
-                      <option key={setor.id} value={setor.id}>{setor.nome}</option>
-                    ))}
-                  </select>
+                  <SearchSelect
+                    options={setorOptions}
+                    value={setorOptions.find(option => option.value === formData.setorId) ?? null}
+                    onChange={(option) => handleSetorChange(option ? String(option.value) : '')}
+                    placeholder="Selecione um setor"
+                    hasError={Boolean(formErrors.setorId)}
+                  />
                   {formErrors.setorId && <p className="glass-modal-error">{formErrors.setorId}</p>}
                 </div>
                 <div className="md:col-span-2">
                   <label className="glass-modal-label">Cargo Pai</label>
-                  <select
-                    value={formData.cargoPaiId}
-                    onChange={e => setFormData(prev => ({ ...prev, cargoPaiId: e.target.value }))}
-                    className="glass-modal-input"
-                    disabled={!formData.setorId}
-                  >
-                    <option value="">
-                      {formData.setorId ? 'Selecione um cargo pai' : 'Selecione um setor primeiro'}
-                    </option>
-                    {cargosPaiOptions.map(cargo => (
-                      <option key={cargo.id} value={cargo.id}>{cargo.nome}</option>
-                    ))}
-                  </select>
+                  <SearchSelect
+                    options={cargoPaiSelectOptions}
+                    value={cargoPaiSelectOptions.find(option => option.value === formData.cargoPaiId) ?? null}
+                    onChange={(option) =>
+                      setFormData(prev => ({ ...prev, cargoPaiId: option ? String(option.value) : '' }))
+                    }
+                    placeholder={formData.setorId ? 'Selecione um cargo pai' : 'Selecione um setor primeiro'}
+                    isDisabled={!formData.setorId}
+                  />
                 </div>
               </div>
 

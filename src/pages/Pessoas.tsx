@@ -6,6 +6,7 @@ import api from '../lib/api';
 import type { Pessoa, Setor, Cargo } from '../types';
 import { StatusPessoa } from '../types';
 import { DataTable } from '../components/DataTable';
+import SearchSelect, { type SearchSelectOption } from '../components/SearchSelect';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { SortingState } from '@tanstack/react-table';
 import type { PagedResult, PaginationParams } from '../types/pagination';
@@ -477,6 +478,30 @@ export default function Pessoas() {
     ? cargos.filter(cargo => cargo.setorId === assignSetorId)
     : [];
 
+  const setorOptions = useMemo<SearchSelectOption[]>(
+    () => setores.map(setor => ({ value: setor.id, label: setor.nome })),
+    [setores]
+  );
+
+  const cargoOptions = useMemo<SearchSelectOption[]>(
+    () => cargosDisponiveis.map(cargo => ({ value: cargo.id, label: cargo.nome })),
+    [cargosDisponiveis]
+  );
+
+  const cargoAssignOptions = useMemo<SearchSelectOption[]>(
+    () => cargosDisponiveisAssign.map(cargo => ({ value: cargo.id, label: cargo.nome })),
+    [cargosDisponiveisAssign]
+  );
+
+  const statusOptions = useMemo<SearchSelectOption[]>(
+    () => [
+      { value: StatusPessoa.Ativo, label: t('people.statusActive') },
+      { value: StatusPessoa.Afastado, label: t('people.statusAway') },
+      { value: StatusPessoa.Desligado, label: t('people.statusTerminated') }
+    ],
+    [t]
+  );
+
   return (
     <div className="animate-fadeIn">
       {/* Header da página */}
@@ -571,36 +596,22 @@ export default function Pessoas() {
                 </div>
                 <div>
                   <label className="glass-modal-label">{t('people.sector')}</label>
-                  <select
-                    value={selectedSetorId}
-                    onChange={e => handleSetorChange(e.target.value)}
-                    className="glass-modal-input"
-                  >
-                    <option value="">{t('people.selectSector')}</option>
-                    {setores.map(setor => (
-                      <option key={setor.id} value={setor.id}>
-                        {setor.nome}
-                      </option>
-                    ))}
-                  </select>
+                  <SearchSelect
+                    options={setorOptions}
+                    value={setorOptions.find(option => option.value === selectedSetorId) ?? null}
+                    onChange={(option) => handleSetorChange(option ? String(option.value) : '')}
+                    placeholder={t('people.selectSector')}
+                  />
                 </div>
                 <div>
                   <label className="glass-modal-label">{t('people.position')}</label>
-                  <select
-                    value={selectedCargoId}
-                    onChange={e => setSelectedCargoId(e.target.value)}
-                    className="glass-modal-input"
-                    disabled={!selectedSetorId}
-                  >
-                    <option value="">
-                      {selectedSetorId ? t('people.selectPosition') : t('people.selectSectorFirst')}
-                    </option>
-                    {cargosDisponiveis.map(cargo => (
-                      <option key={cargo.id} value={cargo.id}>
-                        {cargo.nome}
-                      </option>
-                    ))}
-                  </select>
+                  <SearchSelect
+                    options={cargoOptions}
+                    value={cargoOptions.find(option => option.value === selectedCargoId) ?? null}
+                    onChange={(option) => setSelectedCargoId(option ? String(option.value) : '')}
+                    placeholder={selectedSetorId ? t('people.selectPosition') : t('people.selectSectorFirst')}
+                    isDisabled={!selectedSetorId}
+                  />
                 </div>
                 <div className="md:col-span-2">
                   <label className="glass-modal-label">
@@ -620,17 +631,19 @@ export default function Pessoas() {
                   <label className="glass-modal-label">
                     {t('people.status')} <span className="glass-modal-required">*</span>
                   </label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    className={`glass-modal-input ${formErrors.status ? 'glass-modal-input-error' : ''}`}
-                    required
-                  >
-                    <option value={StatusPessoa.Ativo}>{t('people.statusActive')}</option>
-                    <option value={StatusPessoa.Afastado}>{t('people.statusAway')}</option>
-                    <option value={StatusPessoa.Desligado}>{t('people.statusTerminated')}</option>
-                  </select>
+                  <SearchSelect
+                    options={statusOptions}
+                    value={statusOptions.find(option => option.value === formData.status) ?? null}
+                    onChange={(option) =>
+                      setFormData(prev => ({
+                        ...prev,
+                        status: option ? Number(option.value) : StatusPessoa.Ativo
+                      }))
+                    }
+                    placeholder={t('people.status')}
+                    isClearable={false}
+                    hasError={Boolean(formErrors.status)}
+                  />
                   {formErrors.status && <p className="glass-modal-error">{formErrors.status}</p>}
                 </div>
                 <div className="md:col-span-2">
@@ -722,37 +735,25 @@ export default function Pessoas() {
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="glass-modal-label">{t('people.sector')}</label>
-                  <select
-                    value={assignSetorId}
-                    onChange={e => handleAssignSetorChange(e.target.value)}
-                    className={`glass-modal-input ${assignErrors.setor ? 'glass-modal-input-error' : ''}`}
-                  >
-                    <option value="">{t('people.selectSector')}</option>
-                    {setores.map(setor => (
-                      <option key={setor.id} value={setor.id}>
-                        {setor.nome}
-                      </option>
-                    ))}
-                  </select>
+                  <SearchSelect
+                    options={setorOptions}
+                    value={setorOptions.find(option => option.value === assignSetorId) ?? null}
+                    onChange={(option) => handleAssignSetorChange(option ? String(option.value) : '')}
+                    placeholder={t('people.selectSector')}
+                    hasError={Boolean(assignErrors.setor)}
+                  />
                   {assignErrors.setor && <p className="glass-modal-error">{assignErrors.setor}</p>}
                 </div>
                 <div>
                   <label className="glass-modal-label">{t('people.position')}</label>
-                  <select
-                    value={assignCargoId}
-                    onChange={e => setAssignCargoId(e.target.value)}
-                    className={`glass-modal-input ${assignErrors.cargo ? 'glass-modal-input-error' : ''}`}
-                    disabled={!assignSetorId}
-                  >
-                    <option value="">
-                      {assignSetorId ? t('people.selectPosition') : t('people.selectSectorFirst')}
-                    </option>
-                    {cargosDisponiveisAssign.map(cargo => (
-                      <option key={cargo.id} value={cargo.id}>
-                        {cargo.nome}
-                      </option>
-                    ))}
-                  </select>
+                  <SearchSelect
+                    options={cargoAssignOptions}
+                    value={cargoAssignOptions.find(option => option.value === assignCargoId) ?? null}
+                    onChange={(option) => setAssignCargoId(option ? String(option.value) : '')}
+                    placeholder={assignSetorId ? t('people.selectPosition') : t('people.selectSectorFirst')}
+                    isDisabled={!assignSetorId}
+                    hasError={Boolean(assignErrors.cargo)}
+                  />
                   {assignErrors.cargo && <p className="glass-modal-error">{assignErrors.cargo}</p>}
                 </div>
               </div>

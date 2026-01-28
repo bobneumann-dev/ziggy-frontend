@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-table';
 import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, ArrowDown, ArrowUp } from 'lucide-react';
+import SearchSelect, { type SearchSelectOption } from '../SearchSelect';
 import './styles.css';
 
 interface DataTableProps<TData> {
@@ -68,7 +69,7 @@ export function DataTable<TData>({
   }, [sorting, isServerSide, onSortingChange]);
 
   useEffect(() => {
-    if (isServerSide && onSearchChange) {
+    if (onSearchChange) {
       // Debounce the search term to avoid too many API calls
       const timeoutId = setTimeout(() => {
         onSearchChange(searchTerm);
@@ -76,7 +77,7 @@ export function DataTable<TData>({
 
       return () => clearTimeout(timeoutId);
     }
-  }, [searchTerm, isServerSide, onSearchChange]);
+  }, [searchTerm, onSearchChange]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -274,27 +275,23 @@ export function DataTable<TData>({
           >
             <ChevronsRight className="w-4 h-4" />
           </button>
-          
-          <select
-            value={pagination.pageSize}
-            onChange={e => {
-              table.setPageSize(Number(e.target.value));
+          <SearchSelect
+            className="ml-2 data-table-page-size"
+            options={[10, 20, 50, 100].map((size) => ({
+              value: size,
+              label: `${size} por pagina`
+            })) as SearchSelectOption[]}
+            value={{ value: pagination.pageSize, label: `${pagination.pageSize} por pagina` }}
+            onChange={(option) => {
+              if (!option) return;
+              table.setPageSize(Number(option.value));
             }}
-            className="ml-2 px-3 py-2 rounded-md text-sm cursor-pointer"
-            style={{ 
-              backgroundColor: 'var(--input-bg)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-color)'
-            }}
-          >
-            {[10, 20, 50, 100].map(pageSize => (
-              <option key={pageSize} value={pageSize}>
-                {pageSize} por página
-              </option>
-            ))}
-          </select>
+            isClearable={false}
+            isSearchable
+          />
         </div>
       </div>
     </div>
   );
 }
+

@@ -20,6 +20,7 @@ import 'reactflow/dist/style.css';
 import { Save, Plus, Edit, Trash2, X, Users } from 'lucide-react';
 import type { Cargo, Setor, Pessoa } from '../types';
 import api from '../lib/api';
+import SearchSelect, { type SearchSelectOption } from './SearchSelect';
 
 interface CargoOrgChartProps {
   cargos: Cargo[];
@@ -61,6 +62,11 @@ function CargoOrgChartInner({
   onDelete,
 }: CargoOrgChartProps) {
   const [isUnassignedOpen, setIsUnassignedOpen] = useState(false);
+
+  const setorOptions = useMemo<SearchSelectOption[]>(
+    () => setores.map(setor => ({ value: setor.id, label: setor.nome })),
+    [setores]
+  );
   const handleDragStart = (event: React.DragEvent, pessoaId: string) => {
     event.dataTransfer.setData('text/plain', pessoaId);
     event.dataTransfer.effectAllowed = 'move';
@@ -433,16 +439,13 @@ function CargoOrgChartInner({
         <Panel position="top-right">
           <div className="flex flex-col items-end gap-2">
             <div className="flex items-center gap-2">
-            <select
+            <SearchSelect
               className="org-canvas-filter"
-              value={selectedSetorId ?? ''}
-              onChange={(event) => onSelectedSetorChange?.(event.target.value)}
-            >
-              <option value="">Todos os setores</option>
-              {setores.map(setor => (
-                <option key={setor.id} value={setor.id}>{setor.nome}</option>
-              ))}
-            </select>
+              options={setorOptions}
+              value={setorOptions.find(option => option.value === (selectedSetorId ?? '')) ?? null}
+              onChange={(option) => onSelectedSetorChange?.(option ? String(option.value) : '')}
+              placeholder="Todos os setores"
+            />
             <button 
               className={`flex items-center space-x-2 px-3 py-2 rounded-md ${isModified ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-800 opacity-50 cursor-not-allowed'}`}
               onClick={saveHierarchy}

@@ -5,6 +5,7 @@ import api from '../lib/api';
 import SetorOrgChart from '../components/SetorOrgChart';
 import { DataTable } from '../components/DataTable';
 import type { Setor, SetorTree } from '../types';
+import SearchSelect, { type SearchSelectOption } from '../components/SearchSelect';
 import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import type { PagedResult, PaginationParams } from '../types/pagination';
 
@@ -335,6 +336,11 @@ export default function Setores() {
 
   const setoresPaiOptions = allSetores.filter(setor => setor.id !== editingSetorId);
 
+  const setorPaiSelectOptions = useMemo<SearchSelectOption[]>(
+    () => setoresPaiOptions.map(setor => ({ value: setor.id, label: setor.nome })),
+    [setoresPaiOptions]
+  );
+
   return (
     <div className="animate-fadeIn">
       {/* Header */}
@@ -433,16 +439,12 @@ export default function Setores() {
                 </div>
                 <div>
                   <label className="glass-modal-label">Setor Pai</label>
-                  <select
-                    value={formData.setorPaiId}
-                    onChange={e => setFormData(prev => ({ ...prev, setorPaiId: e.target.value }))}
-                    className="glass-modal-input"
-                  >
-                    <option value="">Nenhum</option>
-                    {setoresPaiOptions.map(setor => (
-                      <option key={setor.id} value={setor.id}>{setor.nome}</option>
-                    ))}
-                  </select>
+                  <SearchSelect
+                    options={setorPaiSelectOptions}
+                    value={setorPaiSelectOptions.find(option => option.value === formData.setorPaiId) ?? null}
+                    onChange={(option) => setFormData(prev => ({ ...prev, setorPaiId: option ? String(option.value) : '' }))}
+                    placeholder="Nenhum"
+                  />
                 </div>
               </div>
 

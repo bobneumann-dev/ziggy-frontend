@@ -953,6 +953,10 @@ body {
   background: #1c1c1c;
   border-color: #2c2c2c;
 }
+
+.data-table-page-size {
+  min-width: 160px;
+}
 .bg-primary { background-color: var(--bg-primary); }
 .bg-secondary { background-color: var(--bg-secondary); }
 .bg-card { background-color: var(--card-bg); }

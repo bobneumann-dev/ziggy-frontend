@@ -12,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import api from '../lib/api';
+import SearchSelect, { type SearchSelectOption } from '../components/SearchSelect';
 import type {
   Atribuicao,
   AtribuicaoCargo,
@@ -422,6 +423,26 @@ export default function Atribuicoes() {
     return cargos.filter(cargo => cargo.setorId === addSetorId);
   }, [cargos, addSetorId]);
 
+  const categoriaSelectOptions = useMemo<SearchSelectOption[]>(
+    () => categoriasOptions.map(option => ({ value: option.id, label: option.label })),
+    [categoriasOptions]
+  );
+
+  const pessoaOptions = useMemo<SearchSelectOption[]>(
+    () => availablePessoas.map(pessoa => ({ value: pessoa.id, label: pessoa.nomeCompleto })),
+    [availablePessoas]
+  );
+
+  const setorOptions = useMemo<SearchSelectOption[]>(
+    () => setores.map(setor => ({ value: setor.id, label: setor.nome })),
+    [setores]
+  );
+
+  const cargoOptions = useMemo<SearchSelectOption[]>(
+    () => filteredCargos.map(cargo => ({ value: cargo.id, label: `${cargo.nome} (${cargo.setorNome})` })),
+    [filteredCargos]
+  );
+
   const renderAtribuicaoRow = (atrib: Atribuicao, level: number) => (
     <div
       key={atrib.id}
@@ -713,16 +734,13 @@ export default function Atribuicoes() {
                       <span className="text-xs text-muted">{atribPessoas.length} pessoas</span>
                     </div>
                     <div className="flex items-center space-x-2 mb-3">
-                      <select
-                        className={`glass-modal-input flex-1 ${actionErrors.pessoa ? 'glass-modal-input-error' : ''}`}
-                        value={addPessoaId}
-                        onChange={(e) => setAddPessoaId(e.target.value)}
-                      >
-                        <option value="">Selecione uma pessoa</option>
-                        {availablePessoas.map(pessoa => (
-                          <option key={pessoa.id} value={pessoa.id}>{pessoa.nomeCompleto}</option>
-                        ))}
-                      </select>
+                      <SearchSelect
+                        options={pessoaOptions}
+                        value={pessoaOptions.find(option => option.value === addPessoaId) ?? null}
+                        onChange={(option) => setAddPessoaId(option ? String(option.value) : '')}
+                        placeholder="Selecione uma pessoa"
+                        hasError={Boolean(actionErrors.pessoa)}
+                      />
                       <button
                         className="glass-button flex items-center space-x-2 px-4 py-2 rounded-xl"
                         onClick={handleAddPessoa}
@@ -761,32 +779,23 @@ export default function Atribuicoes() {
                       <span className="text-xs text-muted">{atribCargos.length} cargos</span>
                     </div>
                     <div className="grid grid-cols-1 gap-2 mb-3">
-                      <select
-                        className="glass-modal-input"
-                        value={addSetorId}
-                        onChange={(e) => {
-                          setAddSetorId(e.target.value);
+                      <SearchSelect
+                        options={setorOptions}
+                        value={setorOptions.find(option => option.value === addSetorId) ?? null}
+                        onChange={(option) => {
+                          setAddSetorId(option ? String(option.value) : '');
                           setAddCargoId('');
                         }}
-                      >
-                        <option value="">Todos os setores</option>
-                        {setores.map(setor => (
-                          <option key={setor.id} value={setor.id}>{setor.nome}</option>
-                        ))}
-                      </select>
+                        placeholder="Todos os setores"
+                      />
                       <div className="flex items-center space-x-2">
-                        <select
-                          className={`glass-modal-input flex-1 ${actionErrors.cargo ? 'glass-modal-input-error' : ''}`}
-                          value={addCargoId}
-                          onChange={(e) => setAddCargoId(e.target.value)}
-                        >
-                          <option value="">Selecione um cargo</option>
-                          {filteredCargos.map(cargo => (
-                            <option key={cargo.id} value={cargo.id}>
-                              {cargo.nome} ({cargo.setorNome})
-                            </option>
-                          ))}
-                        </select>
+                        <SearchSelect
+                          options={cargoOptions}
+                          value={cargoOptions.find(option => option.value === addCargoId) ?? null}
+                          onChange={(option) => setAddCargoId(option ? String(option.value) : '')}
+                          placeholder="Selecione um cargo"
+                          hasError={Boolean(actionErrors.cargo)}
+                        />
                         <button
                           className="glass-button flex items-center space-x-2 px-4 py-2 rounded-xl"
                           onClick={handleAddCargo}
@@ -867,16 +876,12 @@ export default function Atribuicoes() {
 
                 <div>
                   <label className="glass-modal-label">Categoria</label>
-                  <select
-                    value={formData.categoriaId}
-                    onChange={(e) => setFormData(prev => ({ ...prev, categoriaId: e.target.value }))}
-                    className="glass-modal-input"
-                  >
-                    <option value="">Sem categoria</option>
-                    {categoriasOptions.map(option => (
-                      <option key={option.id} value={option.id}>{option.label}</option>
-                    ))}
-                  </select>
+                  <SearchSelect
+                    options={categoriaSelectOptions}
+                    value={categoriaSelectOptions.find(option => option.value === formData.categoriaId) ?? null}
+                    onChange={(option) => setFormData(prev => ({ ...prev, categoriaId: option ? String(option.value) : '' }))}
+                    placeholder="Sem categoria"
+                  />
                 </div>
               </div>
 
@@ -949,16 +954,12 @@ export default function Atribuicoes() {
 
                 <div>
                   <label className="glass-modal-label">Categoria Pai</label>
-                  <select
-                    value={categoriaForm.categoriaPaiId}
-                    onChange={(e) => setCategoriaForm(prev => ({ ...prev, categoriaPaiId: e.target.value }))}
-                    className="glass-modal-input"
-                  >
-                    <option value="">Sem pai</option>
-                    {categoriasOptions.map(option => (
-                      <option key={option.id} value={option.id}>{option.label}</option>
-                    ))}
-                  </select>
+                  <SearchSelect
+                    options={categoriaSelectOptions}
+                    value={categoriaSelectOptions.find(option => option.value === categoriaForm.categoriaPaiId) ?? null}
+                    onChange={(option) => setCategoriaForm(prev => ({ ...prev, categoriaPaiId: option ? String(option.value) : '' }))}
+                    placeholder="Sem pai"
+                  />
                 </div>
               </div>
 

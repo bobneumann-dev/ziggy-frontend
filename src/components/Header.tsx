@@ -23,7 +23,7 @@ export default function Header({ isSidebarCollapsed, onToggleSidebar }: HeaderPr
         </button>
         <Link to="/admin" className="header-logo">
           <div className="header-logo-icon">
-            <img src="/logo_ziggy.png" alt="Ziggy" className="h-7 w-auto" />
+            <img src="/logo_ziggy.png" alt="Ziggy" className="h-9 w-auto" />
           </div>
           {!isSidebarCollapsed && <span className="header-logo-text">Ziggy</span>}
         </Link>
