@@ -12,6 +12,8 @@ import ReactFlow, {
   addEdge,
   ConnectionLineType,
   Panel,
+  ReactFlowProvider,
+  useReactFlow,
 } from 'reactflow';
 import type { Connection } from 'reactflow';
 import 'reactflow/dist/style.css';
@@ -37,7 +39,7 @@ type NodeData = {
   cargo?: Cargo;
 };
 
-export default function CargoOrgChart({
+function CargoOrgChartInner({
   cargos,
   setores,
   selectedSetorId,
@@ -215,15 +217,14 @@ export default function CargoOrgChart({
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [isModified, setIsModified] = useState(false);
+  const { fitView } = useReactFlow();
+
   useEffect(() => {
     const id = setTimeout(() => {
-      const instance = document.querySelector('.react-flow') as any;
-      if (instance?.__reactFlowInstance?.fitView) {
-        instance.__reactFlowInstance.fitView({ padding: 0.2, duration: 300 });
-      }
+      fitView({ padding: 0.25, duration: 300 });
     }, 0);
     return () => clearTimeout(id);
-  }, [selectedSetorId, nodes.length, edges.length]);
+  }, [fitView, selectedSetorId, nodes.length, edges.length]);
 
   useEffect(() => {
     const { nodes: nextNodes, edges: nextEdges } = buildHierarchy();
@@ -385,6 +386,14 @@ export default function CargoOrgChart({
         </Panel>
       </ReactFlow>
     </div>
+  );
+}
+
+export default function CargoOrgChart(props: CargoOrgChartProps) {
+  return (
+    <ReactFlowProvider>
+      <CargoOrgChartInner {...props} />
+    </ReactFlowProvider>
   );
 }
 
