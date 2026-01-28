@@ -9,7 +9,6 @@ import Pessoas from './pages/Pessoas';
 import Setores from './pages/Setores';
 import Cargos from './pages/Cargos';
 import Atribuicoes from './pages/Atribuicoes';
-import Vinculos from './pages/Vinculos';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { usuario, loading } = useAuth();
@@ -88,16 +87,6 @@ function App() {
               <PrivateRoute>
                 <Layout>
                   <Atribuicoes />
-                </Layout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/admin/vinculos"
-            element={
-              <PrivateRoute>
-                <Layout>
-                  <Vinculos />
                 </Layout>
               </PrivateRoute>
             }

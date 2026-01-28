@@ -4,7 +4,7 @@ import { Plus, Edit, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
 import api from '../lib/api';
 import CargoOrgChart from '../components/CargoOrgChart';
 import { DataTable } from '../components/DataTable';
-import type { Cargo, Setor } from '../types';
+import type { Cargo, Setor, Pessoa, PessoaSetorCargo } from '../types';
 import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import type { PagedResult, PaginationParams } from '../types/pagination';
 
@@ -12,6 +12,8 @@ export default function Cargos() {
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [allCargos, setAllCargos] = useState<Cargo[]>([]);
   const [setores, setSetores] = useState<Setor[]>([]);
+  const [pessoas, setPessoas] = useState<Pessoa[]>([]);
+  const [vinculos, setVinculos] = useState<PessoaSetorCargo[]>([]);
   const [viewMode, setViewMode] = useState<'list' | 'org' | 'tree'>('org');
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<PaginationParams>({
@@ -22,6 +24,7 @@ export default function Cargos() {
   const [pageCount, setPageCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedSetorId, setSelectedSetorId] = useState('');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCargoId, setEditingCargoId] = useState<string | null>(null);
@@ -78,6 +81,19 @@ export default function Cargos() {
     }
   };
 
+  const fetchPessoasEVinculos = async () => {
+    try {
+      const [pessoasResponse, vinculosResponse] = await Promise.all([
+        api.get<Pessoa[]>('/pessoas'),
+        api.get<PessoaSetorCargo[]>('/pessoasetorcargo'),
+      ]);
+      setPessoas(pessoasResponse.data);
+      setVinculos(vinculosResponse.data.filter(v => v.ativo));
+    } catch (error) {
+      console.error('Erro ao carregar pessoas e vínculos:', error);
+    }
+  };
+
   useEffect(() => {
     fetchPaginatedCargos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -86,6 +102,7 @@ export default function Cargos() {
   useEffect(() => {
     fetchAllCargos();
     fetchSetores();
+    fetchPessoasEVinculos();
   }, []);
 
   useEffect(() => {
@@ -182,7 +199,7 @@ export default function Cargos() {
         await api.post('/cargos', payload);
       }
 
-      await Promise.all([fetchPaginatedCargos(), fetchAllCargos()]);
+      await Promise.all([fetchPaginatedCargos(), fetchAllCargos(), fetchPessoasEVinculos()]);
       handleCloseModal();
     } catch (error) {
       console.error('Erro ao salvar cargo:', error);
@@ -205,7 +222,7 @@ export default function Cargos() {
     try {
       setLoading(true);
       await api.delete(`/cargos/${deleteTarget.id}`);
-      await Promise.all([fetchPaginatedCargos(), fetchAllCargos()]);
+      await Promise.all([fetchPaginatedCargos(), fetchAllCargos(), fetchPessoasEVinculos()]);
       setIsDeleteOpen(false);
       setDeleteTarget(null);
     } catch (error) {
@@ -258,6 +275,68 @@ export default function Cargos() {
   const cargosPaiOptions = allCargos.filter(cargo =>
     cargo.setorId === formData.setorId && cargo.id !== editingCargoId
   );
+
+  const pessoasPorCargo = useMemo(() => {
+    const map = new Map<string, Pessoa[]>();
+    const pessoaMap = new Map(pessoas.map(p => [p.id, p]));
+    vinculos.forEach(v => {
+      const pessoa = pessoaMap.get(v.pessoaId);
+      if (!pessoa) return;
+      const list = map.get(v.cargoId) || [];
+      list.push(pessoa);
+      map.set(v.cargoId, list);
+    });
+    return map;
+  }, [pessoas, vinculos]);
+
+  const vinculoAtivoPorPessoa = useMemo(() => {
+    const map = new Map<string, PessoaSetorCargo>();
+    vinculos.forEach(v => {
+      map.set(v.pessoaId, v);
+    });
+    return map;
+  }, [vinculos]);
+
+  const pessoasSemVinculo = useMemo(() => {
+    return pessoas.filter(pessoa => !vinculoAtivoPorPessoa.has(pessoa.id));
+  }, [pessoas, vinculoAtivoPorPessoa]);
+
+  const handleMovePessoa = async (pessoaId: string, cargo: Cargo) => {
+    try {
+      await api.post('/pessoasetorcargo', {
+        pessoaId,
+        setorId: cargo.setorId,
+        cargoId: cargo.id,
+        dataInicio: new Date().toISOString(),
+      });
+      await fetchPessoasEVinculos();
+    } catch (error) {
+      console.error('Erro ao mover pessoa:', error);
+    }
+  };
+
+  const showMovedMessage = (pessoaId: string, cargo: Cargo) => {
+    const pessoa = pessoas.find(p => p.id === pessoaId);
+    const nomeCompleto = pessoa?.nomeCompleto?.trim() || 'Pessoa';
+    const nome =
+      nomeCompleto.length > 35 ? `${nomeCompleto.slice(0, 35)}...` : nomeCompleto;
+    const setorNome = setores.find(s => s.id === cargo.setorId)?.nome || 'Setor';
+    setToastMessage(`Pessoa trocada de setor: ${nome} → ${setorNome}`);
+    setTimeout(() => setToastMessage(null), 2500);
+  };
+
+  const handleRemovePessoa = async (pessoaId: string) => {
+    const vinculo = vinculoAtivoPorPessoa.get(pessoaId);
+    if (!vinculo) return;
+    try {
+      await api.put(`/pessoasetorcargo/${vinculo.id}`, {
+        dataFim: new Date().toISOString(),
+      });
+      await fetchPessoasEVinculos();
+    } catch (error) {
+      console.error('Erro ao remover pessoa do cargo:', error);
+    }
+  };
 
   const columns = useMemo<ColumnDef<Cargo, any>[]>(() => [
     {
@@ -421,6 +500,11 @@ export default function Cargos() {
           setores={setores}
           selectedSetorId={selectedSetorId}
           onSelectedSetorChange={setSelectedSetorId}
+          pessoasPorCargo={pessoasPorCargo}
+          pessoasSemVinculo={pessoasSemVinculo}
+          onMovePessoa={handleMovePessoa}
+          onRemovePessoa={handleRemovePessoa}
+          onMovedMessage={showMovedMessage}
           onAddForSetor={(setor) => handleOpenModal(undefined, setor.id)}
           onAddChild={(cargo) => handleOpenModal(undefined, cargo.setorId, cargo.id)}
           onEdit={(cargo) => handleOpenModal(cargo)}
@@ -610,6 +694,12 @@ export default function Cargos() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {toastMessage && (
+        <div className="org-toast">
+          {toastMessage}
         </div>
       )}
     </div>

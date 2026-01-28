@@ -684,8 +684,102 @@ body {
   border-radius: 12px;
   padding: 0.75rem 0.9rem;
   min-width: 190px;
+  min-height: 150px;
   color: #f8fafc;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.org-cargo-people {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.org-cargo-person {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.5rem;
+  background: rgba(30, 41, 59, 0.6);
+  font-size: 0.75rem;
+  color: #e2e8f0;
+  cursor: grab;
+}
+
+.org-cargo-person:active {
+  cursor: grabbing;
+}
+
+.org-cargo-remove {
+  border: none;
+  background: transparent;
+  color: rgba(248, 113, 113, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.org-cargo-empty {
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.org-people-pool {
+  min-width: 220px;
+  max-width: 260px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px dashed rgba(148, 163, 184, 0.6);
+  border-radius: 12px;
+  padding: 0.75rem;
+  color: #e2e8f0;
+}
+
+.org-people-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+.org-people-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(15, 23, 42, 0.7);
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.org-people-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.org-people-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.5rem;
+  background: rgba(30, 41, 59, 0.6);
+  font-size: 0.75rem;
+  cursor: grab;
+}
+
+.org-people-item:active {
+  cursor: grabbing;
 }
 
 .org-canvas-filter {
@@ -806,7 +900,94 @@ body {
 .text-primary { color: var(--text-primary); }
 .text-secondary { color: var(--text-secondary); }
 .text-muted { color: var(--text-muted); }
+
+.atribuicao-drag-preview {
+  padding: 0.35rem 0.6rem;
+  background: var(--card-bg);
+  border: 1px dashed var(--accent-primary);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.atribuicao-drop-target {
+  border: 1px dashed var(--accent-primary);
+  border-radius: 0.6rem;
+  background: rgba(201, 162, 39, 0.08);
+}
+
+.atribuicao-dragging {
+  opacity: 0.4;
+}
+
+.atribuicao-row:hover {
+  background: var(--table-row-hover);
+}
+
+.atribuicao-row-selected {
+  background: rgba(201, 162, 39, 0.18);
+}
+
+:root[data-theme="dark"] .atribuicao-row-selected {
+  background: rgba(201, 162, 39, 0.22);
+}
+
+.section-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--table-border);
+  background: var(--card-bg);
+}
+
+:root[data-theme="dark"] .section-header {
+  background: #161616;
+}
+
+.atribuicao-detail-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+}
+
+:root[data-theme="dark"] .atribuicao-detail-card {
+  background: #1c1c1c;
+  border-color: #2c2c2c;
+}
 .bg-primary { background-color: var(--bg-primary); }
 .bg-secondary { background-color: var(--bg-secondary); }
 .bg-card { background-color: var(--card-bg); }
 .border-default { border-color: var(--border-color); }
+.org-cargo-person-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.org-cargo-person-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.org-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  color: #e2e8f0;
+  padding: 0.65rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.85rem;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  z-index: 50;
+}

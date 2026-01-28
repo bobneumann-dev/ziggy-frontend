@@ -74,14 +74,51 @@ export interface Cargo {
   dataCriacao: string;
 }
 
+export interface Categoria {
+  id: string;
+  nome: string;
+  categoriaPaiId?: string;
+  categoriaPaiNome?: string;
+  quantidadeAtribuicoes: number;
+  dataCriacao: string;
+}
+
+export interface CategoriaTree {
+  id: string;
+  nome: string;
+  categoriaPaiId?: string;
+  filhas: CategoriaTree[];
+  quantidadeAtribuicoes: number;
+}
+
 export interface Atribuicao {
   id: string;
   nome: string;
   descricao?: string;
+  categoriaId?: string;
+  categoriaNome?: string;
   quantidadeCargos: number;
   quantidadePessoasExcecao: number;
   totalPessoasElegiveis: number;
   dataCriacao: string;
+}
+
+export interface AtribuicaoCargo {
+  id: string;
+  atribuicaoId: string;
+  atribuicaoNome: string;
+  cargoId: string;
+  cargoNome: string;
+  setorNome: string;
+}
+
+export interface AtribuicaoPessoa {
+  id: string;
+  atribuicaoId: string;
+  atribuicaoNome: string;
+  pessoaId: string;
+  pessoaNome: string;
+  observacao?: string;
 }
 
 export interface PessoaElegivel {

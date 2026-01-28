@@ -41,7 +41,6 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/admin/setores', icon: Building2, label: t('menu.sectors') },
     { path: '/admin/cargos', icon: Briefcase, label: t('menu.positions') },
     { path: '/admin/atribuicoes', icon: ClipboardList, label: t('menu.attributions') },
-    { path: '/admin/vinculos', icon: LinkIcon, label: t('menu.links') },
   ];
 
   return (
