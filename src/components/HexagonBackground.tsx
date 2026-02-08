@@ -106,9 +106,11 @@ function buildHoneycomb(seed: number): HexCell[] {
 export default function HexagonBackground({ idleTimeoutMs = 10000 }: HexagonBackgroundProps) {
     const [isIdle, setIsIdle] = useState(false);
     const [visibleSet, setVisibleSet] = useState<Set<number>>(new Set());
+    const [fadedSet, setFadedSet] = useState<Set<number>>(new Set());
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const animRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const breathRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const colorRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const baseVisibleRef = useRef<Set<number>>(new Set());
 
     const cells = useMemo(() => buildHoneycomb(42), []);
@@ -166,11 +168,18 @@ export default function HexagonBackground({ idleTimeoutMs = 10000 }: HexagonBack
         setVisibleSet(new Set(baseVisible));
     }, [baseVisible]);
 
-    // Idle: slow growth + continuous breathing at frontier
-    // Active: snap back
+    // Internal cells: base visible, used for color shifting
+    const internalCells = useMemo(() => {
+        const baseCount = Math.floor(revealOrder.length * 0.25);
+        return revealOrder.slice(0, baseCount);
+    }, [revealOrder]);
+
+    // Idle: slow growth + breathing at frontier + color shifts on internals
+    // Active: snap back, clear all effects
     useEffect(() => {
         if (animRef.current) clearInterval(animRef.current);
         if (breathRef.current) clearInterval(breathRef.current);
+        if (colorRef.current) clearInterval(colorRef.current);
 
         if (isIdle) {
             // Phase 1: slow growth outward
@@ -188,24 +197,21 @@ export default function HexagonBackground({ idleTimeoutMs = 10000 }: HexagonBack
                 }
                 setVisibleSet(prev => {
                     const next = new Set(prev);
-                    // Slow: 1 hex at a time
                     next.add(revealOrder[revealIdx]);
                     revealIdx++;
-                    // Occasionally add a second one for natural variation
                     if (Math.random() > 0.6 && revealIdx < revealOrder.length) {
                         next.add(revealOrder[revealIdx]);
                         revealIdx++;
                     }
                     return next;
                 });
-            }, 350); // much slower
+            }, 350);
 
-            // Phase 2: breathing — random frontier cells fade in/out continuously
+            // Phase 2: breathing at frontier
             breathRef.current = setInterval(() => {
                 if (!growthDone && revealIdx < revealOrder.length * 0.4) return;
                 setVisibleSet(prev => {
                     const next = new Set(prev);
-                    // Pick 2-4 frontier cells to toggle
                     const count = 2 + Math.floor(Math.random() * 3);
                     for (let i = 0; i < count; i++) {
                         const idx = frontierCells[Math.floor(Math.random() * frontierCells.length)];
@@ -217,30 +223,53 @@ export default function HexagonBackground({ idleTimeoutMs = 10000 }: HexagonBack
                     }
                     return next;
                 });
-            }, 2200); // slow breathing cycle
+            }, 2200);
+
+            // Phase 3: color shift — some internal cells fade fill in/out
+            colorRef.current = setInterval(() => {
+                setFadedSet(prev => {
+                    const next = new Set(prev);
+                    // Toggle 2-5 random internal cells
+                    const count = 2 + Math.floor(Math.random() * 4);
+                    for (let i = 0; i < count; i++) {
+                        const idx = internalCells[Math.floor(Math.random() * internalCells.length)];
+                        if (next.has(idx)) {
+                            next.delete(idx); // restore fill
+                        } else {
+                            next.add(idx); // fade out fill
+                        }
+                    }
+                    return next;
+                });
+            }, 3000);
 
         } else {
-            // Snap back instantly
+            // Snap back: reset everything instantly
             setVisibleSet(new Set(baseVisibleRef.current));
+            setFadedSet(new Set());
         }
 
         return () => {
             if (animRef.current) clearInterval(animRef.current);
             if (breathRef.current) clearInterval(breathRef.current);
+            if (colorRef.current) clearInterval(colorRef.current);
         };
-    }, [isIdle, revealOrder, frontierCells]);
+    }, [isIdle, revealOrder, frontierCells, internalCells]);
 
     const renderHex = (cell: HexCell, i: number) => {
         const d = hexPath(cell.cx, cell.cy, cell.r);
         const isVisible = visibleSet.has(i);
+        const isFaded = fadedSet.has(i);
         const opacity = isVisible ? cell.maxOpacity : 0;
+        // Fill fades to 0 when shifted, border always stays
+        const fillOp = isFaded ? 0 : 1;
 
         return (
             <path
                 key={i}
                 d={d}
                 className="hex-cell"
-                style={{ opacity }}
+                style={{ opacity, fillOpacity: fillOp }}
                 fill={
                     cell.type === 'gold' ? '#c9a227' :
                     cell.type === 'gray' ? '#6b7280' :

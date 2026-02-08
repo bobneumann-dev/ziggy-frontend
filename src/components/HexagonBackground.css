@@ -17,7 +17,7 @@
   height: 100%;
 }
 
-/* Each hex fades in/out individually */
+/* Each hex fades in/out individually; fill-opacity for smooth color shifts */
 .hex-cell {
-  transition: opacity 0.8s ease;
+  transition: opacity 0.8s ease, fill-opacity 1.5s linear;
 }
