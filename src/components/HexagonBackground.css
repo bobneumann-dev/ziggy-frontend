@@ -1,0 +1,23 @@
+.hexagon-bg-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none !important;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.hexagon-bg-container * {
+  pointer-events: none !important;
+}
+
+.hexagon-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Each hex fades in/out individually */
+.hex-cell {
+  transition: opacity 0.8s ease;
+}

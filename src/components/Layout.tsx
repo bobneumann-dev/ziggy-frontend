@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 import ThemeToggle from './ThemeToggle';
 import Header from './Header';
+import HexagonBackground from './HexagonBackground';
 import {
   Users,
   UserCircle,
@@ -193,14 +194,17 @@ export default function Layout({ children }: LayoutProps) {
 
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)' }}>
+    <div className="flex flex-col h-screen overflow-hidden relative">
+      <HexagonBackground />
       {/* Header/Topbar */}
-      <Header
-        isSidebarCollapsed={isSidebarCollapsed}
-        onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
-      />
+      <div className="relative z-10">
+        <Header
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
+        />
+      </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative z-10">
         {/* Sidebar */}
         <aside
           className="flex flex-col"
@@ -302,7 +306,7 @@ export default function Layout({ children }: LayoutProps) {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <main className="flex-1 overflow-auto">
           <div className="p-6">
             {children}
           </div>
