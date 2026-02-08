@@ -364,7 +364,7 @@ export default function Setores() {
                 id: node.id,
                 nome: node.nome,
                 setorPaiId: node.setorPaiId,
-                setorPaiNome: null,
+                setorPaiNome: undefined,
                 quantidadeCargos: node.quantidadeCargos,
                 quantidadePessoas: node.quantidadePessoas,
                 dataCriacao: ''
@@ -375,7 +375,7 @@ export default function Setores() {
                 id: node.id,
                 nome: node.nome,
                 setorPaiId: node.setorPaiId,
-                setorPaiNome: null,
+                setorPaiNome: undefined,
                 quantidadeCargos: node.quantidadeCargos,
                 quantidadePessoas: node.quantidadePessoas,
                 dataCriacao: ''

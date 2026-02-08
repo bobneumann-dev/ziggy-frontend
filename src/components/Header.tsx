@@ -1,5 +1,5 @@
 import { useAuth } from '../contexts/AuthContext';
-import { Bell, HelpCircle, Settings, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import { Bell, HelpCircle, Settings, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import LanguageSelector from './LanguageSelector';
 
@@ -41,7 +41,7 @@ export default function Header({ isSidebarCollapsed, onToggleSidebar }: HeaderPr
           <Settings className="w-5 h-5" />
         </button>
         <LanguageSelector />
-        
+
         {/* User Avatar */}
         <div className="header-avatar">
           <span>{usuario?.login?.charAt(0).toUpperCase() || 'U'}</span>

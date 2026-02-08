@@ -15,9 +15,24 @@ export default function CatalogoItens() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<{
+        codigo: string;
+        nome: string;
+        tipo: TipoItemCatalogo;
+        categoriaId: string;
+        unidade: string;
+        precoBase: number;
+        precoMinimo: number;
+        vendavel: boolean;
+        compravel: boolean;
+        estocavel: boolean;
+        serializado: boolean;
+        atribuicaoId: string;
+        moedaId: string | number;
+        ativo: boolean;
+    }>({
         codigo: '', nome: '', tipo: TipoItemCatalogo.Produto, categoriaId: '', unidade: 'UN', precoBase: 0, precoMinimo: 0,
-        vendavel: true, compravel: false, estocavel: true, serializado: false, atribuicaoId: '', moedaId: '', ativo: true
+        vendavel: true, compravel: true, estocavel: true, serializado: false, atribuicaoId: '', moedaId: '', ativo: true
     });
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [deleteTarget, setDeleteTarget] = useState<ItemCatalogo | null>(null);
@@ -88,7 +103,7 @@ export default function CatalogoItens() {
     ];
 
     const applyPreset = (preset: typeof presets[0]) => {
-        setFormData({ ...formData, tipo: preset.tipo, vendavel: preset.vendavel, compravel: preset.compravel, estocavel: preset.estocavel, serializado: preset.serializado });
+        setFormData({ ...formData, tipo: preset.tipo as TipoItemCatalogo, vendavel: preset.vendavel, compravel: preset.compravel, estocavel: preset.estocavel, serializado: preset.serializado });
     };
 
     const handleOpenModal = (item?: ItemCatalogo) => {
@@ -218,7 +233,7 @@ export default function CatalogoItens() {
                 </button>
             </div>
 
-            <DataTable columns={columns} data={itens} searchPlaceholder={t('table.searchPlaceholder')} />
+            <DataTable columns={columns} data={itens} />
 
             {showModal && (
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>
@@ -251,7 +266,7 @@ export default function CatalogoItens() {
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                     <div>
                                         <label className="glass-modal-label">{t('catalog.type')} <span className="glass-modal-required">*</span></label>
-                                        <SearchSelect options={tipoOptions} value={tipoOptions.find(o => o.value === String(formData.tipo)) || null} onChange={(opt) => setFormData({ ...formData, tipo: Number(opt?.value || TipoItemCatalogo.Produto) })} />
+                                        <SearchSelect options={tipoOptions} value={tipoOptions.find(o => o.value === String(formData.tipo)) || null} onChange={(opt) => setFormData({ ...formData, tipo: Number(opt?.value) as TipoItemCatalogo })} />
                                     </div>
                                     <div>
                                         <label className="glass-modal-label">{t('catalog.category')}</label>

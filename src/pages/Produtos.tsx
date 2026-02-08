@@ -15,7 +15,9 @@ export default function Produtos() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<{
+        codigo: string; nome: string; categoriaId: string; unidade: string; precoBase: number; precoMinimo: number; moedaId: string; ativo: boolean;
+    }>({
         codigo: '', nome: '', categoriaId: '', unidade: 'UN', precoBase: 0, precoMinimo: 0, moedaId: '', ativo: true
     });
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -70,7 +72,7 @@ export default function Produtos() {
             });
         } else {
             setEditingId(null);
-            const defaultMoedaId = moedas.length > 0 ? moedas[0].value : '';
+            const defaultMoedaId = moedas.length > 0 ? String(moedas[0].value) : '';
             setFormData({ codigo: '', nome: '', categoriaId: '', unidade: 'UN', precoBase: 0, precoMinimo: 0, moedaId: defaultMoedaId, ativo: true });
         }
         setFormErrors({});
@@ -177,7 +179,7 @@ export default function Produtos() {
                 </button>
             </div>
 
-            <DataTable columns={columns} data={itens} searchPlaceholder={t('table.searchPlaceholder')} />
+            <DataTable columns={columns} data={itens} />
 
             {showModal && (
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>

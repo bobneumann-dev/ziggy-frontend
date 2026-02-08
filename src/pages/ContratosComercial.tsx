@@ -113,7 +113,7 @@ export default function ContratosComercial() {
                 <p className="text-secondary">{t('contracts.description')}</p>
             </div>
 
-            <DataTable columns={columns} data={contratos} searchPlaceholder={t('table.searchPlaceholder')} />
+            <DataTable columns={columns} data={contratos} />
         </div>
     );
 }

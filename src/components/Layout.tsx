@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import LanguageSelector from './LanguageSelector';
+
 import ThemeToggle from './ThemeToggle';
 import Header from './Header';
 import {
@@ -12,10 +12,8 @@ import {
   Building2,
   Briefcase,
   ClipboardList,
-  Link as LinkIcon,
   LogOut,
   LayoutDashboard,
-  Settings,
   ChevronDown,
   ChevronRight,
   Package,
@@ -60,12 +58,12 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
-    'financeiro': true,
-    'estoque': true,
-    'cadastros': true,
-    'estoque-armazens': true,
-    'comercial': true,
-    'empresa': true
+    'financeiro': false,
+    'estoque': false,
+    'cadastros': false,
+    'estoque-armazens': false,
+    'comercial': false,
+    'empresa': false
   });
 
   const toggleMenu = (key: string) => {

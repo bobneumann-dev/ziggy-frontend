@@ -15,7 +15,7 @@ import ReactFlow, {
 } from 'reactflow';
 import type { Connection } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Building2, Save, Plus, Edit, Trash2, Undo2, RefreshCcw } from 'lucide-react';
+import { Save, Plus, Edit, Trash2, Undo2, RefreshCcw } from 'lucide-react';
 import type { Setor } from '../types';
 import api from '../lib/api';
 
@@ -38,31 +38,31 @@ export default function SetorOrgChart({
   onEdit,
   onDelete,
 }: SetorOrgChartProps) {
-  const addChildRef = useRef<(setor: Setor) => void>();
-  const editRef = useRef<(setor: Setor) => void>();
-  const deleteRef = useRef<(setor: Setor) => void>();
+  const addChildRef = useRef<(setor: Setor) => void | Promise<void> | undefined>(undefined);
+  const editRef = useRef<(setor: Setor) => void | Promise<void> | undefined>(undefined);
+  const deleteRef = useRef<(setor: Setor) => void | Promise<void> | undefined>(undefined);
   const buildHierarchy = useCallback(() => {
     const nodes: Node[] = [];
     const edges: Edge[] = [];
     const nodeMap = new Map<string, { x: number; y: number; level: number }>();
-    
+
     // Encontrar setores raiz (sem pai)
     const rootSetores = setores.filter(s => !s.setorPaiId);
-    
+
     // Função recursiva para construir a árvore
     const buildTree = (setor: Setor, level: number, parentX: number, siblingIndex: number, totalSiblings: number) => {
       const nodeId = setor.id.toString();
       const spacing = 250;
       const levelHeight = 150;
-      
+
       // Calcular posição X baseado nos irmãos
       const x = parentX + (siblingIndex - (totalSiblings - 1) / 2) * spacing;
       const y = level * levelHeight;
-      
+
       nodeMap.set(nodeId, { x, y, level });
-      
+
       // Criar nó
-      const isRoot = !setor.setorPaiId;
+      // Criar nó
       nodes.push({
         id: nodeId,
         type: 'default',
@@ -95,14 +95,14 @@ export default function SetorOrgChart({
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
-                <button
-                  className="org-node-icon org-node-add"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    addChildRef.current?.(setor);
-                  }}
-                  title="Adicionar setor filho"
-                >
+                  <button
+                    className="org-node-icon org-node-add"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      addChildRef.current?.(setor);
+                    }}
+                    title="Adicionar setor filho"
+                  >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -129,7 +129,7 @@ export default function SetorOrgChart({
         targetPosition: Position.Top,
         draggable: true,
       });
-      
+
       // Criar edge se tiver pai
       if (setor.setorPaiId) {
         edges.push({
@@ -145,19 +145,19 @@ export default function SetorOrgChart({
           },
         });
       }
-      
+
       // Processar filhos
       const children = setores.filter(s => s.setorPaiId === setor.id);
       children.forEach((child, index) => {
         buildTree(child, level + 1, x, index, children.length);
       });
     };
-    
+
     // Construir árvore a partir dos nós raiz
     rootSetores.forEach((root, index) => {
       buildTree(root, 0, index * 300, 0, 1);
     });
-    
+
     return { nodes, edges };
   }, [setores]);
 
@@ -196,48 +196,48 @@ export default function SetorOrgChart({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleUndoRemove, lastRemovedEdge]);
-  
+
   const onConnect = useCallback(
     (connection: Connection) => {
       const sourceNode = nodes.find(node => node.id === connection.source);
       const targetNode = nodes.find(node => node.id === connection.target);
-      
+
       if (sourceNode && targetNode) {
         // Check for cycles - prevent a node from being connected to its descendants
         const wouldCreateCycle = (sourceId: string, targetId: string): boolean => {
           // Check direct connection (target -> source would create a cycle)
           const directEdge = edges.find(e => e.source === targetId && e.target === sourceId);
           if (directEdge) return true;
-          
+
           // Check if target is already an ancestor of source
           const findDescendants = (nodeId: string): string[] => {
             const children = edges
               .filter(e => e.source === nodeId)
               .map(e => e.target);
-            
+
             return children.reduce((acc, childId) => [
               ...acc,
               childId,
               ...findDescendants(childId)
             ], [] as string[]);
           };
-          
+
           const descendants = findDescendants(targetId);
           return descendants.includes(sourceId);
         };
-        
+
         if (wouldCreateCycle(connection.source!, connection.target!)) {
           alert('Esta conexão criaria um ciclo, o que não é permitido em uma estrutura hierárquica.');
           return;
         }
-        
+
         // Check if target already has a parent
         const existingParentEdge = edges.find(edge => edge.target === connection.target);
         if (existingParentEdge) {
           // Remove existing parent connection before adding new one
           setEdges(eds => eds.filter(e => e.id !== existingParentEdge.id));
         }
-        
+
         // Add new edge
         const newEdge = {
           ...connection,
@@ -250,7 +250,7 @@ export default function SetorOrgChart({
             color: '#fbbf24',
           },
         };
-        
+
         setEdges(eds => addEdge(newEdge, eds));
         setIsModified(true);
       }
@@ -271,11 +271,11 @@ export default function SetorOrgChart({
       const hierarchyUpdates = edges.map(edge => {
         const sourceNodeId = edge.source;
         const targetNodeId = edge.target;
-        
+
         // Find the corresponding nodes to get the setor data
         const targetNode = nodes.find(node => node.id === targetNodeId);
         const sourceNode = nodes.find(node => node.id === sourceNodeId);
-        
+
         if (targetNode && sourceNode && targetNode.data.setor && sourceNode.data.setor) {
           return {
             id: targetNode.data.setor.id,
@@ -284,15 +284,15 @@ export default function SetorOrgChart({
         }
         return null;
       }).filter(Boolean);
-      
+
       // Send updated hierarchy to backend
       await api.post('/setores/update-hierarchy', { updates: hierarchyUpdates });
       setIsModified(false);
-      
+
       if (onHierarchyUpdate) {
         onHierarchyUpdate();
       }
-      
+
       alert('Hierarquia atualizada com sucesso!');
       return true;
     } catch (error) {
@@ -353,7 +353,7 @@ export default function SetorOrgChart({
       >
         <Background color="#334155" gap={20} size={1} />
         <Controls className="rounded-lg bg-slate-800 border border-slate-700" />
-        <MiniMap 
+        <MiniMap
           className="rounded-lg"
           style={{
             background: 'rgba(15, 23, 42, 0.9)',
@@ -364,7 +364,7 @@ export default function SetorOrgChart({
         />
         <Panel position="top-right">
           <div className="flex items-center gap-2">
-            <button 
+            <button
               className="org-canvas-add"
               onClick={handleAddRoot}
               title="Adicionar setor"
@@ -387,7 +387,7 @@ export default function SetorOrgChart({
                 <RefreshCcw className="w-4 h-4" />
               </button>
             )}
-            <button 
+            <button
               className={`flex items-center space-x-2 px-3 py-2 rounded-md ${isModified ? 'bg-amber-600 hover:bg-amber-700' : 'bg-slate-700 opacity-50 cursor-not-allowed'}`}
               onClick={saveHierarchy}
               disabled={!isModified}

@@ -29,7 +29,14 @@ export default function Pessoas() {
   const [assignTarget, setAssignTarget] = useState<Pessoa | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Pessoa | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    nomeCompleto: string;
+    email: string;
+    telefone: string;
+    documento: string;
+    dataNascimento: string;
+    status: StatusPessoa;
+  }>({
     nomeCompleto: '',
     email: '',
     telefone: '',
@@ -639,7 +646,7 @@ export default function Pessoas() {
                     onChange={(option) =>
                       setFormData(prev => ({
                         ...prev,
-                        status: option ? Number(option.value) : StatusPessoa.Ativo
+                        status: option ? (Number(option.value) as StatusPessoa) : StatusPessoa.Ativo
                       }))
                     }
                     placeholder={t('people.status')}

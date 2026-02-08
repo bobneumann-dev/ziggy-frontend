@@ -14,7 +14,14 @@ export default function EstoqueMovimentos() {
     const [movimentos, setMovimentos] = useState<MovimentoEstoque[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [formData, setFormData] = useState({ tipo: TipoMovimentoEstoque.Entrada, itemCatalogoId: '', armazemOrigemId: '', armazemDestinoId: '', quantidade: 1, observacao: '' });
+    const [formData, setFormData] = useState<{
+        tipo: TipoMovimentoEstoque;
+        itemCatalogoId: string;
+        armazemOrigemId: string;
+        armazemDestinoId: string;
+        quantidade: number;
+        observacao: string;
+    }>({ tipo: TipoMovimentoEstoque.Entrada, itemCatalogoId: '', armazemOrigemId: '', armazemDestinoId: '', quantidade: 1, observacao: '' });
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [armazens, setArmazens] = useState<SearchSelectOption[]>([]);
     const [itens, setItens] = useState<SearchSelectOption[]>([]);
@@ -144,7 +151,7 @@ export default function EstoqueMovimentos() {
                 </button>
             </div>
 
-            <DataTable columns={columns} data={movimentos} searchPlaceholder={t('table.searchPlaceholder')} />
+            <DataTable columns={columns} data={movimentos} />
 
             {showModal && (
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>
@@ -158,24 +165,24 @@ export default function EstoqueMovimentos() {
                                 {formErrors._global && <div className="glass-modal-error">{formErrors._global}</div>}
                                 <div>
                                     <label className="glass-modal-label">{t('catalog.type')} <span className="glass-modal-required">*</span></label>
-                                    <SearchSelect options={tipoOptions} value={String(formData.tipo)} onChange={(val) => setFormData({ ...formData, tipo: Number(val) })} />
+                                    <SearchSelect options={tipoOptions} value={tipoOptions.find(o => o.value === String(formData.tipo)) || null} onChange={(opt) => setFormData({ ...formData, tipo: Number(opt?.value) as TipoMovimentoEstoque })} />
                                 </div>
                                 <div>
                                     <label className="glass-modal-label">{t('stock.item')} <span className="glass-modal-required">*</span></label>
-                                    <SearchSelect options={itens} value={formData.itemCatalogoId} onChange={(val) => setFormData({ ...formData, itemCatalogoId: val || '' })} />
+                                    <SearchSelect options={itens} value={itens.find(i => i.value === formData.itemCatalogoId) || null} onChange={(opt) => setFormData({ ...formData, itemCatalogoId: (opt?.value as string) || '' })} />
                                     {formErrors.itemCatalogoId && <div className="glass-modal-error">{formErrors.itemCatalogoId}</div>}
                                 </div>
                                 {(formData.tipo === TipoMovimentoEstoque.Saida || formData.tipo === TipoMovimentoEstoque.Transferencia) && (
                                     <div>
                                         <label className="glass-modal-label">{t('stock.origin')} <span className="glass-modal-required">*</span></label>
-                                        <SearchSelect options={armazens} value={formData.armazemOrigemId} onChange={(val) => setFormData({ ...formData, armazemOrigemId: val || '' })} />
+                                        <SearchSelect options={armazens} value={armazens.find(a => a.value === formData.armazemOrigemId) || null} onChange={(opt) => setFormData({ ...formData, armazemOrigemId: (opt?.value as string) || '' })} />
                                         {formErrors.armazemOrigemId && <div className="glass-modal-error">{formErrors.armazemOrigemId}</div>}
                                     </div>
                                 )}
                                 {(formData.tipo === TipoMovimentoEstoque.Entrada || formData.tipo === TipoMovimentoEstoque.Transferencia) && (
                                     <div>
                                         <label className="glass-modal-label">{t('stock.destination')} <span className="glass-modal-required">*</span></label>
-                                        <SearchSelect options={armazens} value={formData.armazemDestinoId} onChange={(val) => setFormData({ ...formData, armazemDestinoId: val || '' })} />
+                                        <SearchSelect options={armazens} value={armazens.find(a => a.value === formData.armazemDestinoId) || null} onChange={(opt) => setFormData({ ...formData, armazemDestinoId: (opt?.value as string) || '' })} />
                                         {formErrors.armazemDestinoId && <div className="glass-modal-error">{formErrors.armazemDestinoId}</div>}
                                     </div>
                                 )}

@@ -43,6 +43,7 @@ type NodeData = {
   kind: 'setor' | 'cargo';
   setor?: Setor;
   cargo?: Cargo;
+  label?: React.ReactNode;
 };
 
 function CargoOrgChartInner({
@@ -427,7 +428,7 @@ function CargoOrgChartInner({
       >
         <Background color="#1e3a8a" gap={20} size={1} />
         <Controls className="rounded-lg bg-blue-900 border border-blue-800" />
-        <MiniMap 
+        <MiniMap
           className="rounded-lg"
           style={{
             background: 'rgba(23, 37, 84, 0.9)',
@@ -439,21 +440,21 @@ function CargoOrgChartInner({
         <Panel position="top-right">
           <div className="flex flex-col items-end gap-2">
             <div className="flex items-center gap-2">
-            <SearchSelect
-              className="org-canvas-filter"
-              options={setorOptions}
-              value={setorOptions.find(option => option.value === (selectedSetorId ?? '')) ?? null}
-              onChange={(option) => onSelectedSetorChange?.(option ? String(option.value) : '')}
-              placeholder="Todos os setores"
-            />
-            <button 
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md ${isModified ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-800 opacity-50 cursor-not-allowed'}`}
-              onClick={saveHierarchy}
-              disabled={!isModified}
-            >
-              <Save className="w-4 h-4" />
-              <span>Salvar Alterações</span>
-            </button>
+              <SearchSelect
+                className="org-canvas-filter"
+                options={setorOptions}
+                value={setorOptions.find(option => option.value === (selectedSetorId ?? '')) ?? null}
+                onChange={(option) => onSelectedSetorChange?.(option ? String(option.value) : '')}
+                placeholder="Todos os setores"
+              />
+              <button
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md ${isModified ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-800 opacity-50 cursor-not-allowed'}`}
+                onClick={saveHierarchy}
+                disabled={!isModified}
+              >
+                <Save className="w-4 h-4" />
+                <span>Salvar Alterações</span>
+              </button>
             </div>
             <div className="org-people-panel">
               <button
@@ -511,15 +512,15 @@ export default function CargoOrgChart(props: CargoOrgChartProps) {
 }
 
 
-  const getInitials = (name: string) => {
-    const parts = name.trim().split(/\s+/).filter(Boolean);
-    if (!parts.length) return '';
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-  };
+const getInitials = (name: string) => {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
 
-  const formatName = (name: string) => {
-    const trimmed = name.trim();
-    if (trimmed.length <= 35) return trimmed;
-    return `${trimmed.slice(0, 35)}...`;
-  };
+const formatName = (name: string) => {
+  const trimmed = name.trim();
+  if (trimmed.length <= 35) return trimmed;
+  return `${trimmed.slice(0, 35)}...`;
+};

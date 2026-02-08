@@ -360,3 +360,5 @@ export interface Cotacao {
   data: string;
   createdAt: string;
 }
+
+

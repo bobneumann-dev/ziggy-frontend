@@ -154,7 +154,7 @@ export default function ClientesFornecedores() {
                 <button className={`filter-badge ${filterType === 'suppliers' ? 'active' : ''}`} onClick={() => setFilterType('suppliers')}>{t('clients.filterSuppliers')}</button>
             </div>
 
-            <DataTable columns={columns} data={filteredRecords} searchPlaceholder={t('table.searchPlaceholder')} />
+            <DataTable columns={columns} data={filteredRecords} />
 
             {showModal && (
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>

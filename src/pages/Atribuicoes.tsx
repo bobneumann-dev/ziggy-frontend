@@ -606,7 +606,7 @@ export default function Atribuicoes() {
       <div key={node.id}>
         <div
           className={`atribuicao-row flex items-center justify-between py-2 px-4 cursor-pointer ${isDropTarget ? 'atribuicao-drop-target' : ''
-            }`}
+            } ${draggingCategoriaId === node.id ? 'opacity-50' : ''}`}
           style={{ paddingLeft: `${level * 24 + 16}px` }}
           draggable
           onDragOver={handleDragOverRow(node.id)}

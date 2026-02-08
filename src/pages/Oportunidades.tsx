@@ -15,7 +15,7 @@ export default function Oportunidades() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [formData, setFormData] = useState({ clienteId: '', titulo: '', estagio: EstagioFunil.Lead });
+    const [formData, setFormData] = useState<{ clienteId: string; titulo: string; estagio: EstagioFunil }>({ clienteId: '', titulo: '', estagio: EstagioFunil.Lead });
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [clientes, setClientes] = useState<SearchSelectOption[]>([]);
     const [closing, setClosing] = useState<string | null>(null);
@@ -169,7 +169,7 @@ export default function Oportunidades() {
                 </button>
             </div>
 
-            <DataTable columns={columns} data={oportunidades} searchPlaceholder={t('table.searchPlaceholder')} />
+            <DataTable columns={columns} data={oportunidades} />
 
             {showModal && (
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>
@@ -183,7 +183,7 @@ export default function Oportunidades() {
                                 {formErrors._global && <div className="glass-modal-error">{formErrors._global}</div>}
                                 <div>
                                     <label className="glass-modal-label">{t('opportunities.client')} <span className="glass-modal-required">*</span></label>
-                                    <SearchSelect options={clientes} value={formData.clienteId} onChange={(val) => setFormData({ ...formData, clienteId: val || '' })} />
+                                    <SearchSelect options={clientes} value={clientes.find(c => c.value === formData.clienteId) || null} onChange={(opt) => setFormData({ ...formData, clienteId: (opt?.value as string) || '' })} />
                                     {formErrors.clienteId && <div className="glass-modal-error">{formErrors.clienteId}</div>}
                                 </div>
                                 <div>
@@ -193,7 +193,7 @@ export default function Oportunidades() {
                                 </div>
                                 <div>
                                     <label className="glass-modal-label">{t('opportunities.stage')}</label>
-                                    <SearchSelect options={estagioOptions} value={String(formData.estagio)} onChange={(val) => setFormData({ ...formData, estagio: Number(val) })} />
+                                    <SearchSelect options={estagioOptions} value={estagioOptions.find(o => o.value === String(formData.estagio)) || null} onChange={(opt) => setFormData({ ...formData, estagio: Number(opt?.value) as EstagioFunil })} />
                                 </div>
                             </div>
                             <div className="glass-modal-footer">

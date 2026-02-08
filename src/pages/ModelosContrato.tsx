@@ -137,7 +137,7 @@ export default function ModelosContrato() {
                 </button>
             </div>
 
-            <DataTable columns={columns} data={modelos} searchPlaceholder={t('table.searchPlaceholder')} />
+            <DataTable columns={columns} data={modelos} />
 
             {showModal && (
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>

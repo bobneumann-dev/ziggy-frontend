@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Edit, Trash2, X } from 'lucide-react';
 import api from '../lib/api';
-import { type ItemCatalogo, TipoItemCatalogo, type Armazem } from '../types';
+
 import { DataTable } from '../components/DataTable';
 import SearchSelect, { type SearchSelectOption } from '../components/SearchSelect';
 import type { ColumnDef } from '@tanstack/react-table';

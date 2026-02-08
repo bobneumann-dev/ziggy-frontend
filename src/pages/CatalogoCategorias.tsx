@@ -139,7 +139,7 @@ export default function CatalogoCategorias() {
                 </button>
             </div>
 
-            <DataTable columns={columns} data={categorias} searchPlaceholder={t('table.searchPlaceholder')} />
+            <DataTable columns={columns} data={categorias} />
 
             {showModal && (
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>
@@ -162,7 +162,7 @@ export default function CatalogoCategorias() {
                                 </div>
                                 <div>
                                     <label className="glass-modal-label">{t('catalogCategories.parentCategory')}</label>
-                                    <SearchSelect options={categoriaOptions} value={formData.categoriaPaiId} onChange={(val) => setFormData({ ...formData, categoriaPaiId: val || '' })} isClearable />
+                                    <SearchSelect options={categoriaOptions} value={categoriaOptions.find(c => c.value === formData.categoriaPaiId) || null} onChange={(opt) => setFormData({ ...formData, categoriaPaiId: (opt?.value as string) || '' })} isClearable />
                                 </div>
                                 <div>
                                     <label className="glass-modal-label">{t('catalogCategories.order')}</label>
