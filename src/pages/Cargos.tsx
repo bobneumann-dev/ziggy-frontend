@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../lib/api';
 import CargoOrgChart from '../components/CargoOrgChart';
 import { DataTable } from '../components/DataTable';
+import LoadingState from '../components/LoadingState';
 import type { Cargo, Setor, Pessoa, PessoaSetorCargo } from '../types';
 import SearchSelect, { type SearchSelectOption } from '../components/SearchSelect';
 import type { ColumnDef, SortingState } from '@tanstack/react-table';
@@ -50,7 +51,7 @@ export default function Cargos() {
   const fetchPaginatedCargos = async () => {
     setLoading(true);
     try {
-      const response = await api.get<PagedResult<Cargo>>('/cargos/paged', {
+      const response = await api.get<PagedResult<Cargo>>('/api/cargos/paged', {
         params: {
           pageNumber: pagination.pageNumber,
           pageSize: pagination.pageSize,
@@ -71,7 +72,7 @@ export default function Cargos() {
 
   const fetchAllCargos = async () => {
     try {
-      const response = await api.get<Cargo[]>('/cargos');
+      const response = await api.get<Cargo[]>('/api/cargos');
       setAllCargos(response.data);
     } catch (error) {
       console.error('Erro ao carregar cargos:', error);
@@ -80,7 +81,7 @@ export default function Cargos() {
 
   const fetchSetores = async () => {
     try {
-      const response = await api.get<Setor[]>('/setores');
+      const response = await api.get<Setor[]>('/api/setores');
       setSetores(response.data);
     } catch (error) {
       console.error('Erro ao carregar setores:', error);
@@ -90,8 +91,8 @@ export default function Cargos() {
   const fetchPessoasEVinculos = async () => {
     try {
       const [pessoasResponse, vinculosResponse] = await Promise.all([
-        api.get<Pessoa[]>('/pessoas'),
-        api.get<PessoaSetorCargo[]>('/pessoasetorcargo'),
+        api.get<Pessoa[]>('/api/pessoas'),
+        api.get<PessoaSetorCargo[]>('/api/pessoasetorcargo'),
       ]);
       setPessoas(pessoasResponse.data);
       setVinculos(vinculosResponse.data.filter(v => v.ativo));
@@ -200,9 +201,9 @@ export default function Cargos() {
       };
 
       if (editingCargoId) {
-        await api.put(`/cargos/${editingCargoId}`, payload);
+        await api.put(`/api/cargos/${editingCargoId}`, payload);
       } else {
-        await api.post('/cargos', payload);
+        await api.post('/api/cargos', payload);
       }
 
       await Promise.all([fetchPaginatedCargos(), fetchAllCargos(), fetchPessoasEVinculos()]);
@@ -227,7 +228,7 @@ export default function Cargos() {
     if (!deleteTarget) return;
     try {
       setLoading(true);
-      await api.delete(`/cargos/${deleteTarget.id}`);
+      await api.delete(`/api/cargos/${deleteTarget.id}`);
       await Promise.all([fetchPaginatedCargos(), fetchAllCargos(), fetchPessoasEVinculos()]);
       setIsDeleteOpen(false);
       setDeleteTarget(null);
@@ -306,7 +307,7 @@ export default function Cargos() {
 
     try {
       setLoading(true);
-      await api.put(`/cargos/${cargoId}`, {
+      await api.put(`/api/cargos/${cargoId}`, {
         setorId,
         cargoPaiId,
       });
@@ -372,7 +373,7 @@ export default function Cargos() {
 
   const handleMovePessoa = async (pessoaId: string, cargo: Cargo) => {
     try {
-      await api.post('/pessoasetorcargo', {
+      await api.post('/api/pessoasetorcargo', {
         pessoaId,
         setorId: cargo.setorId,
         cargoId: cargo.id,
@@ -398,7 +399,7 @@ export default function Cargos() {
     const vinculo = vinculoAtivoPorPessoa.get(pessoaId);
     if (!vinculo) return;
     try {
-      await api.put(`/pessoasetorcargo/${vinculo.id}`, {
+      await api.put(`/api/pessoasetorcargo/${vinculo.id}`, {
         dataFim: new Date().toISOString(),
       });
       await fetchPessoasEVinculos();
@@ -440,12 +441,14 @@ export default function Cargos() {
         const cargo = info.row.original;
         return (
           <div className="text-right">
-            <button className="text-indigo-600 hover:text-indigo-900 mr-3" onClick={() => handleOpenModal(cargo)}>
-              <Edit className="w-4 h-4" />
-            </button>
-            <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(cargo)}>
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="action-button-group inline-flex">
+              <button className="action-button" onClick={() => handleOpenModal(cargo)}>
+                <Edit className="w-4 h-4" />
+              </button>
+              <button className="action-button" onClick={() => handleDelete(cargo)}>
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         );
       }
@@ -539,20 +542,20 @@ export default function Cargos() {
               <span className="font-medium text-primary" draggable onDragStart={handleCargoDragStart}>
                 {cargo.nome}
               </span>
-          {cargo.cargoPaiNome && (
+              {cargo.cargoPaiNome && (
                 <span className="ml-3 text-sm text-secondary" draggable onDragStart={handleCargoDragStart}>
                   {t('positions.parentLabel', { name: cargo.cargoPaiNome })}
                 </span>
               )}
             </div>
-            <div className="flex space-x-2">
-              <button className="text-indigo-600 hover:text-indigo-900" draggable={false} onClick={() => handleOpenModal(cargo)}>
+            <div className="action-button-group">
+              <button className="action-button" draggable={false} onClick={() => handleOpenModal(cargo)}>
                 <Edit className="w-4 h-4" />
               </button>
-              <button className="text-red-600 hover:text-red-900" draggable={false} onClick={() => handleDelete(cargo)}>
+              <button className="action-button" draggable={false} onClick={() => handleDelete(cargo)}>
                 <Trash2 className="w-4 h-4" />
               </button>
-              <button className="text-emerald-600 hover:text-emerald-700" draggable={false} onClick={() => handleOpenModal(undefined, setorId, cargo.id)}>
+              <button className="action-button" draggable={false} onClick={() => handleOpenModal(undefined, setorId, cargo.id)}>
                 <Plus className="w-4 h-4" />
               </button>
             </div>
@@ -568,14 +571,7 @@ export default function Cargos() {
   };
 
   if (loading && cargos.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex flex-col items-center space-y-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: 'var(--border-color)', borderTopColor: 'var(--accent-primary)' }}></div>
-          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('common.loading')}</span>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
@@ -589,8 +585,8 @@ export default function Cargos() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div 
-            className="flex rounded-lg p-1" 
+          <div
+            className="flex rounded-lg p-1"
             style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
           >
             {[
@@ -653,9 +649,8 @@ export default function Cargos() {
             return (
               <div key={setor.id}>
                 <div
-                  className={`atribuicao-row flex items-center py-2 px-4 cursor-pointer ${
-                    dropTargetKey === `setor:${setor.id}` ? 'atribuicao-drop-target' : ''
-                  }`}
+                  className={`atribuicao-row flex items-center py-2 px-4 cursor-pointer ${dropTargetKey === `setor:${setor.id}` ? 'atribuicao-drop-target' : ''
+                    }`}
                   onDragOver={handleDragOverRow(
                     `setor:${setor.id}`,
                     Boolean(draggingCargoId)
@@ -702,7 +697,7 @@ export default function Cargos() {
                       </span>
                     </div>
                     <button
-                      className="text-emerald-600 hover:text-emerald-700"
+                      className="glass-button"
                       onClick={(event) => {
                         event.stopPropagation();
                         handleOpenModal(undefined, setor.id);

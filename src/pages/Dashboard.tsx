@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users, UserCircle, Building2, Briefcase, ClipboardList } from 'lucide-react';
 import api from '../lib/api';
+import LoadingState from '../components/LoadingState';
 
 interface Stats {
   usuarios: number;
@@ -26,11 +27,11 @@ export default function Dashboard() {
     const fetchStats = async () => {
       try {
         const [usuarios, pessoas, setores, cargos, atribuicoes] = await Promise.all([
-          api.get('/usuarios'),
-          api.get('/pessoas'),
-          api.get('/setores'),
-          api.get('/cargos'),
-          api.get('/atribuicoes'),
+          api.get('/api/usuarios'),
+          api.get('/api/pessoas'),
+          api.get('/api/setores'),
+          api.get('/api/cargos'),
+          api.get('/api/atribuicoes'),
         ]);
 
         setStats({
@@ -58,16 +59,7 @@ export default function Dashboard() {
     { icon: ClipboardList, label: t('menu.attributions'), value: stats.atribuicoes, color: '#ec4899' },
   ];
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex flex-col items-center space-y-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: 'var(--border-color)', borderTopColor: 'var(--accent-primary)' }}></div>
-          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('common.loading')}</span>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingState />;
 
   return (
     <div className="animate-fadeIn">

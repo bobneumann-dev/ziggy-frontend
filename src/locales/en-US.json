@@ -40,7 +40,21 @@
     "positions": "Positions",
     "attributions": "Attributions",
     "links": "Links",
-    "adminPanel": "Admin Panel"
+    "adminPanel": "Admin Panel",
+    "catalog": "Catalog",
+    "catalogItems": "Items",
+    "catalogCategories": "Categories",
+    "stockAndAssets": "Stock & Assets",
+    "warehouses": "Warehouses",
+    "stockBalances": "Balances",
+    "stockMovements": "Movements",
+    "assets": "Assets",
+    "commercial": "Commercial",
+    "clients": "Clients",
+    "opportunities": "Opportunities",
+    "contracts": "Contracts",
+    "proposals": "Proposals",
+    "contractTemplates": "Contract Templates"
   },
   "dashboard": {
     "title": "Dashboard",

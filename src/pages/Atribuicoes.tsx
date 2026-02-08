@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import api from '../lib/api';
+import LoadingState from '../components/LoadingState';
 import SearchSelect, { type SearchSelectOption } from '../components/SearchSelect';
 import type {
   Atribuicao,
@@ -73,7 +74,7 @@ export default function Atribuicoes() {
   const fetchAtribuicoes = async () => {
     setAtribuicoesLoading(true);
     try {
-      const response = await api.get<Atribuicao[]>('/atribuicoes');
+      const response = await api.get<Atribuicao[]>('/api/atribuicoes');
       setAtribuicoes(response.data);
     } catch (error) {
       console.error('Erro ao carregar atribuicoes:', error);
@@ -85,8 +86,8 @@ export default function Atribuicoes() {
   const fetchCategorias = async () => {
     try {
       const [categoriasResponse, treeResponse] = await Promise.all([
-        api.get<Categoria[]>('/categorias'),
-        api.get<CategoriaTree>('/categorias/tree')
+        api.get<Categoria[]>('/api/categorias'),
+        api.get<CategoriaTree>('/api/categorias/tree')
       ]);
       setCategorias(categoriasResponse.data);
       setCategoriaTree(treeResponse.data);
@@ -98,9 +99,9 @@ export default function Atribuicoes() {
   const fetchPeopleAndCargos = async () => {
     try {
       const [pessoasResponse, setoresResponse, cargosResponse] = await Promise.all([
-        api.get<Pessoa[]>('/pessoas'),
-        api.get<Setor[]>('/setores'),
-        api.get<Cargo[]>('/cargos'),
+        api.get<Pessoa[]>('/api/pessoas'),
+        api.get<Setor[]>('/api/setores'),
+        api.get<Cargo[]>('/api/cargos'),
       ]);
       setPessoas(pessoasResponse.data);
       setSetores(setoresResponse.data);
@@ -114,8 +115,8 @@ export default function Atribuicoes() {
     setLoadingDetails(true);
     try {
       const [pessoasResponse, cargosResponse] = await Promise.all([
-        api.get<AtribuicaoPessoa[]>(`/atribuicoes/${atribId}/pessoas`),
-        api.get<AtribuicaoCargo[]>(`/atribuicoes/${atribId}/cargos`)
+        api.get<AtribuicaoPessoa[]>(`/api/atribuicoes/${atribId}/pessoas`),
+        api.get<AtribuicaoCargo[]>(`/api/atribuicoes/${atribId}/cargos`)
       ]);
       setAtribPessoas(pessoasResponse.data);
       setAtribCargos(cargosResponse.data);
@@ -255,9 +256,9 @@ export default function Atribuicoes() {
         categoriaPaiId: categoriaForm.categoriaPaiId || null
       };
       if (editingCategoriaId) {
-        await api.put(`/categorias/${editingCategoriaId}`, payload);
+        await api.put(`/api/categorias/${editingCategoriaId}`, payload);
       } else {
-        await api.post('/categorias', payload);
+        await api.post('/api/categorias', payload);
       }
       await fetchCategorias();
       handleCloseCategoriaModal();
@@ -290,9 +291,9 @@ export default function Atribuicoes() {
       };
 
       if (editingAtribuicaoId) {
-        await api.put(`/atribuicoes/${editingAtribuicaoId}`, payload);
+        await api.put(`/api/atribuicoes/${editingAtribuicaoId}`, payload);
       } else {
-        await api.post('/atribuicoes', payload);
+        await api.post('/api/atribuicoes', payload);
       }
 
       await Promise.all([fetchAtribuicoes(), fetchCategorias()]);
@@ -317,7 +318,7 @@ export default function Atribuicoes() {
     if (!deleteTarget) return;
     try {
       setAtribuicoesLoading(true);
-      await api.delete(`/atribuicoes/${deleteTarget.id}`);
+      await api.delete(`/api/atribuicoes/${deleteTarget.id}`);
       await Promise.all([fetchAtribuicoes(), fetchCategorias()]);
       if (selectedAtribuicaoId === deleteTarget.id) {
         setSelectedAtribuicaoId(null);
@@ -347,7 +348,7 @@ export default function Atribuicoes() {
 
     try {
       setLoadingDetails(true);
-      await api.post('/atribuicoes/pessoa', {
+      await api.post('/api/atribuicoes/pessoa', {
         atribuicaoId: selectedAtribuicao.id,
         pessoaId: addPessoaId
       });
@@ -365,7 +366,7 @@ export default function Atribuicoes() {
     if (!selectedAtribuicao) return;
     try {
       setLoadingDetails(true);
-      await api.delete(`/atribuicoes/pessoa/${id}`);
+      await api.delete(`/api/atribuicoes/pessoa/${id}`);
       await fetchRelacionamentos(selectedAtribuicao.id);
     } catch (error) {
       console.error('Erro ao remover pessoa:', error);
@@ -385,7 +386,7 @@ export default function Atribuicoes() {
 
     try {
       setLoadingDetails(true);
-      await api.post('/atribuicoes/cargo', {
+      await api.post('/api/atribuicoes/cargo', {
         atribuicaoId: selectedAtribuicao.id,
         cargoId: addCargoId
       });
@@ -403,7 +404,7 @@ export default function Atribuicoes() {
     if (!selectedAtribuicao) return;
     try {
       setLoadingDetails(true);
-      await api.delete(`/atribuicoes/cargo/${id}`);
+      await api.delete(`/api/atribuicoes/cargo/${id}`);
       await fetchRelacionamentos(selectedAtribuicao.id);
     } catch (error) {
       console.error('Erro ao remover cargo:', error);
@@ -415,7 +416,7 @@ export default function Atribuicoes() {
   const handleDropCategoria = async (categoriaId: string | null, atribId: string) => {
     try {
       setAtribuicoesLoading(true);
-      await api.put(`/atribuicoes/${atribId}`, { categoriaId });
+      await api.put(`/api/atribuicoes/${atribId}`, { categoriaId });
       await Promise.all([fetchAtribuicoes(), fetchCategorias()]);
     } catch (error) {
       console.error('Erro ao mover atribuicao:', error);
@@ -430,7 +431,7 @@ export default function Atribuicoes() {
 
     try {
       setAtribuicoesLoading(true);
-      await api.put(`/categorias/${categoriaId}`, { categoriaPaiId });
+      await api.put(`/api/categorias/${categoriaId}`, { categoriaPaiId });
       await fetchCategorias();
     } catch (error) {
       console.error('Erro ao mover categoria:', error);
@@ -526,9 +527,8 @@ export default function Atribuicoes() {
   const renderAtribuicaoRow = (atrib: Atribuicao, level: number) => (
     <div
       key={atrib.id}
-      className={`atribuicao-row flex items-start justify-between py-2 px-4 cursor-pointer transition-colors ${
-        selectedAtribuicaoId === atrib.id ? 'atribuicao-row-selected' : ''
-      } ${draggingAtribuicaoId === atrib.id ? 'atribuicao-dragging' : ''}`}
+      className={`atribuicao-row flex items-start justify-between py-2 px-4 cursor-pointer transition-colors ${selectedAtribuicaoId === atrib.id ? 'atribuicao-row-selected' : ''
+        } ${draggingAtribuicaoId === atrib.id ? 'atribuicao-dragging' : ''}`}
       style={{ paddingLeft: `${level * 24 + 16}px` }}
       draggable
       onDragStart={(event) => {
@@ -560,13 +560,13 @@ export default function Atribuicoes() {
           <span>{t('attributions.countEligible', { count: atrib.totalPessoasElegiveis })}</span>
         </div>
       </div>
-      <div className="flex space-x-2 ml-4">
+      <div className="action-button-group ml-4">
         <button
           onClick={(e) => {
             e.stopPropagation();
             handleSelectAtribuicao(atrib);
           }}
-          className="text-indigo-600 hover:text-indigo-900"
+          className="action-button"
           aria-label={t('attributions.viewDetails')}
         >
           <Users className="w-4 h-4" />
@@ -576,7 +576,7 @@ export default function Atribuicoes() {
             e.stopPropagation();
             handleOpenModal(atrib);
           }}
-          className="text-indigo-600 hover:text-indigo-900"
+          className="action-button"
           aria-label={t('common.edit')}
         >
           <Edit className="w-4 h-4" />
@@ -586,7 +586,7 @@ export default function Atribuicoes() {
             e.stopPropagation();
             handleDelete(atrib);
           }}
-          className="text-red-600 hover:text-red-900"
+          className="action-button"
           aria-label={t('common.delete')}
         >
           <Trash2 className="w-4 h-4" />
@@ -605,9 +605,8 @@ export default function Atribuicoes() {
     return (
       <div key={node.id}>
         <div
-          className={`atribuicao-row flex items-center justify-between py-2 px-4 cursor-pointer ${
-            isDropTarget ? 'atribuicao-drop-target' : ''
-          }`}
+          className={`atribuicao-row flex items-center justify-between py-2 px-4 cursor-pointer ${isDropTarget ? 'atribuicao-drop-target' : ''
+            }`}
           style={{ paddingLeft: `${level * 24 + 16}px` }}
           draggable
           onDragOver={handleDragOverRow(node.id)}
@@ -668,9 +667,9 @@ export default function Atribuicoes() {
             <span className="text-sm font-semibold text-primary">{node.nome}</span>
             <span className="text-xs text-muted ml-2">({node.quantidadeAtribuicoes})</span>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="action-button-group">
             <button
-              className="text-indigo-600 hover:text-indigo-900 flex items-center space-x-1"
+              className="action-button flex items-center space-x-1"
               onClick={(e) => {
                 e.stopPropagation();
                 handleOpenModal(undefined, node.id);
@@ -681,7 +680,7 @@ export default function Atribuicoes() {
               <span className="text-xs font-semibold">{t('attributions.shortAttribution')}</span>
             </button>
             <button
-              className="text-slate-600 hover:text-slate-900 flex items-center space-x-1"
+              className="action-button flex items-center space-x-1"
               onClick={(e) => {
                 e.stopPropagation();
                 handleOpenCategoriaEdit(node);
@@ -692,7 +691,7 @@ export default function Atribuicoes() {
               <span className="text-xs font-semibold">{t('common.edit')}</span>
             </button>
             <button
-              className="text-emerald-600 hover:text-emerald-800 flex items-center space-x-1"
+              className="action-button flex items-center space-x-1"
               onClick={(e) => {
                 e.stopPropagation();
                 handleOpenCategoriaModal(node.id);
@@ -718,7 +717,7 @@ export default function Atribuicoes() {
   const semCategoria = atribuicoesByCategoria.get('sem-categoria') || [];
 
   if (atribuicoesLoading) {
-    return <div className="flex items-center justify-center h-64">{t('common.loading')}</div>;
+    return <LoadingState />;
   }
 
   return (
@@ -762,7 +761,7 @@ export default function Atribuicoes() {
               <div className="p-6 text-sm text-muted flex items-center justify-between">
                 <span>{t('attributions.noCategories')}</span>
                 <button
-                  className="text-indigo-600 hover:text-indigo-900"
+                  className="glass-button"
                   onClick={() => handleOpenCategoriaModal()}
                   aria-label={t('attributions.newCategory')}
                 >
@@ -773,9 +772,8 @@ export default function Atribuicoes() {
             {semCategoria.length > 0 && (
               <div className="border-t border-gray-200">
                 <div
-                  className={`flex items-center justify-between py-2 px-4 ${
-                    dropTargetCategoriaId === 'sem-categoria' ? 'atribuicao-drop-target' : ''
-                  }`}
+                  className={`flex items-center justify-between py-2 px-4 ${dropTargetCategoriaId === 'sem-categoria' ? 'atribuicao-drop-target' : ''
+                    }`}
                   onDragOver={handleDragOverRow('sem-categoria')}
                   onDrop={(event) => {
                     event.preventDefault();
@@ -790,7 +788,7 @@ export default function Atribuicoes() {
                 >
                   <span className="text-sm font-semibold text-primary">{t('attributions.noCategory')}</span>
                   <button
-                    className="text-indigo-600 hover:text-indigo-900"
+                    className="glass-button"
                     onClick={() => handleOpenModal(undefined, '')}
                     aria-label={t('attributions.newAttribution')}
                   >
@@ -826,27 +824,29 @@ export default function Atribuicoes() {
                       })}
                     </div>
                   </div>
-                  <div className="flex space-x-2">
-                    <button
-                      className="text-indigo-600 hover:text-indigo-900"
-                      onClick={() => handleOpenModal(selectedAtribuicao)}
-                      aria-label={t('common.edit')}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      className="text-red-600 hover:text-red-900"
-                      onClick={() => handleDelete(selectedAtribuicao)}
-                      aria-label={t('common.delete')}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  <div className="text-right">
+                    <div className="action-button-group inline-flex">
+                      <button
+                        className="action-button"
+                        onClick={() => handleOpenModal(selectedAtribuicao)}
+                        aria-label={t('common.edit')}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        className="action-button"
+                        onClick={() => handleDelete(selectedAtribuicao)}
+                        aria-label={t('common.delete')}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {loadingDetails ? (
-                <div className="flex items-center justify-center h-64 text-muted">{t('common.loading')}</div>
+                <LoadingState />
               ) : (
                 <div className="p-6 space-y-6">
                   <div>
@@ -884,7 +884,7 @@ export default function Atribuicoes() {
                               {pessoa.observacao && <div className="text-xs text-muted">{pessoa.observacao}</div>}
                             </div>
                             <button
-                              className="text-red-600 hover:text-red-900"
+                              className="glass-button"
                               onClick={() => handleRemovePessoa(pessoa.id)}
                               aria-label={t('attributions.removePerson')}
                             >
@@ -942,7 +942,7 @@ export default function Atribuicoes() {
                               <div className="text-xs text-muted">{cargo.setorNome}</div>
                             </div>
                             <button
-                              className="text-red-600 hover:text-red-900"
+                              className="glass-button"
                               onClick={() => handleRemoveCargo(cargo.id)}
                               aria-label={t('attributions.removePosition')}
                             >
@@ -1108,4 +1108,3 @@ export default function Atribuicoes() {
     </div>
   );
 }
-

@@ -6,16 +6,30 @@ import { useAuth } from '../contexts/AuthContext';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import Header from './Header';
-import { 
-  Users, 
-  UserCircle, 
-  Building2, 
-  Briefcase, 
-  ClipboardList, 
+import {
+  Users,
+  UserCircle,
+  Building2,
+  Briefcase,
+  ClipboardList,
   Link as LinkIcon,
   LogOut,
   LayoutDashboard,
-  Settings
+  Settings,
+  ChevronDown,
+  ChevronRight,
+  Package,
+  FolderTree,
+  Warehouse,
+  BarChart3,
+  ArrowLeftRight,
+  Tag,
+  TrendingUp,
+  FileText,
+  FileCode,
+  Coins,
+  DollarSign,
+  Wrench
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -24,6 +38,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
   const { usuario, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -34,14 +49,150 @@ export default function Layout({ children }: LayoutProps) {
     navigate('/login');
   };
 
-  const menuItems = [
-    { path: '/admin', icon: LayoutDashboard, label: t('menu.dashboard') },
-    { path: '/admin/usuarios', icon: Users, label: t('menu.users') },
-    { path: '/admin/pessoas', icon: UserCircle, label: t('menu.people') },
-    { path: '/admin/setores', icon: Building2, label: t('menu.sectors') },
-    { path: '/admin/cargos', icon: Briefcase, label: t('menu.positions') },
-    { path: '/admin/atribuicoes', icon: ClipboardList, label: t('menu.attributions') },
+  // New Menu Structure Definition
+  type MenuItem = {
+    path?: string;
+    icon?: any;
+    label: string;
+    children?: MenuItem[];
+    isOpen?: boolean;
+    onToggle?: () => void;
+  };
+
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
+    'financeiro': true,
+    'estoque': true,
+    'cadastros': true,
+    'estoque-armazens': true,
+    'comercial': true,
+    'empresa': true
+  });
+
+  const toggleMenu = (key: string) => {
+    setOpenMenus(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const SidebarItem = ({ item, depth = 0 }: { item: MenuItem; depth?: number }) => {
+    const isActive = item.path ? location.pathname === item.path : false;
+    const hasChildren = item.children && item.children.length > 0;
+    const isOpen = item.label && openMenus[item.label.toLowerCase().replace(/\s/g, '-')];
+    const Icon = item.icon;
+
+    if (hasChildren) {
+      return (
+        <>
+          <div
+            className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 select-none ${depth > 0 ? 'mt-1' : ''}`}
+            style={{
+              paddingLeft: `${(depth * 12) + 12}px`,
+              color: 'var(--sidebar-text)',
+              opacity: isSidebarCollapsed && depth > 0 ? 0 : 1
+            }}
+            onClick={() => !isSidebarCollapsed && toggleMenu(item.label.toLowerCase().replace(/\s/g, '-'))}
+            title={isSidebarCollapsed ? item.label : undefined}
+          >
+            <div className="flex items-center gap-3 overflow-hidden">
+              {Icon && <Icon className="w-4 h-4 min-w-[16px]" style={{ color: 'var(--text-muted)' }} />}
+              {!isSidebarCollapsed && <span className="text-sm font-medium truncate">{item.label}</span>}
+            </div>
+            {!isSidebarCollapsed && (isOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />)}
+          </div>
+          <div style={{ display: isOpen && !isSidebarCollapsed ? 'block' : 'none', overflow: 'hidden' }}>
+            {item.children?.map((child, index) => (
+              <SidebarItem key={index} item={child} depth={depth + 1} />
+            ))}
+          </div>
+        </>
+      );
+    }
+
+    return (
+      <Link
+        to={item.path!}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150"
+        style={{
+          paddingLeft: `${(depth * 12) + 12}px`,
+          backgroundColor: isActive ? 'var(--sidebar-active)' : 'transparent',
+          color: isActive ? 'var(--accent-primary)' : 'var(--sidebar-text)',
+          borderLeft: isActive ? '3px solid var(--accent-primary)' : '3px solid transparent',
+        }}
+        onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)'; }}
+        onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'; }}
+        title={isSidebarCollapsed ? item.label : undefined}
+      >
+        {Icon && <Icon className="w-4 h-4 min-w-[16px]" style={{ color: isActive ? 'var(--accent-primary)' : 'var(--text-muted)' }} />}
+        {!isSidebarCollapsed && <span className="text-sm font-medium truncate">{item.label}</span>}
+      </Link>
+    );
+  };
+
+  const menuStructure: MenuItem[] = [
+    {
+      label: 'Empresa',
+      icon: Building2,
+      children: [
+        { path: '/admin', icon: LayoutDashboard, label: t('menu.dashboard') },
+        { path: '/admin/usuarios', icon: Users, label: t('menu.users') },
+        { path: '/admin/pessoas', icon: UserCircle, label: t('menu.people') },
+        { path: '/admin/setores', icon: Building2, label: t('menu.sectors') },
+        { path: '/admin/cargos', icon: Briefcase, label: t('menu.positions') },
+        { path: '/admin/atribuicoes', icon: ClipboardList, label: t('menu.attributions') },
+      ]
+    },
+    {
+      label: 'Financeiro',
+      icon: DollarSign,
+      children: [
+        { path: '/admin/catalogo/moedas', icon: Coins, label: 'Moedas' },
+        { path: '/admin/catalogo/cotacoes', icon: DollarSign, label: 'Cotações' },
+      ]
+    },
+    {
+      label: 'Estoque & Patrimônio',
+      icon: Package,
+      children: [
+        {
+          label: 'Cadastros',
+          icon: FolderTree,
+          children: [
+            {
+              label: 'Itens/Serviços',
+              icon: Package,
+              children: [
+                { path: '/admin/catalogo/categorias', icon: FolderTree, label: t('menu.catalogCategories') },
+                { path: '/admin/catalogo/produtos', icon: Package, label: 'Produtos' },
+                { path: '/admin/catalogo/servicos', icon: Wrench, label: 'Serviços' },
+                { path: '/admin/patrimonio/itens', icon: Tag, label: 'Patrimônio (Tipos)' },
+              ]
+            },
+            {
+              label: 'Armazéns',
+              icon: Warehouse,
+              children: [
+                { path: '/admin/estoque/categorias-armazem', icon: FolderTree, label: 'Categorias' },
+                { path: '/admin/estoque/armazens', icon: Warehouse, label: 'Armazéns' },
+              ]
+            }
+          ]
+        },
+        { path: '/admin/estoque/saldos', icon: BarChart3, label: t('menu.stockBalances') },
+        { path: '/admin/estoque/movimentos', icon: ArrowLeftRight, label: t('menu.stockMovements') },
+        { path: '/admin/patrimonio/ativos', icon: Tag, label: 'Ativos (Patrimônio)' }, // New CRUD
+      ]
+    },
+    {
+      label: 'Comercial',
+      icon: TrendingUp,
+      children: [
+        { path: '/admin/comercial/clientes', icon: Users, label: t('menu.clients') },
+        { path: '/admin/comercial/oportunidades', icon: TrendingUp, label: t('menu.opportunities') },
+        { path: '/admin/comercial/propostas', icon: ClipboardList, label: t('menu.proposals') },
+        { path: '/admin/comercial/contratos', icon: FileText, label: t('menu.contracts') },
+        { path: '/admin/comercial/modelos-contrato', icon: FileCode, label: t('menu.contractTemplates') },
+      ]
+    }
   ];
+
 
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -62,54 +213,39 @@ export default function Layout({ children }: LayoutProps) {
             transition: 'width 0.2s ease'
           }}
         >
-          {/* Menu Title */}
-          <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Settings className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                {!isSidebarCollapsed && (
-                  <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                    Menu Principal
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
+          <nav className="flex-1 overflow-y-auto py-2">
+            {menuStructure.map((section, index) => (
+              <div key={index} className="mb-1">
+                {/* Top Level Section Header */}
+                <div
+                  className="px-4 py-3 cursor-pointer select-none flex items-center justify-between"
+                  onClick={() => !isSidebarCollapsed && toggleMenu(section.label.toLowerCase().replace(/\s/g, '-'))}
+                  style={{ borderBottom: '1px solid var(--border-color)' }}
+                >
+                  <div className="flex items-center gap-2">
+                    {section.icon && <section.icon className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />}
+                    {!isSidebarCollapsed && (
+                      <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{section.label}</span>
+                    )}
+                  </div>
+                  {!isSidebarCollapsed && (
+                    openMenus[section.label.toLowerCase().replace(/\s/g, '-')]
+                      ? <ChevronDown className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
+                      : <ChevronRight className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
+                  )}
+                </div>
 
-          {/* Navegação */}
-          <nav className="flex-1 p-2 overflow-y-auto">
-            <div className="space-y-0.5">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.path;
-                
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150"
-                    style={{ 
-                      backgroundColor: isActive ? 'var(--sidebar-active)' : 'transparent',
-                      color: isActive ? 'var(--accent-primary)' : 'var(--sidebar-text)',
-                      borderLeft: isActive ? '3px solid var(--accent-primary)' : '3px solid transparent'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }
-                    }}
-                  >
-                    <Icon className="w-4 h-4" style={{ color: isActive ? 'var(--accent-primary)' : 'var(--text-muted)' }} />
-                    {!isSidebarCollapsed && <span className="text-sm font-medium">{item.label}</span>}
-                  </Link>
-                );
-              })}
-            </div>
+                {/* Children */}
+                <div style={{
+                  display: (openMenus[section.label.toLowerCase().replace(/\s/g, '-')] || isSidebarCollapsed) ? 'block' : 'none',
+                  padding: '0.5rem'
+                }}>
+                  {section.children?.map((child, cIndex) => (
+                    <SidebarItem key={cIndex} item={child} />
+                  ))}
+                </div>
+              </div>
+            ))}
           </nav>
 
           {/* Controles de tema/idioma */}
@@ -122,9 +258,9 @@ export default function Layout({ children }: LayoutProps) {
           {/* Perfil do usuário */}
           <div className="p-3" style={{ borderTop: '1px solid var(--border-color)' }}>
             <div className="flex items-center gap-2 mb-2">
-              <div 
+              <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                style={{ 
+                style={{
                   background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
                   color: '#1a1a1a'
                 }}
@@ -145,7 +281,7 @@ export default function Layout({ children }: LayoutProps) {
             <button
               onClick={handleLogout}
               className="flex items-center justify-center gap-2 w-full px-2 py-1.5 rounded-md transition-all duration-150 text-xs"
-              style={{ 
+              style={{
                 backgroundColor: 'transparent',
                 color: 'var(--text-muted)',
                 border: '1px solid var(--border-color)'

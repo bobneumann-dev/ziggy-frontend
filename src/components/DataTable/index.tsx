@@ -9,6 +9,7 @@ import {
 import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, ArrowDown, ArrowUp } from 'lucide-react';
 import SearchSelect, { type SearchSelectOption } from '../SearchSelect';
+import LoadingState from '../LoadingState';
 import './styles.css';
 
 interface DataTableProps<TData> {
@@ -110,12 +111,7 @@ export function DataTable<TData>({
       {/* Tabela */}
       <div className="relative overflow-x-auto">
         {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center z-10" style={{ backgroundColor: 'var(--card-bg)', opacity: 0.9 }}>
-            <div className="flex flex-col items-center space-y-3">
-              <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: 'var(--border-color)', borderTopColor: 'var(--accent-primary)' }}></div>
-              <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('common.loading')}</span>
-            </div>
-          </div>
+          <LoadingState variant="overlay" />
         )}
         
         <table className="min-w-full">

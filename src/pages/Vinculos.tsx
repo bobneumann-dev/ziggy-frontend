@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import api from '../lib/api';
+import LoadingState from '../components/LoadingState';
 import type { PessoaSetorCargo } from '../types';
 
 export default function Vinculos() {
@@ -13,7 +14,7 @@ export default function Vinculos() {
 
   const fetchVinculos = async () => {
     try {
-      const response = await api.get<PessoaSetorCargo[]>('/pessoasetorcargo');
+      const response = await api.get<PessoaSetorCargo[]>('/api/pessoasetorcargo');
       setVinculos(response.data);
     } catch (error) {
       console.error('Erro ao carregar vínculos:', error);
@@ -27,7 +28,7 @@ export default function Vinculos() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Carregando...</div>;
+    return <LoadingState />;
   }
 
   return (

@@ -63,7 +63,7 @@ export default function Pessoas() {
   const fetchPaginatedPessoas = async () => {
     setLoading(true);
     try {
-      const response = await api.get<PagedResult<Pessoa>>('/pessoas/paged', {
+      const response = await api.get<PagedResult<Pessoa>>('/api/pessoas/paged', {
         params: {
           pageNumber: pagination.pageNumber,
           pageSize: pagination.pageSize,
@@ -91,8 +91,8 @@ export default function Pessoas() {
     const fetchSetoresECargos = async () => {
       try {
         const [setoresResponse, cargosResponse] = await Promise.all([
-          api.get<Setor[]>('/setores'),
-          api.get<Cargo[]>('/cargos'),
+          api.get<Setor[]>('/api/setores'),
+          api.get<Cargo[]>('/api/cargos'),
         ]);
         setSetores(setoresResponse.data);
         setCargos(cargosResponse.data);
@@ -191,25 +191,27 @@ export default function Pessoas() {
         const pessoa = info.row.original;
         return (
           <div className="text-right">
-            <button
-              className="text-indigo-600 hover:text-indigo-900 mr-3"
-              onClick={() => handleOpenModal(pessoa)}
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-            <button
-              className="text-emerald-600 hover:text-emerald-700 mr-3"
-              onClick={() => handleOpenAssign(pessoa)}
-              title={t('people.quickAssign')}
-            >
-              <Link2 className="w-4 h-4" />
-            </button>
-            <button
-              className="text-red-600 hover:text-red-900"
-              onClick={() => handleDelete(pessoa)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="action-button-group inline-flex">
+              <button
+                className="action-button"
+                onClick={() => handleOpenModal(pessoa)}
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+              <button
+                className="action-button"
+                onClick={() => handleOpenAssign(pessoa)}
+                title={t('people.quickAssign')}
+              >
+                <Link2 className="w-4 h-4" />
+              </button>
+              <button
+                className="action-button"
+                onClick={() => handleDelete(pessoa)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         );
       }
@@ -326,10 +328,10 @@ export default function Pessoas() {
 
       let pessoaId = editingPessoaId;
       if (editingPessoaId) {
-        const response = await api.put(`/pessoas/${editingPessoaId}`, payload);
+        const response = await api.put(`/api/pessoas/${editingPessoaId}`, payload);
         pessoaId = response.data?.id ?? editingPessoaId;
       } else {
-        const response = await api.post('/pessoas', payload);
+        const response = await api.post('/api/pessoas', payload);
         pessoaId = response.data?.id;
       }
 
@@ -341,7 +343,7 @@ export default function Pessoas() {
       );
 
       if (changedSelection && pessoaId) {
-        await api.post('/pessoasetorcargo', {
+        await api.post('/api/pessoasetorcargo', {
           pessoaId,
           setorId: selectedSetorId,
           cargoId: selectedCargoId,
@@ -417,7 +419,7 @@ export default function Pessoas() {
     }
     try {
       setLoading(true);
-      await api.post('/pessoasetorcargo', {
+      await api.post('/api/pessoasetorcargo', {
         pessoaId: assignTarget.id,
         setorId: assignSetorId,
         cargoId: assignCargoId,
@@ -441,7 +443,7 @@ export default function Pessoas() {
     if (!deleteTarget) return;
     try {
       setLoading(true);
-      await api.delete(`/pessoas/${deleteTarget.id}`);
+      await api.delete(`/api/pessoas/${deleteTarget.id}`);
       await fetchPaginatedPessoas();
     } catch (error) {
       console.error('Erro ao deletar pessoa:', error);
@@ -519,7 +521,7 @@ export default function Pessoas() {
       </div>
 
       {/* Tabela de dados */}
-      <DataTable 
+      <DataTable
         columns={columns}
         data={pessoas}
         pageCount={pageCount}

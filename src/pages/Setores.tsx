@@ -43,7 +43,7 @@ export default function Setores() {
   const fetchPaginatedSetores = async () => {
     setLoading(true);
     try {
-      const response = await api.get<PagedResult<Setor>>('/setores/paged', {
+      const response = await api.get<PagedResult<Setor>>('/api/setores/paged', {
         params: {
           pageNumber: pagination.pageNumber,
           pageSize: pagination.pageSize,
@@ -64,7 +64,7 @@ export default function Setores() {
 
   const fetchAllSetores = async () => {
     try {
-      const response = await api.get<Setor[]>('/setores');
+      const response = await api.get<Setor[]>('/api/setores');
       setAllSetores(response.data);
     } catch (error) {
       console.error('Erro ao carregar setores:', error);
@@ -73,7 +73,7 @@ export default function Setores() {
 
   const fetchTree = async () => {
     try {
-      const response = await api.get<SetorTree>('/setores/tree');
+      const response = await api.get<SetorTree>('/api/setores/tree');
       setTree(response.data);
     } catch (error) {
       console.error('Erro ao carregar árvore de setores:', error);
@@ -164,7 +164,7 @@ export default function Setores() {
 
     try {
       setLoading(true);
-      await api.put(`/setores/${setorId}`, { setorPaiId });
+      await api.put(`/api/setores/${setorId}`, { setorPaiId });
       await Promise.all([fetchPaginatedSetores(), fetchAllSetores(), fetchTree()]);
     } catch (error) {
       console.error('Erro ao mover setor:', error);
@@ -234,9 +234,9 @@ export default function Setores() {
       };
 
       if (editingSetorId) {
-        await api.put(`/setores/${editingSetorId}`, payload);
+        await api.put(`/api/setores/${editingSetorId}`, payload);
       } else {
-        await api.post('/setores', payload);
+        await api.post('/api/setores', payload);
       }
 
       await Promise.all([fetchPaginatedSetores(), fetchAllSetores(), fetchTree()]);
@@ -261,7 +261,7 @@ export default function Setores() {
     if (!deleteTarget) return;
     try {
       setLoading(true);
-      await api.delete(`/setores/${deleteTarget.id}`);
+      await api.delete(`/api/setores/${deleteTarget.id}`);
       await Promise.all([fetchPaginatedSetores(), fetchAllSetores(), fetchTree()]);
       setIsDeleteOpen(false);
       setDeleteTarget(null);
@@ -289,7 +289,7 @@ export default function Setores() {
 
     return (
       <div key={node.id}>
-        <div 
+        <div
           className={`atribuicao-row flex items-center py-2 px-4 cursor-pointer ${isDropTarget ? 'atribuicao-drop-target' : ''}`}
           style={{ paddingLeft: `${level * 24 + 16}px` }}
           draggable
@@ -350,9 +350,9 @@ export default function Setores() {
                 {t('sectors.treeCounts', { cargos: node.quantidadeCargos, pessoas: node.quantidadePessoas })}
               </span>
             </div>
-            <div className="flex space-x-2">
+            <div className="action-button-group">
               <button
-                className="text-emerald-600 hover:text-emerald-700"
+                className="action-button"
                 onClick={(event) => {
                   event.stopPropagation();
                   handleOpenModal(undefined, node.id);
@@ -360,7 +360,7 @@ export default function Setores() {
               >
                 <Plus className="w-4 h-4" />
               </button>
-              <button className="text-indigo-600 hover:text-indigo-900" onClick={() => handleOpenModal({
+              <button className="action-button" onClick={() => handleOpenModal({
                 id: node.id,
                 nome: node.nome,
                 setorPaiId: node.setorPaiId,
@@ -371,7 +371,7 @@ export default function Setores() {
               })}>
                 <Edit className="w-4 h-4" />
               </button>
-              <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete({
+              <button className="action-button" onClick={() => handleDelete({
                 id: node.id,
                 nome: node.nome,
                 setorPaiId: node.setorPaiId,
@@ -422,12 +422,14 @@ export default function Setores() {
         const setor = info.row.original;
         return (
           <div className="text-right">
-            <button className="text-indigo-600 hover:text-indigo-900 mr-3" onClick={() => handleOpenModal(setor)}>
-              <Edit className="w-4 h-4" />
-            </button>
-            <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(setor)}>
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="action-button-group inline-flex">
+              <button className="action-button" onClick={() => handleOpenModal(setor)}>
+                <Edit className="w-4 h-4" />
+              </button>
+              <button className="action-button" onClick={() => handleDelete(setor)}>
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         );
       }
@@ -452,8 +454,8 @@ export default function Setores() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div 
-            className="flex rounded-lg p-1" 
+          <div
+            className="flex rounded-lg p-1"
             style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
           >
             {[

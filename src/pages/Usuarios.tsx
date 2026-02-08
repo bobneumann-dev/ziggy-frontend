@@ -6,6 +6,7 @@ import api from '../lib/api';
 import type { Usuario, Pessoa } from '../types';
 import { StatusUsuario } from '../types';
 import { DataTable } from '../components/DataTable';
+import LoadingState from '../components/LoadingState';
 import SearchSelect, { type SearchSelectOption } from '../components/SearchSelect';
 import type { ColumnDef } from '@tanstack/react-table';
 
@@ -21,7 +22,14 @@ export default function Usuarios() {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [statusTarget, setStatusTarget] = useState<Usuario | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    login: string;
+    roles: string;
+    status: StatusUsuario;
+    pessoaId: string;
+    idioma: string;
+    password: string;
+  }>({
     login: '',
     roles: '',
     status: StatusUsuario.Ativo,
@@ -40,7 +48,7 @@ export default function Usuarios() {
   const fetchUsuarios = async () => {
     setLoading(true);
     try {
-      const response = await api.get<Usuario[]>('/usuarios');
+      const response = await api.get<Usuario[]>('/api/usuarios');
       setUsuarios(response.data);
     } catch (error) {
       console.error('Erro ao carregar usuarios:', error);
@@ -51,7 +59,7 @@ export default function Usuarios() {
 
   const fetchPessoas = async () => {
     try {
-      const response = await api.get<Pessoa[]>('/pessoas');
+      const response = await api.get<Pessoa[]>('/api/pessoas');
       setPessoas(response.data);
     } catch (error) {
       console.error('Erro ao carregar pessoas:', error);
@@ -151,7 +159,7 @@ export default function Usuarios() {
     try {
       setLoading(true);
       if (editingUsuarioId) {
-        await api.put(`/usuarios/${editingUsuarioId}`, {
+        await api.put(`/api/usuarios/${editingUsuarioId}`, {
           login: formData.login,
           status: formData.status,
           roles: formData.roles,
@@ -159,12 +167,12 @@ export default function Usuarios() {
           idioma: formData.idioma || null,
         });
         if (formData.password.trim()) {
-          await api.post(`/usuarios/${editingUsuarioId}/reset-password`, {
+          await api.post(`/api/usuarios/${editingUsuarioId}/reset-password`, {
             newPassword: formData.password,
           });
         }
       } else {
-        await api.post('/usuarios', {
+        await api.post('/api/usuarios', {
           login: formData.login,
           password: formData.password,
           roles: formData.roles,
@@ -191,7 +199,7 @@ export default function Usuarios() {
     if (!deleteTarget) return;
     try {
       setLoading(true);
-      await api.delete(`/usuarios/${deleteTarget.id}`);
+      await api.delete(`/api/usuarios/${deleteTarget.id}`);
       await fetchUsuarios();
       setIsDeleteOpen(false);
       setDeleteTarget(null);
@@ -221,7 +229,7 @@ export default function Usuarios() {
     if (!statusTarget) return;
     try {
       setLoading(true);
-      await api.post(`/usuarios/${statusTarget.id}/toggle-status`);
+      await api.post(`/api/usuarios/${statusTarget.id}/toggle-status`);
       await fetchUsuarios();
       setIsStatusOpen(false);
       setStatusTarget(null);
@@ -273,18 +281,20 @@ export default function Usuarios() {
         const usuario = info.row.original;
         return (
           <div className="text-right">
-            <button
-              className="text-indigo-600 hover:text-indigo-900 mr-3"
-              onClick={() => handleOpenModal(usuario)}
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-            <button
-              className="text-red-600 hover:text-red-900"
-              onClick={() => handleDelete(usuario)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="action-button-group inline-flex">
+              <button
+                className="action-button"
+                onClick={() => handleOpenModal(usuario)}
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+              <button
+                className="action-button"
+                onClick={() => handleDelete(usuario)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         );
       }
@@ -292,7 +302,7 @@ export default function Usuarios() {
   ], [t]);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">{t('common.loading')}</div>;
+    return <LoadingState />;
   }
 
   return (
@@ -374,7 +384,7 @@ export default function Usuarios() {
                     onChange={(option) =>
                       setFormData(prev => ({
                         ...prev,
-                        status: option ? Number(option.value) : StatusUsuario.Ativo
+                        status: option ? (Number(option.value) as StatusUsuario) : StatusUsuario.Ativo
                       }))
                     }
                     isClearable={false}
