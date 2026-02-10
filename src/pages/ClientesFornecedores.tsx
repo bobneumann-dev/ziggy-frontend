@@ -1,14 +1,51 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Edit, Trash2, X } from 'lucide-react';
+import { Plus, Edit, Trash2, X, PlusCircle, MinusCircle } from 'lucide-react';
 import api from '../lib/api';
-import { type ClienteFornecedor } from '../types';
+import { type ClienteFornecedor, TipoDocumento, Nacionalidade, TipoContato } from '../types';
 import { DataTable } from '../components/DataTable';
 import type { ColumnDef } from '@tanstack/react-table';
 import LoadingState from '../components/LoadingState';
 
 type FilterType = 'all' | 'clients' | 'suppliers';
+
+interface ContatoForm { tipo: number; valor: string; descricao: string; contatoAutomatico: boolean; principal: boolean; }
+const emptyContato = (): ContatoForm => ({ tipo: TipoContato.Email, valor: '', descricao: '', contatoAutomatico: false, principal: false });
+
+const DOC_TYPE_KEYS: { value: number; key: string }[] = [
+    { value: TipoDocumento.BR_CPF, key: 'docType_BR_CPF' },
+    { value: TipoDocumento.BR_CNPJ, key: 'docType_BR_CNPJ' },
+    { value: TipoDocumento.BR_RG, key: 'docType_BR_RG' },
+    { value: TipoDocumento.PY_RUC, key: 'docType_PY_RUC' },
+    { value: TipoDocumento.PY_CI, key: 'docType_PY_CI' },
+    { value: TipoDocumento.AR_CUIT, key: 'docType_AR_CUIT' },
+    { value: TipoDocumento.AR_CUIL, key: 'docType_AR_CUIL' },
+    { value: TipoDocumento.AR_DNI, key: 'docType_AR_DNI' },
+    { value: TipoDocumento.Passaporte, key: 'docType_Passaporte' },
+    { value: TipoDocumento.Outro, key: 'docType_Outro' },
+];
+
+const NAT_KEYS: { value: number; key: string }[] = [
+    { value: Nacionalidade.Brasileira, key: 'nat_Brasileira' },
+    { value: Nacionalidade.Paraguaia, key: 'nat_Paraguaia' },
+    { value: Nacionalidade.Argentina, key: 'nat_Argentina' },
+    { value: Nacionalidade.Uruguaia, key: 'nat_Uruguaia' },
+    { value: Nacionalidade.Boliviana, key: 'nat_Boliviana' },
+    { value: Nacionalidade.Chilena, key: 'nat_Chilena' },
+    { value: Nacionalidade.Colombiana, key: 'nat_Colombiana' },
+    { value: Nacionalidade.Peruana, key: 'nat_Peruana' },
+    { value: Nacionalidade.Venezuelana, key: 'nat_Venezuelana' },
+    { value: Nacionalidade.Outra, key: 'nat_Outra' },
+];
+
+const CONTATO_TYPE_KEYS: { value: number; key: string }[] = [
+    { value: TipoContato.Telefone, key: 'typePhone' },
+    { value: TipoContato.Celular, key: 'typeMobile' },
+    { value: TipoContato.Email, key: 'typeEmail' },
+    { value: TipoContato.WhatsApp, key: 'typeWhatsApp' },
+    { value: TipoContato.Outro, key: 'typeOther' },
+];
 
 export default function ClientesFornecedores() {
     const { t } = useTranslation();
@@ -16,7 +53,12 @@ export default function ClientesFornecedores() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [formData, setFormData] = useState({ nomeRazaoSocial: '', documento: '', email: '', telefone: '', isCliente: true, isFornecedor: false, status: 1 });
+    const [formData, setFormData] = useState({
+        nomeRazaoSocial: '', documento: '', tipoDocumento: '' as string,
+        nacionalidade: '' as string, ativo: true,
+        isCliente: true, isFornecedor: false, status: 1,
+    });
+    const [contatos, setContatos] = useState<ContatoForm[]>([]);
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [deleteTarget, setDeleteTarget] = useState<ClienteFornecedor | null>(null);
     const [filterType, setFilterType] = useState<FilterType>('all');
@@ -45,10 +87,24 @@ export default function ClientesFornecedores() {
     const handleOpenModal = (record?: ClienteFornecedor) => {
         if (record) {
             setEditingId(record.id);
-            setFormData({ nomeRazaoSocial: record.nomeRazaoSocial, documento: record.documento || '', email: record.email || '', telefone: record.telefone || '', isCliente: record.isCliente, isFornecedor: record.isFornecedor, status: record.status });
+            setFormData({
+                nomeRazaoSocial: record.nomeRazaoSocial, documento: record.documento || '',
+                tipoDocumento: record.tipoDocumento != null ? String(record.tipoDocumento) : '',
+                nacionalidade: record.nacionalidade != null ? String(record.nacionalidade) : '',
+                ativo: record.ativo, isCliente: record.isCliente, isFornecedor: record.isFornecedor, status: record.status,
+            });
+            setContatos(record.contatos?.map(c => ({
+                tipo: c.tipo, valor: c.valor, descricao: c.descricao || '',
+                contatoAutomatico: c.contatoAutomatico, principal: c.principal,
+            })) || []);
         } else {
             setEditingId(null);
-            setFormData({ nomeRazaoSocial: '', documento: '', email: '', telefone: '', isCliente: true, isFornecedor: false, status: 1 });
+            setFormData({
+                nomeRazaoSocial: '', documento: '', tipoDocumento: '',
+                nacionalidade: '', ativo: true,
+                isCliente: true, isFornecedor: false, status: 1,
+            });
+            setContatos([emptyContato()]);
         }
         setFormErrors({});
         setShowModal(true);
@@ -62,15 +118,27 @@ export default function ClientesFornecedores() {
         event.preventDefault();
         setFormErrors({});
         if (!formData.nomeRazaoSocial.trim()) {
-            setFormErrors({ nomeRazaoSocial: 'Nome obrigatório' });
+            setFormErrors({ nomeRazaoSocial: t('clients.name') });
             return;
         }
         if (!formData.isCliente && !formData.isFornecedor) {
-            setFormErrors({ _global: 'Marque pelo menos Cliente ou Fornecedor' });
+            setFormErrors({ _global: t('clients.isClient') + ' / ' + t('clients.isSupplier') });
             return;
         }
         try {
-            const payload = { ...formData, documento: formData.documento || null, email: formData.email || null, telefone: formData.telefone || null };
+            const payload = {
+                nomeRazaoSocial: formData.nomeRazaoSocial,
+                documento: formData.documento || null,
+                tipoDocumento: formData.tipoDocumento ? Number(formData.tipoDocumento) : null,
+                nacionalidade: formData.nacionalidade ? Number(formData.nacionalidade) : null,
+                ativo: formData.ativo,
+                isCliente: formData.isCliente,
+                isFornecedor: formData.isFornecedor,
+                contatos: contatos.filter(c => c.valor.trim()).map(c => ({
+                    tipo: c.tipo, valor: c.valor, descricao: c.descricao || null,
+                    contatoAutomatico: c.contatoAutomatico, principal: c.principal,
+                })),
+            };
             if (editingId) {
                 await api.put(`/api/clientes-fornecedores/${editingId}`, payload);
             } else {
@@ -79,7 +147,7 @@ export default function ClientesFornecedores() {
             fetchRecords();
             handleCloseModal();
         } catch (error: any) {
-            setFormErrors({ _global: error.response?.data?.message || 'Erro ao salvar' });
+            setFormErrors({ _global: error.response?.data?.message || t('countries.validation.saveFailed') });
         }
     };
 
@@ -105,15 +173,22 @@ export default function ClientesFornecedores() {
     const columns: ColumnDef<ClienteFornecedor>[] = useMemo(() => [
         { header: t('clients.name'), accessorKey: 'nomeRazaoSocial' },
         { header: t('clients.document'), accessorKey: 'documento', cell: ({ row }) => row.original.documento || '-' },
-        { header: t('clients.email'), accessorKey: 'email', cell: ({ row }) => row.original.email || '-' },
-        { header: t('clients.phone'), accessorKey: 'telefone', cell: ({ row }) => row.original.telefone || '-' },
         {
-            header: 'Tipo',
+            header: t('common.status'),
+            id: 'ativo',
+            cell: ({ row }) => (
+                <span className={`badge ${row.original.ativo ? 'badge-success' : 'badge-danger'}`}>
+                    {row.original.ativo ? t('common.active') : t('common.inactive')}
+                </span>
+            ),
+        },
+        {
+            header: t('clients.type'),
             id: 'tipo',
             cell: ({ row }) => (
                 <div style={{ display: 'flex', gap: '0.25rem' }}>
-                    {row.original.isCliente && <span className="badge badge-success">Cliente</span>}
-                    {row.original.isFornecedor && <span className="badge badge-info">Fornecedor</span>}
+                    {row.original.isCliente && <span className="badge badge-success">{t('clients.isClient')}</span>}
+                    {row.original.isFornecedor && <span className="badge badge-info">{t('clients.isSupplier')}</span>}
                 </div>
             ),
         },
@@ -158,31 +233,49 @@ export default function ClientesFornecedores() {
 
             {showModal && (
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>
-                    <div className="glass-modal" onClick={(e) => e.stopPropagation()}>
+                    <div className="glass-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
                         <div className="glass-modal-header">
                             <h2>{editingId ? t('clients.editRecord') : t('clients.newRecord')}</h2>
                             <button onClick={handleCloseModal}><X size={20} /></button>
                         </div>
                         <form onSubmit={handleSubmit}>
-                            <div className="glass-modal-body">
+                            <div className="glass-modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                                 {formErrors._global && <div className="glass-modal-error">{formErrors._global}</div>}
                                 <div>
                                     <label className="glass-modal-label">{t('clients.name')} <span className="glass-modal-required">*</span></label>
                                     <input type="text" className="glass-modal-input" value={formData.nomeRazaoSocial} onChange={(e) => setFormData({ ...formData, nomeRazaoSocial: e.target.value })} />
                                     {formErrors.nomeRazaoSocial && <div className="glass-modal-error">{formErrors.nomeRazaoSocial}</div>}
                                 </div>
-                                <div>
-                                    <label className="glass-modal-label">{t('clients.document')}</label>
-                                    <input type="text" className="glass-modal-input" value={formData.documento} onChange={(e) => setFormData({ ...formData, documento: e.target.value })} />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div>
+                                        <label className="glass-modal-label">{t('clients.documentType')}</label>
+                                        <select className="glass-modal-input" value={formData.tipoDocumento} onChange={(e) => setFormData({ ...formData, tipoDocumento: e.target.value })}>
+                                            <option value="">{t('clients.selectDocType')}</option>
+                                            {DOC_TYPE_KEYS.map(d => (
+                                                <option key={d.value} value={d.value}>{t(`clients.${d.key}`)}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="glass-modal-label">{t('clients.document')}</label>
+                                        <input type="text" className="glass-modal-input" value={formData.documento} onChange={(e) => setFormData({ ...formData, documento: e.target.value })} />
+                                    </div>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                     <div>
-                                        <label className="glass-modal-label">{t('clients.email')}</label>
-                                        <input type="email" className="glass-modal-input" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                                        <label className="glass-modal-label">{t('clients.nationality')}</label>
+                                        <select className="glass-modal-input" value={formData.nacionalidade} onChange={(e) => setFormData({ ...formData, nacionalidade: e.target.value })}>
+                                            <option value="">{t('clients.selectNationality')}</option>
+                                            {NAT_KEYS.map(n => (
+                                                <option key={n.value} value={n.value}>{t(`clients.${n.key}`)}</option>
+                                            ))}
+                                        </select>
                                     </div>
-                                    <div>
-                                        <label className="glass-modal-label">{t('clients.phone')}</label>
-                                        <input type="text" className="glass-modal-input" value={formData.telefone} onChange={(e) => setFormData({ ...formData, telefone: e.target.value })} />
+                                    <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '0.25rem' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <input type="checkbox" checked={formData.ativo} onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })} />
+                                            {t('clients.active')}
+                                        </label>
                                     </div>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -194,6 +287,29 @@ export default function ClientesFornecedores() {
                                         <input type="checkbox" checked={formData.isFornecedor} onChange={(e) => setFormData({ ...formData, isFornecedor: e.target.checked })} />
                                         {t('clients.isSupplier')}
                                     </label>
+                                </div>
+
+                                {/* Contatos Section */}
+                                <div style={{ borderTop: '1px solid var(--border-color)', marginTop: '1rem', paddingTop: '1rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                        <label className="glass-modal-label" style={{ margin: 0 }}>{t('clients.contactsSection')}</label>
+                                        <button type="button" onClick={() => setContatos([...contatos, emptyContato()])} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem' }}>
+                                            <PlusCircle size={14} /> {t('contacts.addContact')}
+                                        </button>
+                                    </div>
+                                    {contatos.map((ct, idx) => (
+                                        <div key={idx} style={{ display: 'grid', gridTemplateColumns: '120px 1fr auto', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
+                                            <select className="glass-modal-input" value={ct.tipo} onChange={(e) => { const arr = [...contatos]; arr[idx].tipo = Number(e.target.value); setContatos(arr); }}>
+                                                {CONTATO_TYPE_KEYS.map(c => (
+                                                    <option key={c.value} value={c.value}>{t(`contacts.${c.key}`)}</option>
+                                                ))}
+                                            </select>
+                                            <input type="text" className="glass-modal-input" value={ct.valor} onChange={(e) => { const arr = [...contatos]; arr[idx].valor = e.target.value; setContatos(arr); }} placeholder={ct.tipo === TipoContato.Email ? 'email@exemplo.com' : '(99) 99999-0000'} />
+                                            <button type="button" onClick={() => setContatos(contatos.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }} title={t('contacts.removeContact')}>
+                                                <MinusCircle size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                             <div className="glass-modal-footer">

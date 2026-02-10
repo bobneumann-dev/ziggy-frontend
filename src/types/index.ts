@@ -186,7 +186,7 @@ export interface CategoriaArmazem {
 }
 
 export interface Armazem {
-  id: string; nome: string; categoriaId?: string; categoriaNome?: string; setorId?: string; ativo: boolean; dataCriacao: string;
+  id: string; nome: string; categoriaId?: string; categoriaNome?: string; ativo: boolean; dataCriacao: string;
 }
 export interface EstoqueSaldo {
   armazemId: string; armazemNome: string;
@@ -218,12 +218,84 @@ export interface AtivoPatrimonio {
   dataCriacao: string;
 }
 
+// === CADASTROS (País, Departamento, Cidade) ===
+export interface Pais {
+  id: number;
+  nome: string;
+  codigoIso: string;
+  ddi: string;
+}
+
+export interface Departamento {
+  id: number;
+  nome: string;
+  abreviacao?: string;
+  paisId: number;
+  paisNome: string;
+}
+
+export interface Cidade {
+  id: number;
+  nome: string;
+  departamentoId: number;
+  departamentoNome: string;
+  paisId: number;
+  paisNome: string;
+}
+
+// === CONTATO / ENDEREÇO ===
+export const TipoContato = { Telefone: 1, Celular: 2, Email: 3, WhatsApp: 4, Outro: 99 } as const;
+export type TipoContato = typeof TipoContato[keyof typeof TipoContato];
+
+export const TipoDocumento = {
+  BR_CPF: 10, BR_CNPJ: 11, BR_RG: 12,
+  PY_RUC: 20, PY_CI: 21,
+  AR_CUIT: 30, AR_CUIL: 31, AR_DNI: 32,
+  Passaporte: 99, Outro: 100
+} as const;
+export type TipoDocumento = typeof TipoDocumento[keyof typeof TipoDocumento];
+
+export const Nacionalidade = {
+  Brasileira: 1, Paraguaia: 2, Argentina: 3, Uruguaia: 4, Boliviana: 5,
+  Chilena: 6, Colombiana: 7, Peruana: 8, Venezuelana: 9, Outra: 99
+} as const;
+export type Nacionalidade = typeof Nacionalidade[keyof typeof Nacionalidade];
+
+export interface ContatoDto {
+  id: string;
+  tipo: TipoContato;
+  valor: string;
+  descricao?: string;
+  contatoAutomatico: boolean;
+  principal: boolean;
+}
+
+export interface EnderecoDto {
+  id: string;
+  logradouro1?: string;
+  logradouro2?: string;
+  cep?: string;
+  cidadeId?: number;
+  cidadeNome?: string;
+  departamentoNome?: string;
+  paisNome?: string;
+  principal: boolean;
+}
+
 // === CLIENTE / FORNECEDOR ===
 export interface ClienteFornecedor {
-  id: string; nomeRazaoSocial: string; documento?: string;
-  email?: string; telefone?: string; status: number;
-  isCliente: boolean; isFornecedor: boolean;
+  id: string;
+  nomeRazaoSocial: string;
+  documento?: string;
+  tipoDocumento?: TipoDocumento;
+  nacionalidade?: Nacionalidade;
+  ativo: boolean;
+  status: number;
+  isCliente: boolean;
+  isFornecedor: boolean;
   dataCriacao: string;
+  contatos: ContatoDto[];
+  enderecos: EnderecoDto[];
 }
 
 // === COMERCIAL ===

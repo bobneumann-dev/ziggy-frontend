@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import api from '../lib/api';
 import LoadingState from '../components/LoadingState';
 import type { PessoaSetorCargo } from '../types';
 
 export default function Vinculos() {
+  const { t } = useTranslation();
   const [vinculos, setVinculos] = useState<PessoaSetorCargo[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +26,7 @@ export default function Vinculos() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    return new Date(dateString).toLocaleDateString();
   };
 
   if (loading) {
@@ -34,10 +36,10 @@ export default function Vinculos() {
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Vínculos Pessoa-Setor-Cargo</h1>
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{t('links.title')}</h1>
         <button className="glass-button flex items-center space-x-2 px-5 py-3 rounded-xl font-semibold">
           <Plus className="w-5 h-5" />
-          <span>Novo Vínculo</span>
+          <span>{t('links.newLink')}</span>
         </button>
       </div>
 
@@ -46,25 +48,25 @@ export default function Vinculos() {
           <thead className="bg-white/50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Pessoa
+                {t('links.person')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Cargo
+                {t('links.position')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Setor
+                {t('links.sector')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Data Início
+                {t('links.startDate')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Data Fim
+                {t('links.endDate')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
+                {t('links.status')}
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Ações
+                {t('links.actions')}
               </th>
             </tr>
           </thead>
@@ -96,7 +98,7 @@ export default function Vinculos() {
                         : 'bg-gray-100 text-gray-800'
                     }`}
                   >
-                    {vinculo.ativo ? 'Ativo' : 'Inativo'}
+                    {vinculo.ativo ? t('links.active') : t('links.inactive')}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

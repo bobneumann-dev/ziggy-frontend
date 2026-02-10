@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
 import api from '../lib/api';
@@ -7,6 +8,7 @@ import { StatusAssinatura, TipoContratoDocumento } from '../types';
 import LoadingState from '../components/LoadingState';
 
 export default function ContratoDocumentoViewer() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const documentoId = searchParams.get('id');
@@ -50,9 +52,9 @@ export default function ContratoDocumentoViewer() {
 
   const getTipoLabel = (tipo: number) => {
     switch (tipo) {
-      case TipoContratoDocumento.Contrato: return 'Contrato';
-      case TipoContratoDocumento.Aditivo: return 'Aditivo';
-      case TipoContratoDocumento.Termo: return 'Termo';
+      case TipoContratoDocumento.Contrato: return t('documents.typeContract');
+      case TipoContratoDocumento.Aditivo: return t('documents.typeAddendum');
+      case TipoContratoDocumento.Termo: return t('documents.typeTerm');
       default: return '';
     }
   };
@@ -68,9 +70,9 @@ export default function ContratoDocumentoViewer() {
 
   const getStatusLabel = (status: number) => {
     switch (status) {
-      case StatusAssinatura.Pendente: return 'Pendente';
-      case StatusAssinatura.Assinado: return 'Assinado';
-      case StatusAssinatura.Recusado: return 'Recusado';
+      case StatusAssinatura.Pendente: return t('documents.statusPending');
+      case StatusAssinatura.Assinado: return t('documents.statusSigned');
+      case StatusAssinatura.Recusado: return t('documents.statusRefused');
       default: return '';
     }
   };
@@ -85,7 +87,7 @@ export default function ContratoDocumentoViewer() {
       const res = await api.get(`/api/documentos/${documento.id}`);
       setDocumento(res.data);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao assinar';
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || t('documents.signError');
       alert(msg);
     }
   };
@@ -97,11 +99,11 @@ export default function ContratoDocumentoViewer() {
       <div className="animate-fadeIn">
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.5rem' }}>
           <button className="action-button" onClick={() => navigate(-1)}><ArrowLeft size={18} /></button>
-          <h1 className="page-title" style={{ margin: 0 }}>Documento</h1>
+          <h1 className="page-title" style={{ margin: 0 }}>{t('documents.title')}</h1>
         </div>
         <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
           <FileText size={48} style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
-          <p className="text-secondary">Nenhum documento encontrado.</p>
+          <p className="text-secondary">{t('documents.noDocuments')}</p>
         </div>
       </div>
     );
@@ -115,7 +117,7 @@ export default function ContratoDocumentoViewer() {
           <button className="action-button" onClick={() => navigate(-1)}><ArrowLeft size={18} /></button>
           <div>
             <h1 className="page-title" style={{ margin: 0 }}>
-              {documento ? `${getTipoLabel(documento.tipo)} - v${documento.versaoModelo}` : 'Documentos'}
+              {documento ? `${getTipoLabel(documento.tipo)} - v${documento.versaoModelo}` : t('documents.titlePlural')}
             </h1>
             {documento && (
               <span className="text-secondary" style={{ fontSize: '0.8rem' }}>
@@ -150,7 +152,7 @@ export default function ContratoDocumentoViewer() {
           <div style={{ display: 'flex', gap: '4px', marginBottom: '1rem' }}>
             {(['preview', 'assinaturas', 'meta'] as const).map(tab => (
               <button key={tab} className={`btn ${activeTab === tab ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveTab(tab)} style={{ fontSize: '0.85rem' }}>
-                {tab === 'preview' ? 'Visualizar' : tab === 'assinaturas' ? `Assinaturas (${documento.assinaturas.length})` : 'Metadados'}
+                {tab === 'preview' ? t('documents.preview') : tab === 'assinaturas' ? `${t('documents.signaturesTab')} (${documento.assinaturas.length})` : t('documents.metadata')}
               </button>
             ))}
           </div>
@@ -160,7 +162,7 @@ export default function ContratoDocumentoViewer() {
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
               <iframe
                 srcDoc={documento.conteudoCompilado}
-                title="Contrato Preview"
+                title="Contract Preview"
                 style={{ width: '100%', minHeight: '70vh', border: 'none' }}
               />
             </div>
@@ -169,15 +171,15 @@ export default function ContratoDocumentoViewer() {
           {/* Signatures Tab */}
           {activeTab === 'assinaturas' && (
             <div className="card" style={{ padding: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem' }}>Assinaturas</h2>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem' }}>{t('documents.signaturesTitle')}</h2>
               <table className="data-table" style={{ width: '100%' }}>
                 <thead>
                   <tr>
-                    <th>Papel</th>
-                    <th>Nome</th>
-                    <th>Documento</th>
-                    <th>Status</th>
-                    <th>Assinado em</th>
+                    <th>{t('documents.role')}</th>
+                    <th>{t('documents.name')}</th>
+                    <th>{t('documents.document')}</th>
+                    <th>{t('documents.status')}</th>
+                    <th>{t('documents.signedAt')}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -197,14 +199,14 @@ export default function ContratoDocumentoViewer() {
                       <td>
                         {a.status === StatusAssinatura.Pendente && (
                           <button className="btn btn-primary btn-sm" onClick={() => handleAssinar(a)}>
-                            Assinar
+                            {t('documents.sign')}
                           </button>
                         )}
                       </td>
                     </tr>
                   ))}
                   {documento.assinaturas.length === 0 && (
-                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>Nenhuma assinatura</td></tr>
+                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>{t('documents.noSignatures')}</td></tr>
                   )}
                 </tbody>
               </table>
@@ -214,22 +216,22 @@ export default function ContratoDocumentoViewer() {
           {/* Metadata Tab */}
           {activeTab === 'meta' && (
             <div className="card" style={{ padding: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem' }}>Metadados do Documento</h2>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem' }}>{t('documents.metadataTitle')}</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '0.75rem', fontSize: '0.9rem' }}>
                 <span className="text-secondary">ID:</span><code>{documento.id}</code>
-                <span className="text-secondary">Tipo:</span><span>{getTipoLabel(documento.tipo)}</span>
-                <span className="text-secondary">Modelo ID:</span><code>{documento.modeloContratoId}</code>
-                <span className="text-secondary">Versão Modelo:</span><span>{documento.versaoModelo}</span>
-                <span className="text-secondary">Hash SHA-256:</span><code style={{ fontSize: '0.8rem', wordBreak: 'break-all' }}>{documento.hashConteudo}</code>
-                <span className="text-secondary">Gerado em:</span><span>{new Date(documento.createdAt).toLocaleString()}</span>
+                <span className="text-secondary">{t('documents.type')}:</span><span>{getTipoLabel(documento.tipo)}</span>
+                <span className="text-secondary">{t('documents.modelId')}:</span><code>{documento.modeloContratoId}</code>
+                <span className="text-secondary">{t('documents.modelVersion')}:</span><span>{documento.versaoModelo}</span>
+                <span className="text-secondary">{t('documents.hash')}:</span><code style={{ fontSize: '0.8rem', wordBreak: 'break-all' }}>{documento.hashConteudo}</code>
+                <span className="text-secondary">{t('documents.generatedAt')}:</span><span>{new Date(documento.createdAt).toLocaleString()}</span>
               </div>
 
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginTop: '1.5rem', marginBottom: '0.5rem' }}>Valores de Substituição</h3>
+              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginTop: '1.5rem', marginBottom: '0.5rem' }}>{t('documents.substitutionValues')}</h3>
               <pre style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', fontSize: '0.8rem', overflow: 'auto', maxHeight: '300px' }}>
                 {(() => { try { return JSON.stringify(JSON.parse(documento.valoresSubstituicaoJson), null, 2); } catch { return documento.valoresSubstituicaoJson; } })()}
               </pre>
 
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginTop: '1.5rem', marginBottom: '0.5rem' }}>Cláusulas Aplicadas</h3>
+              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginTop: '1.5rem', marginBottom: '0.5rem' }}>{t('documents.appliedClauses')}</h3>
               <pre style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', fontSize: '0.8rem', overflow: 'auto', maxHeight: '200px' }}>
                 {(() => { try { return JSON.stringify(JSON.parse(documento.clausulasAplicadasJson), null, 2); } catch { return documento.clausulasAplicadasJson; } })()}
               </pre>

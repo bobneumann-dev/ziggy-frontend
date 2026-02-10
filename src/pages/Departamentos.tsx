@@ -3,26 +3,30 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Edit, Trash2, X } from 'lucide-react';
 import api from '../lib/api';
-import { type ItemCategoria } from '../types';
+import { type Departamento, type Pais } from '../types';
 import { DataTable } from '../components/DataTable';
-import SearchSelect, { type SearchSelectOption } from '../components/SearchSelect';
 import type { ColumnDef } from '@tanstack/react-table';
 import LoadingState from '../components/LoadingState';
 
-export default function CatalogoCategorias() {
+export default function Departamentos() {
     const { t } = useTranslation();
-    const [categorias, setCategorias] = useState<ItemCategoria[]>([]);
+    const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
+    const [paises, setPaises] = useState<Pais[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [formData, setFormData] = useState({ nome: '', codigo: '', categoriaPaiId: '', ordem: 0, ativo: true });
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [formData, setFormData] = useState({ nome: '', abreviacao: '', paisId: 0 });
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-    const [deleteTarget, setDeleteTarget] = useState<ItemCategoria | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<Departamento | null>(null);
 
-    const fetchCategorias = useCallback(async () => {
+    const fetchData = useCallback(async () => {
         try {
-            const res = await api.get('/api/catalogo/categorias');
-            setCategorias(res.data);
+            const [depRes, paisRes] = await Promise.all([
+                api.get('/api/departamentos'),
+                api.get('/api/paises'),
+            ]);
+            setDepartamentos(depRes.data);
+            setPaises(paisRes.data);
         } catch (err) {
             console.error(err);
         } finally {
@@ -31,20 +35,16 @@ export default function CatalogoCategorias() {
     }, []);
 
     useEffect(() => {
-        fetchCategorias();
-    }, [fetchCategorias]);
+        fetchData();
+    }, [fetchData]);
 
-    const categoriaOptions = useMemo<SearchSelectOption[]>(() =>
-        categorias.map(c => ({ label: c.nome, value: c.id }))
-        , [categorias]);
-
-    const handleOpenModal = (cat?: ItemCategoria) => {
-        if (cat) {
-            setEditingId(cat.id);
-            setFormData({ nome: cat.nome, codigo: cat.codigo || '', categoriaPaiId: cat.categoriaPaiId || '', ordem: cat.ordem, ativo: cat.ativo });
+    const handleOpenModal = (dep?: Departamento) => {
+        if (dep) {
+            setEditingId(dep.id);
+            setFormData({ nome: dep.nome, abreviacao: dep.abreviacao || '', paisId: dep.paisId });
         } else {
             setEditingId(null);
-            setFormData({ nome: '', codigo: '', categoriaPaiId: '', ordem: 0, ativo: true });
+            setFormData({ nome: '', abreviacao: '', paisId: 0 });
         }
         setFormErrors({});
         setShowModal(true);
@@ -58,32 +58,36 @@ export default function CatalogoCategorias() {
         event.preventDefault();
         setFormErrors({});
         if (!formData.nome.trim()) {
-            setFormErrors({ nome: t('catalogCategories.validation.requiredName') });
+            setFormErrors({ nome: t('departments.validation.requiredName') });
+            return;
+        }
+        if (!formData.paisId) {
+            setFormErrors({ paisId: t('departments.validation.requiredCountry') });
             return;
         }
         try {
-            const payload = { ...formData, codigo: formData.codigo || null, categoriaPaiId: formData.categoriaPaiId || null };
+            const payload = { ...formData, abreviacao: formData.abreviacao || null };
             if (editingId) {
-                await api.put(`/api/catalogo/categorias/${editingId}`, payload);
+                await api.put(`/api/departamentos/${editingId}`, payload);
             } else {
-                await api.post('/api/catalogo/categorias', payload);
+                await api.post('/api/departamentos', payload);
             }
-            fetchCategorias();
+            fetchData();
             handleCloseModal();
         } catch (error: any) {
-            setFormErrors({ _global: error.response?.data?.message || t('catalogCategories.validation.saveFailed') });
+            setFormErrors({ _global: error.response?.data?.message || t('departments.validation.saveFailed') });
         }
     };
 
-    const handleDelete = (cat: ItemCategoria) => {
-        setDeleteTarget(cat);
+    const handleDelete = (dep: Departamento) => {
+        setDeleteTarget(dep);
     };
 
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return;
         try {
-            await api.delete(`/api/catalogo/categorias/${deleteTarget.id}`);
-            fetchCategorias();
+            await api.delete(`/api/departamentos/${deleteTarget.id}`);
+            fetchData();
             setDeleteTarget(null);
         } catch (error) {
             console.error(error);
@@ -94,20 +98,10 @@ export default function CatalogoCategorias() {
         setDeleteTarget(null);
     };
 
-    const columns: ColumnDef<ItemCategoria>[] = useMemo(() => [
-        { header: t('catalogCategories.name'), accessorKey: 'nome' },
-        { header: t('catalogCategories.code'), accessorKey: 'codigo', cell: ({ row }) => row.original.codigo || '-' },
-        { header: t('catalogCategories.parentCategory'), accessorKey: 'categoriaPaiNome', cell: ({ row }) => row.original.categoriaPaiNome || '-' },
-        { header: t('catalogCategories.order'), accessorKey: 'ordem' },
-        {
-            header: t('common.status'),
-            accessorKey: 'ativo',
-            cell: ({ row }) => (
-                <span className={`badge ${row.original.ativo ? 'badge-success' : 'badge-danger'}`}>
-                    {row.original.ativo ? t('common.active') : t('common.inactive')}
-                </span>
-            ),
-        },
+    const columns: ColumnDef<Departamento>[] = useMemo(() => [
+        { header: t('departments.name'), accessorKey: 'nome' },
+        { header: t('departments.abbreviation'), accessorKey: 'abreviacao' },
+        { header: t('departments.country'), accessorKey: 'paisNome' },
         {
             header: t('common.actions'),
             id: 'actions',
@@ -131,42 +125,44 @@ export default function CatalogoCategorias() {
     return (
         <div className="animate-fadeIn">
             <div style={{ marginBottom: '1.5rem' }}>
-                <h1 className="page-title">{t('catalogCategories.title')}</h1>
-                <p className="text-secondary">{t('catalogCategories.description')}</p>
+                <h1 className="page-title">{t('departments.title')}</h1>
+                <p className="text-secondary">{t('departments.description')}</p>
                 <button onClick={() => handleOpenModal()} className="glass-button flex items-center gap-2 px-4 py-2.5" style={{ marginTop: '1rem' }}>
                     <Plus className="w-4 h-4" />
-                    <span>{t('catalogCategories.newCategory')}</span>
+                    <span>{t('departments.newDepartment')}</span>
                 </button>
             </div>
 
-            <DataTable columns={columns} data={categorias} />
+            <DataTable columns={columns} data={departamentos} />
 
             {showModal && (
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>
                     <div className="glass-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="glass-modal-header">
-                            <h2>{editingId ? t('catalogCategories.editCategory') : t('catalogCategories.newCategory')}</h2>
+                            <h2>{editingId ? t('departments.editDepartment') : t('departments.newDepartment')}</h2>
                             <button onClick={handleCloseModal}><X size={20} /></button>
                         </div>
                         <form onSubmit={handleSubmit}>
                             <div className="glass-modal-body">
                                 {formErrors._global && <div className="glass-modal-error">{formErrors._global}</div>}
                                 <div>
-                                    <label className="glass-modal-label">{t('catalogCategories.name')} <span className="glass-modal-required">*</span></label>
-                                    <input type="text" className="glass-modal-input" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} />
+                                    <label className="glass-modal-label">{t('departments.country')} <span className="glass-modal-required">*</span></label>
+                                    <select className="glass-modal-input" value={formData.paisId} onChange={(e) => setFormData({ ...formData, paisId: Number(e.target.value) })}>
+                                        <option value={0}>{t('departments.selectCountry')}</option>
+                                        {paises.map((p) => (
+                                            <option key={p.id} value={p.id}>{p.nome}</option>
+                                        ))}
+                                    </select>
+                                    {formErrors.paisId && <div className="glass-modal-error">{formErrors.paisId}</div>}
+                                </div>
+                                <div>
+                                    <label className="glass-modal-label">{t('departments.name')} <span className="glass-modal-required">*</span></label>
+                                    <input type="text" className="glass-modal-input" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} placeholder="São Paulo, Alto Paraná" />
                                     {formErrors.nome && <div className="glass-modal-error">{formErrors.nome}</div>}
                                 </div>
                                 <div>
-                                    <label className="glass-modal-label">{t('catalogCategories.code')}</label>
-                                    <input type="text" className="glass-modal-input" value={formData.codigo} onChange={(e) => setFormData({ ...formData, codigo: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="glass-modal-label">{t('catalogCategories.parentCategory')}</label>
-                                    <SearchSelect options={categoriaOptions} value={categoriaOptions.find(c => c.value === formData.categoriaPaiId) || null} onChange={(opt) => setFormData({ ...formData, categoriaPaiId: (opt?.value as string) || '' })} isClearable />
-                                </div>
-                                <div>
-                                    <label className="glass-modal-label">{t('catalogCategories.order')}</label>
-                                    <input type="number" className="glass-modal-input" value={formData.ordem} onChange={(e) => setFormData({ ...formData, ordem: parseInt(e.target.value) || 0 })} />
+                                    <label className="glass-modal-label">{t('departments.abbreviation')}</label>
+                                    <input type="text" className="glass-modal-input" value={formData.abreviacao} onChange={(e) => setFormData({ ...formData, abreviacao: e.target.value.toUpperCase() })} maxLength={10} placeholder="SP, AP" />
                                 </div>
                             </div>
                             <div className="glass-modal-footer">
@@ -186,7 +182,7 @@ export default function CatalogoCategorias() {
                             <button onClick={handleCloseDelete}><X size={20} /></button>
                         </div>
                         <div className="glass-modal-body">
-                            <p>{t('catalogCategories.deleteConfirm', { name: deleteTarget.nome })}</p>
+                            <p>{t('departments.deleteConfirm', { name: deleteTarget.nome })}</p>
                         </div>
                         <div className="glass-modal-footer">
                             <button type="button" className="glass-modal-button-secondary" onClick={handleCloseDelete}>{t('common.cancel')}</button>
@@ -198,4 +194,3 @@ export default function CatalogoCategorias() {
         </div>
     );
 }
-

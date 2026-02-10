@@ -53,7 +53,7 @@ export default function CategoriaArmazens() {
         event.preventDefault();
         setFormErrors({});
         if (!formData.nome.trim()) {
-            setFormErrors({ nome: 'Nome obrigatório' });
+            setFormErrors({ nome: t('warehouseCategories.validation.requiredName') });
             return;
         }
         try {
@@ -65,7 +65,7 @@ export default function CategoriaArmazens() {
             fetchCategorias();
             handleCloseModal();
         } catch (error: any) {
-            setFormErrors({ _global: error.response?.data?.message || 'Erro ao salvar' });
+            setFormErrors({ _global: error.response?.data?.message || t('warehouseCategories.validation.saveFailed') });
         }
     };
 
@@ -89,12 +89,16 @@ export default function CategoriaArmazens() {
     };
 
     const columns: ColumnDef<CategoriaArmazem>[] = useMemo(() => [
-        { header: 'Nome', accessorKey: 'nome' },
-        { header: 'Descrição', accessorKey: 'descricao', cell: ({ row }) => row.original.descricao || '-' },
+        { header: t('warehouseCategories.name'), accessorKey: 'nome' },
+        { header: t('warehouseCategories.categoryDescription'), accessorKey: 'descricao', cell: ({ row }) => row.original.descricao || '-' },
         {
-            header: 'Status',
+            header: t('common.status'),
             accessorKey: 'ativo',
-            cell: ({ row }) => <span className={`badge ${row.original.ativo ? 'badge-success' : 'badge-danger'}`}>{row.original.ativo ? 'Ativo' : 'Inativo'}</span>
+            cell: ({ row }) => (
+                <span className={`badge ${row.original.ativo ? 'badge-success' : 'badge-danger'}`}>
+                    {row.original.ativo ? t('common.active') : t('common.inactive')}
+                </span>
+            ),
         },
         {
             header: t('table.actions'),
@@ -117,11 +121,11 @@ export default function CategoriaArmazens() {
     return (
         <div className="animate-fadeIn">
             <div style={{ marginBottom: '1.5rem' }}>
-                <h1 className="page-title">Categorias de Armazém</h1>
-                <p className="text-secondary">Gerenciar categorias para classificação de armazéns</p>
+                <h1 className="page-title">{t('warehouseCategories.title')}</h1>
+                <p className="text-secondary">{t('warehouseCategories.description')}</p>
                 <button onClick={() => handleOpenModal()} className="glass-button flex items-center gap-2 px-4 py-2.5" style={{ marginTop: '1rem' }}>
                     <Plus className="w-4 h-4" />
-                    <span>Nova Categoria</span>
+                    <span>{t('warehouseCategories.newCategory')}</span>
                 </button>
             </div>
 
@@ -131,25 +135,25 @@ export default function CategoriaArmazens() {
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>
                     <div className="glass-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
                         <div className="glass-modal-header">
-                            <h2>{editingId ? 'Editar Categoria' : 'Nova Categoria'}</h2>
+                            <h2>{editingId ? t('warehouseCategories.editCategory') : t('warehouseCategories.newCategory')}</h2>
                             <button onClick={handleCloseModal}><X size={20} /></button>
                         </div>
                         <form onSubmit={handleSubmit}>
                             <div className="glass-modal-body">
                                 {formErrors._global && <div className="glass-modal-error">{formErrors._global}</div>}
                                 <div>
-                                    <label className="glass-modal-label">Nome <span className="glass-modal-required">*</span></label>
+                                    <label className="glass-modal-label">{t('warehouseCategories.name')} <span className="glass-modal-required">*</span></label>
                                     <input type="text" className="glass-modal-input" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} />
                                     {formErrors.nome && <div className="glass-modal-error">{formErrors.nome}</div>}
                                 </div>
                                 <div>
-                                    <label className="glass-modal-label">Descrição</label>
+                                    <label className="glass-modal-label">{t('warehouseCategories.categoryDescription')}</label>
                                     <textarea className="glass-modal-input" value={formData.descricao} onChange={(e) => setFormData({ ...formData, descricao: e.target.value })} rows={3} />
                                 </div>
                                 <div>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                         <input type="checkbox" checked={formData.ativo} onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })} />
-                                        Ativo
+                                        {t('common.active')}
                                     </label>
                                 </div>
                             </div>
@@ -170,7 +174,7 @@ export default function CategoriaArmazens() {
                             <button onClick={handleCloseDelete}><X size={20} /></button>
                         </div>
                         <div className="glass-modal-body">
-                            <p>Tem certeza que deseja excluir a categoria <strong>{deleteTarget.nome}</strong>?</p>
+                            <p>{t('warehouseCategories.deleteConfirm', { name: deleteTarget.nome })}</p>
                         </div>
                         <div className="glass-modal-footer">
                             <button type="button" className="glass-modal-button-secondary" onClick={handleCloseDelete}>{t('common.cancel')}</button>

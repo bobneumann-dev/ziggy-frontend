@@ -133,7 +133,7 @@ export default function ModeloContratoEditor() {
         navigate(`/admin/comercial/modelos-contrato/editor?id=${res.data.id}`, { replace: true });
       }
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao salvar';
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || t('contractEditor.validation.saveFailed');
       alert(msg);
     }
     setSaving(false);
@@ -145,7 +145,7 @@ export default function ModeloContratoEditor() {
       const res = await api.post(`/api/modelos-contrato/${modeloId}/duplicar-versao`);
       navigate(`/admin/comercial/modelos-contrato/editor?id=${res.data.id}`);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao duplicar';
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || t('contractEditor.duplicateError');
       alert(msg);
     }
   };
@@ -163,24 +163,24 @@ export default function ModeloContratoEditor() {
             <ArrowLeft size={16} />
           </button>
           <div className="mce-toolbar-title">
-            {nome || 'Novo Modelo'}
+            {nome || t('contractEditor.newModel')}
           </div>
           <span className="mce-toolbar-badge mce-badge-version">v{versao}</span>
           <span className={`mce-toolbar-badge ${ativo ? 'mce-badge-active' : 'mce-badge-draft'}`}>
-            {ativo ? 'Ativo' : 'Rascunho'}
+            {ativo ? t('contractEditor.active') : t('contractEditor.draft')}
           </span>
         </div>
         <div className="mce-toolbar-right">
           <button className="mce-btn" onClick={() => setShowProps(!showProps)}>
-            {showProps ? 'Ocultar Propriedades' : 'Propriedades'}
+            {showProps ? t('contractEditor.hideProperties') : t('contractEditor.properties')}
           </button>
           {modeloId && (
             <button className="mce-btn" onClick={handleDuplicar}>
-              <Copy size={14} /> Duplicar
+              <Copy size={14} /> {t('contractEditor.duplicate')}
             </button>
           )}
           <button className="mce-btn mce-btn-primary" onClick={handleSave} disabled={saving}>
-            <Save size={14} /> {saving ? 'Salvando...' : 'Salvar'}
+            <Save size={14} /> {saving ? t('contractEditor.saving') : t('contractEditor.save')}
           </button>
         </div>
       </div>
@@ -190,24 +190,24 @@ export default function ModeloContratoEditor() {
         <div className="mce-props">
           <div className="mce-props-grid">
             <div className="mce-field">
-              <label>Nome do Modelo *</label>
-              <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Contrato de Prestação de Serviços" />
+              <label>{t('contractEditor.modelName')} *</label>
+              <input value={nome} onChange={e => setNome(e.target.value)} />
             </div>
             <div className="mce-field">
-              <label>Versão</label>
+              <label>{t('contractEditor.version')}</label>
               <input type="number" value={versao} onChange={e => setVersao(Number(e.target.value))} min={1} />
             </div>
             <div className="mce-field">
-              <label>Status</label>
+              <label>{t('contractEditor.status')}</label>
               <select value={ativo ? '1' : '0'} onChange={e => setAtivo(e.target.value === '1')}>
-                <option value="1">Ativo</option>
-                <option value="0">Rascunho</option>
+                <option value="1">{t('contractEditor.active')}</option>
+                <option value="0">{t('contractEditor.draft')}</option>
               </select>
             </div>
           </div>
           <div className="mce-field" style={{ marginTop: '0.75rem' }}>
-            <label>Descrição</label>
-            <textarea rows={2} value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Breve descrição do modelo de contrato..." />
+            <label>{t('contractEditor.description')}</label>
+            <textarea rows={2} value={descricao} onChange={e => setDescricao(e.target.value)} />
           </div>
         </div>
       )}
@@ -215,13 +215,13 @@ export default function ModeloContratoEditor() {
       {/* ── Tabs ── */}
       <div className="mce-tabs">
         <button className={`mce-tab ${activeTab === 'secoes' ? 'active' : ''}`} onClick={() => setActiveTab('secoes')}>
-          <FileText size={15} /> Documento <span className="mce-tab-count">{secoes.length}</span>
+          <FileText size={15} /> {t('contractEditor.document')} <span className="mce-tab-count">{secoes.length}</span>
         </button>
         <button className={`mce-tab ${activeTab === 'assinaturas' ? 'active' : ''}`} onClick={() => setActiveTab('assinaturas')}>
-          <PenTool size={15} /> Assinaturas <span className="mce-tab-count">{assinaturas.length}</span>
+          <PenTool size={15} /> {t('contractEditor.signatures')} <span className="mce-tab-count">{assinaturas.length}</span>
         </button>
         <button className={`mce-tab ${activeTab === 'palavras' ? 'active' : ''}`} onClick={() => setActiveTab('palavras')}>
-          <Hash size={15} /> Tags <span className="mce-tab-count">{palavrasChave.length}</span>
+          <Hash size={15} /> {t('contractEditor.tags')} <span className="mce-tab-count">{palavrasChave.length}</span>
         </button>
       </div>
 
@@ -232,10 +232,10 @@ export default function ModeloContratoEditor() {
             {secoes.length === 0 && (
               <div className="mce-paper-empty">
                 <FileText size={56} />
-                <p style={{ fontSize: '1rem', fontWeight: 500 }}>Documento vazio</p>
-                <p style={{ fontSize: '0.85rem' }}>Adicione seções para começar a montar o modelo de contrato.</p>
+                <p style={{ fontSize: '1rem', fontWeight: 500 }}>{t('contractEditor.emptyDocument')}</p>
+                <p style={{ fontSize: '0.85rem' }}>{t('contractEditor.emptyDocumentHint')}</p>
                 <button className="mce-btn mce-btn-primary" onClick={addSecao} style={{ marginTop: '0.5rem' }}>
-                  <Plus size={15} /> Adicionar primeira seção
+                  <Plus size={15} /> {t('contractEditor.addFirstSection')}
                 </button>
               </div>
             )}
@@ -249,19 +249,19 @@ export default function ModeloContratoEditor() {
                     <ChevronRight size={16} className={`mce-section-chevron ${isExpanded ? 'open' : ''}`} />
                     <span className="mce-section-number">{sIdx + 1}</span>
                     <span className={`mce-section-title-text ${!secao.titulo ? 'placeholder' : ''}`}>
-                      {secao.titulo || 'Seção sem título'}
+                      {secao.titulo || t('contractEditor.sectionNoTitle')}
                     </span>
                     <div className="mce-section-meta">
                       {secao.codigoIdentificador && (
                         <span className="mce-section-meta-pill">{secao.codigoIdentificador}</span>
                       )}
                       <span className="mce-section-meta-pill">
-                        {secao.paragrafos.length} {secao.paragrafos.length === 1 ? 'parágrafo' : 'parágrafos'}
+                        {secao.paragrafos.length} {secao.paragrafos.length === 1 ? t('contractEditor.paragraph') : t('contractEditor.paragraphs')}
                       </span>
                       <button
                         className="mce-btn mce-btn-ghost mce-btn-danger"
                         onClick={e => { e.stopPropagation(); removeSecao(secao.id); }}
-                        title="Remover seção"
+                        title={t('contractEditor.removeSection')}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -274,15 +274,15 @@ export default function ModeloContratoEditor() {
                       {/* Section Fields */}
                       <div className="mce-section-fields">
                         <div className="mce-field">
-                          <label>Título da Seção</label>
+                          <label>{t('contractEditor.sectionTitle')}</label>
                           <input
                             value={secao.titulo}
                             onChange={e => updateSecao(secao.id, 'titulo', e.target.value)}
-                            placeholder="Ex: Cláusula Primeira — Do Objeto"
+                            placeholder=""
                           />
                         </div>
                         <div className="mce-field">
-                          <label>Código</label>
+                          <label>{t('contractEditor.code')}</label>
                           <input
                             value={secao.codigoIdentificador || ''}
                             onChange={e => updateSecao(secao.id, 'codigoIdentificador', e.target.value)}
@@ -290,7 +290,7 @@ export default function ModeloContratoEditor() {
                           />
                         </div>
                         <div className="mce-field">
-                          <label>Ordem</label>
+                          <label>{t('contractEditor.order')}</label>
                           <input
                             type="number"
                             value={secao.ordem}
@@ -318,7 +318,7 @@ export default function ModeloContratoEditor() {
                               <button
                                 className="mce-btn mce-btn-ghost mce-btn-danger"
                                 onClick={() => removeParagrafo(secao.id, p.id)}
-                                title="Remover parágrafo"
+                                title={t('contractEditor.removeParagraph')}
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -329,21 +329,21 @@ export default function ModeloContratoEditor() {
                             rows={3}
                             value={p.conteudo}
                             onChange={e => updateParagrafo(secao.id, p.id, 'conteudo', e.target.value)}
-                            placeholder="Digite o conteúdo da cláusula... Use {{TAGS}} para variáveis dinâmicas."
+                            placeholder={t('contractEditor.clauseContent')}
                           />
 
                           <div className="mce-para-condition">
                             <input
                               value={p.condicaoExibicao || ''}
                               onChange={e => updateParagrafo(secao.id, p.id, 'condicaoExibicao', e.target.value)}
-                              placeholder='Condição de exibição (JSON)  ex: {"==": [{"var":"tipo"}, "PJ"]}'
+                              placeholder={t('contractEditor.displayCondition')}
                             />
                           </div>
 
                           {/* Hidden fields for code/ordem — inline row */}
                           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
                             <div className="mce-field" style={{ flex: '0 0 130px' }}>
-                              <label style={{ fontSize: '0.65rem' }}><Code size={10} style={{ display: 'inline', verticalAlign: 'middle' }} /> Código</label>
+                              <label style={{ fontSize: '0.65rem' }}><Code size={10} style={{ display: 'inline', verticalAlign: 'middle' }} /> {t('contractEditor.code')}</label>
                               <input
                                 value={p.codigoIdentificador || ''}
                                 onChange={e => updateParagrafo(secao.id, p.id, 'codigoIdentificador', e.target.value)}
@@ -352,7 +352,7 @@ export default function ModeloContratoEditor() {
                               />
                             </div>
                             <div className="mce-field" style={{ flex: '0 0 70px' }}>
-                              <label style={{ fontSize: '0.65rem' }}>Ordem</label>
+                              <label style={{ fontSize: '0.65rem' }}>{t('contractEditor.order')}</label>
                               <input
                                 type="number"
                                 value={p.ordem}
@@ -365,7 +365,7 @@ export default function ModeloContratoEditor() {
                       ))}
 
                       <button className="mce-add-para" onClick={() => addParagrafo(secao.id)}>
-                        <Plus size={14} /> Adicionar parágrafo
+                        <Plus size={14} /> {t('contractEditor.addParagraph')}
                       </button>
                     </div>
                   )}
@@ -375,7 +375,7 @@ export default function ModeloContratoEditor() {
 
             {secoes.length > 0 && (
               <button className="mce-add-section" onClick={addSecao}>
-                <Plus size={16} /> Adicionar seção
+                <Plus size={16} /> {t('contractEditor.addSection')}
               </button>
             )}
           </div>
@@ -389,23 +389,23 @@ export default function ModeloContratoEditor() {
             <div key={a.id} className="mce-row-card">
               <span className="mce-row-num">{idx + 1}</span>
               <div className="mce-field" style={{ flex: 2 }}>
-                <label>Papel</label>
-                <input value={a.papel} onChange={e => updateAssinatura(a.id, 'papel', e.target.value)} placeholder="Ex: Contratante, Contratada, Testemunha" />
+                <label>{t('contractEditor.role')}</label>
+                <input value={a.papel} onChange={e => updateAssinatura(a.id, 'papel', e.target.value)} />
               </div>
               <div className="mce-field" style={{ flex: '0 0 70px' }}>
-                <label>Ordem</label>
+                <label>{t('contractEditor.order')}</label>
                 <input type="number" value={a.ordem} onChange={e => updateAssinatura(a.id, 'ordem', Number(e.target.value))} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, paddingTop: '1.2rem' }}>
                 <label className="mce-checkbox-label">
                   <input type="checkbox" checked={a.obrigatoria} onChange={e => updateAssinatura(a.id, 'obrigatoria', e.target.checked)} />
-                  Obrig.
+                  {t('contractEditor.required')}
                 </label>
               </div>
               <button
                 className="mce-btn mce-btn-ghost mce-btn-danger"
                 onClick={() => removeAssinatura(a.id)}
-                title="Remover"
+                title={t('contractEditor.remove')}
                 style={{ marginTop: '1rem' }}
               >
                 <Trash2 size={14} />
@@ -416,12 +416,12 @@ export default function ModeloContratoEditor() {
           {assinaturas.length === 0 && (
             <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
               <PenTool size={40} style={{ margin: '0 auto 0.75rem', opacity: 0.2 }} />
-              <p>Nenhuma assinatura cadastrada.</p>
+              <p>{t('contractEditor.noSignatures')}</p>
             </div>
           )}
 
           <button className="mce-add-row" onClick={addAssinatura}>
-            <Plus size={15} /> Adicionar assinatura
+            <Plus size={15} /> {t('contractEditor.addSignature')}
           </button>
         </div>
       )}
@@ -433,7 +433,7 @@ export default function ModeloContratoEditor() {
             <div key={p.id} className="mce-row-card">
               <span className="mce-row-num">{idx + 1}</span>
               <div className="mce-field" style={{ flex: '0 0 160px' }}>
-                <label>Tag</label>
+                <label>{t('contractEditor.tag')}</label>
                 <input
                   value={p.tag}
                   onChange={e => updatePalavra(p.id, 'tag', e.target.value)}
@@ -442,17 +442,17 @@ export default function ModeloContratoEditor() {
                 />
               </div>
               <div className="mce-field" style={{ flex: 2 }}>
-                <label>Descrição</label>
-                <input value={p.descricao} onChange={e => updatePalavra(p.id, 'descricao', e.target.value)} placeholder="O que essa tag representa" />
+                <label>{t('contractEditor.tagDescription')}</label>
+                <input value={p.descricao} onChange={e => updatePalavra(p.id, 'descricao', e.target.value)} />
               </div>
               <div className="mce-field" style={{ flex: 1 }}>
-                <label>Exemplo</label>
-                <input value={p.exemplo || ''} onChange={e => updatePalavra(p.id, 'exemplo', e.target.value)} placeholder="Valor exemplo" />
+                <label>{t('contractEditor.example')}</label>
+                <input value={p.exemplo || ''} onChange={e => updatePalavra(p.id, 'exemplo', e.target.value)} />
               </div>
               <button
                 className="mce-btn mce-btn-ghost mce-btn-danger"
                 onClick={() => removePalavra(p.id)}
-                title="Remover"
+                title={t('contractEditor.remove')}
                 style={{ marginTop: '1rem' }}
               >
                 <Trash2 size={14} />
@@ -463,13 +463,13 @@ export default function ModeloContratoEditor() {
           {palavrasChave.length === 0 && (
             <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
               <Hash size={40} style={{ margin: '0 auto 0.75rem', opacity: 0.2 }} />
-              <p>Nenhuma tag cadastrada.</p>
-              <p style={{ fontSize: '0.85rem' }}>Tags são variáveis como <code>{`{{NOME_CLIENTE}}`}</code> que serão substituídas nos contratos gerados.</p>
+              <p>{t('contractEditor.noTags')}</p>
+              <p style={{ fontSize: '0.85rem' }}>{t('contractEditor.tagsHint', { example: '{{NOME_CLIENTE}}' })}</p>
             </div>
           )}
 
           <button className="mce-add-row" onClick={addPalavra}>
-            <Plus size={15} /> Adicionar tag
+            <Plus size={15} /> {t('contractEditor.addTag')}
           </button>
         </div>
       )}

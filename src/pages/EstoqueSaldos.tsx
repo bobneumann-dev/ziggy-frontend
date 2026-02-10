@@ -94,11 +94,11 @@ export default function EstoqueSaldos() {
             <div style={{ marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                     <label className="glass-modal-label">{t('stock.warehouse')}</label>
-                    <SearchSelect options={armazens} value={armazens.find(a => a.value === filterArmazem) || null} onChange={(opt) => setFilterArmazem((opt?.value as string) || '')} isClearable placeholder="Todos os armazéns" />
+                    <SearchSelect options={armazens} value={armazens.find(a => a.value === filterArmazem) || null} onChange={(opt) => setFilterArmazem((opt?.value as string) || '')} isClearable placeholder={t('stock.allWarehouses')} />
                 </div>
                 <div>
                     <label className="glass-modal-label">{t('stock.item')}</label>
-                    <SearchSelect options={itens} value={itens.find(i => i.value === filterItem) || null} onChange={(opt) => setFilterItem((opt?.value as string) || '')} isClearable placeholder="Todos os itens" />
+                    <SearchSelect options={itens} value={itens.find(i => i.value === filterItem) || null} onChange={(opt) => setFilterItem((opt?.value as string) || '')} isClearable placeholder={t('stock.allItems')} />
                 </div>
             </div>
 

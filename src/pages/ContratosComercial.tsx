@@ -57,7 +57,7 @@ export default function ContratosComercial() {
     };
 
     const handleCancel = async (contratoId: string) => {
-        if (!confirm('Tem certeza que deseja cancelar este contrato?')) return;
+        if (!confirm(t('contracts.cancelConfirm'))) return;
         try {
             await api.post(`/api/contratos-comercial/${contratoId}/cancelar`);
             fetchContratos();

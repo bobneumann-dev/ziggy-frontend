@@ -88,7 +88,7 @@ export default function Oportunidades() {
         event.preventDefault();
         setFormErrors({});
         if (!formData.clienteId || !formData.titulo.trim()) {
-            setFormErrors({ clienteId: !formData.clienteId ? 'Cliente obrigatório' : '', titulo: !formData.titulo.trim() ? 'Título obrigatório' : '' });
+            setFormErrors({ clienteId: !formData.clienteId ? t('opportunities.validation.requiredClient') : '', titulo: !formData.titulo.trim() ? t('opportunities.validation.requiredTitle') : '' });
             return;
         }
         try {
@@ -100,7 +100,7 @@ export default function Oportunidades() {
             fetchOportunidades();
             handleCloseModal();
         } catch (error: any) {
-            setFormErrors({ _global: error.response?.data?.message || 'Erro ao salvar' });
+            setFormErrors({ _global: error.response?.data?.message || t('opportunities.validation.saveFailed') });
         }
     };
 
@@ -111,7 +111,7 @@ export default function Oportunidades() {
             fetchOportunidades();
         } catch (error: any) {
             console.error(error);
-            alert(error.response?.data?.message || 'Erro ao fechar venda');
+            alert(error.response?.data?.message || t('opportunities.validation.closeSaleError'));
         } finally {
             setClosing(null);
         }

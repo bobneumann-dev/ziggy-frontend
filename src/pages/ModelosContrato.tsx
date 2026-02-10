@@ -55,7 +55,7 @@ export default function ModelosContrato() {
         event.preventDefault();
         setFormErrors({});
         if (!formData.nome.trim()) {
-            setFormErrors({ nome: 'Nome obrigatório' });
+            setFormErrors({ nome: t('contractTemplates.validation.requiredName') });
             return;
         }
         try {
@@ -68,7 +68,7 @@ export default function ModelosContrato() {
             fetchModelos();
             handleCloseModal();
         } catch (error: any) {
-            setFormErrors({ _global: error.response?.data?.message || 'Erro ao salvar' });
+            setFormErrors({ _global: error.response?.data?.message || t('contractTemplates.validation.saveFailed') });
         }
     };
 
@@ -109,7 +109,7 @@ export default function ModelosContrato() {
             cell: ({ row }) => (
                 <div className="text-right">
                     <div className="action-button-group inline-flex">
-                        <button className="action-button" onClick={() => navigate(`/admin/comercial/modelos-contrato/editor?id=${row.original.id}`)} title="Editor completo">
+                        <button className="action-button" onClick={() => navigate(`/admin/comercial/modelos-contrato/editor?id=${row.original.id}`)} title={t('contractTemplates.fullEditor')}>
                             <FileCode size={16} />
                         </button>
                         <button className="action-button" onClick={() => handleOpenModal(row.original)} title={t('common.edit')}>
@@ -180,7 +180,7 @@ export default function ModelosContrato() {
                             <button onClick={handleCloseDelete}><X size={20} /></button>
                         </div>
                         <div className="glass-modal-body">
-                            <p>Deseja remover {deleteTarget.nome}?</p>
+                            <p>{t('contractTemplates.deleteConfirm', { name: deleteTarget.nome })}</p>
                         </div>
                         <div className="glass-modal-footer">
                             <button type="button" className="glass-modal-button-secondary" onClick={handleCloseDelete}>{t('common.cancel')}</button>

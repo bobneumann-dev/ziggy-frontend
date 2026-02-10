@@ -15,15 +15,14 @@ export default function Armazens() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [formData, setFormData] = useState({ nome: '', categoriaId: '', setorId: '', ativo: true });
+    const [formData, setFormData] = useState({ nome: '', categoriaId: '', ativo: true });
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [deleteTarget, setDeleteTarget] = useState<Armazem | null>(null);
-    const [setores, setSetores] = useState<SearchSelectOption[]>([]);
     const [categorias, setCategorias] = useState<SearchSelectOption[]>([]);
 
     const fetchArmazens = useCallback(async () => {
         try {
-            const res = await api.get('/api/armazens');
+            const res = await api.get('/api/estoque/armazens');
             setArmazens(res.data);
         } catch (err) {
             console.error(err);
@@ -32,18 +31,9 @@ export default function Armazens() {
         }
     }, []);
 
-    const fetchSetores = useCallback(async () => {
-        try {
-            const res = await api.get('/api/setores');
-            setSetores(res.data.map((s: any) => ({ label: s.nome, value: s.id })));
-        } catch (err) {
-            console.error(err);
-        }
-    }, []);
-
     const fetchCategorias = useCallback(async () => {
         try {
-            const res = await api.get('/api/categoriaarmazens', { params: { ativo: true } });
+            const res = await api.get('/api/estoque/categoriaarmazens', { params: { ativo: true } });
             setCategorias(res.data.map((c: any) => ({ label: c.nome, value: c.id })));
         } catch (err) {
             console.error(err);
@@ -52,19 +42,18 @@ export default function Armazens() {
 
     useEffect(() => {
         fetchArmazens();
-        fetchSetores();
         fetchCategorias();
-    }, [fetchArmazens, fetchSetores, fetchCategorias]);
+    }, [fetchArmazens, fetchCategorias]);
 
 
 
     const handleOpenModal = (armazem?: Armazem) => {
         if (armazem) {
             setEditingId(armazem.id);
-            setFormData({ nome: armazem.nome, categoriaId: armazem.categoriaId || '', setorId: armazem.setorId || '', ativo: armazem.ativo });
+            setFormData({ nome: armazem.nome, categoriaId: armazem.categoriaId || '', ativo: armazem.ativo });
         } else {
             setEditingId(null);
-            setFormData({ nome: '', categoriaId: '', setorId: '', ativo: true });
+            setFormData({ nome: '', categoriaId: '', ativo: true });
         }
         setFormErrors({});
         setShowModal(true);
@@ -78,19 +67,19 @@ export default function Armazens() {
         event.preventDefault();
         setFormErrors({});
         if (!formData.nome.trim()) {
-            setFormErrors({ nome: 'Nome é obrigatório' });
+            setFormErrors({ nome: t('warehouses.validation.requiredName') });
             return;
         }
         try {
             if (editingId) {
-                await api.put(`/api/armazens/${editingId}`, { ...formData, setorId: formData.setorId || null });
+                await api.put(`/api/estoque/armazens/${editingId}`, formData);
             } else {
-                await api.post('/api/armazens', { ...formData, setorId: formData.setorId || null });
+                await api.post('/api/estoque/armazens', formData);
             }
             fetchArmazens();
             handleCloseModal();
         } catch (error: any) {
-            setFormErrors({ _global: error.response?.data?.message || 'Erro ao salvar' });
+            setFormErrors({ _global: error.response?.data?.message || t('warehouses.validation.saveFailed') });
         }
     };
 
@@ -101,7 +90,7 @@ export default function Armazens() {
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return;
         try {
-            await api.delete(`/api/armazens/${deleteTarget.id}`);
+            await api.delete(`/api/estoque/armazens/${deleteTarget.id}`);
             fetchArmazens();
             setDeleteTarget(null);
         } catch (error) {
@@ -115,7 +104,7 @@ export default function Armazens() {
 
     const columns: ColumnDef<Armazem>[] = useMemo(() => [
         { header: t('warehouses.name'), accessorKey: 'nome' },
-        { header: 'Categoria', accessorKey: 'categoriaNome', cell: ({ row }) => row.original.categoriaNome || '-' },
+        { header: t('warehouses.category'), accessorKey: 'categoriaNome', cell: ({ row }) => row.original.categoriaNome || '-' },
         {
             header: t('common.status'),
             accessorKey: 'ativo',
@@ -174,12 +163,8 @@ export default function Armazens() {
                                     {formErrors.nome && <div className="glass-modal-error">{formErrors.nome}</div>}
                                 </div>
                                 <div>
-                                    <label className="glass-modal-label">Categoria</label>
+                                    <label className="glass-modal-label">{t('warehouses.category')}</label>
                                     <SearchSelect options={categorias} value={categorias.find(c => c.value === formData.categoriaId) || null} onChange={(opt) => setFormData({ ...formData, categoriaId: (opt?.value as string) || '' })} isClearable />
-                                </div>
-                                <div>
-                                    <label className="glass-modal-label">{t('people.sector')}</label>
-                                    <SearchSelect options={setores} value={setores.find(s => s.value === formData.setorId) || null} onChange={(opt) => setFormData({ ...formData, setorId: (opt?.value as string) || '' })} isClearable />
                                 </div>
                                 <div>
                                     <label className="glass-modal-label">{t('common.status')}</label>
@@ -203,7 +188,7 @@ export default function Armazens() {
                             <button onClick={handleCloseDelete}><X size={20} /></button>
                         </div>
                         <div className="glass-modal-body">
-                            <p>Deseja remover {deleteTarget.nome}?</p>
+                            <p>{t('warehouses.deleteConfirm', { name: deleteTarget.nome })}</p>
                         </div>
                         <div className="glass-modal-footer">
                             <button type="button" className="glass-modal-button-secondary" onClick={handleCloseDelete}>{t('common.cancel')}</button>

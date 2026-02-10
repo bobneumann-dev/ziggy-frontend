@@ -28,7 +28,9 @@ import {
   FileCode,
   Coins,
   DollarSign,
-  Wrench
+  Wrench,
+  Globe,
+  MapPin
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -53,6 +55,7 @@ export default function Layout({ children }: LayoutProps) {
     path?: string;
     icon?: any;
     label: string;
+    menuKey?: string;
     children?: MenuItem[];
     isOpen?: boolean;
     onToggle?: () => void;
@@ -64,7 +67,9 @@ export default function Layout({ children }: LayoutProps) {
     'cadastros': false,
     'estoque-armazens': false,
     'comercial': false,
-    'empresa': false
+    'empresa': false,
+    'cadastros-geo': false,
+    'itens-servicos': false
   });
 
   const toggleMenu = (key: string) => {
@@ -74,7 +79,8 @@ export default function Layout({ children }: LayoutProps) {
   const SidebarItem = ({ item, depth = 0 }: { item: MenuItem; depth?: number }) => {
     const isActive = item.path ? location.pathname === item.path : false;
     const hasChildren = item.children && item.children.length > 0;
-    const isOpen = item.label && openMenus[item.label.toLowerCase().replace(/\s/g, '-')];
+    const menuKey = item.menuKey || item.label.toLowerCase().replace(/\s/g, '-');
+    const isOpen = menuKey && openMenus[menuKey];
     const Icon = item.icon;
 
     if (hasChildren) {
@@ -87,7 +93,7 @@ export default function Layout({ children }: LayoutProps) {
               color: 'var(--sidebar-text)',
               opacity: isSidebarCollapsed && depth > 0 ? 0 : 1
             }}
-            onClick={() => !isSidebarCollapsed && toggleMenu(item.label.toLowerCase().replace(/\s/g, '-'))}
+            onClick={() => !isSidebarCollapsed && toggleMenu(menuKey)}
             title={isSidebarCollapsed ? item.label : undefined}
           >
             <div className="flex items-center gap-3 overflow-hidden">
@@ -127,7 +133,8 @@ export default function Layout({ children }: LayoutProps) {
 
   const menuStructure: MenuItem[] = [
     {
-      label: 'Empresa',
+      label: t('menu.company'),
+      menuKey: 'empresa',
       icon: Building2,
       children: [
         { path: '/admin', icon: LayoutDashboard, label: t('menu.dashboard') },
@@ -139,48 +146,64 @@ export default function Layout({ children }: LayoutProps) {
       ]
     },
     {
-      label: 'Financeiro',
+      label: t('menu.financial'),
+      menuKey: 'financeiro',
       icon: DollarSign,
       children: [
-        { path: '/admin/catalogo/moedas', icon: Coins, label: 'Moedas' },
-        { path: '/admin/catalogo/cotacoes', icon: DollarSign, label: 'Cotações' },
+        { path: '/admin/catalogo/moedas', icon: Coins, label: t('menu.currencies') },
+        { path: '/admin/catalogo/cotacoes', icon: DollarSign, label: t('menu.exchangeRates') },
       ]
     },
     {
-      label: 'Estoque & Patrimônio',
+      label: t('menu.stockAndAssets'),
+      menuKey: 'estoque',
       icon: Package,
       children: [
         {
-          label: 'Cadastros',
+          label: t('menu.registrations'),
+          menuKey: 'cadastros',
           icon: FolderTree,
           children: [
             {
-              label: 'Itens/Serviços',
+              label: t('menu.itemsServices'),
+              menuKey: 'itens-servicos',
               icon: Package,
               children: [
                 { path: '/admin/catalogo/categorias', icon: FolderTree, label: t('menu.catalogCategories') },
-                { path: '/admin/catalogo/produtos', icon: Package, label: 'Produtos' },
-                { path: '/admin/catalogo/servicos', icon: Wrench, label: 'Serviços' },
-                { path: '/admin/patrimonio/itens', icon: Tag, label: 'Patrimônio (Tipos)' },
+                { path: '/admin/catalogo/produtos', icon: Package, label: t('menu.products') },
+                { path: '/admin/catalogo/servicos', icon: Wrench, label: t('menu.services') },
+                { path: '/admin/patrimonio/itens', icon: Tag, label: t('menu.assetTypes') },
               ]
             },
             {
-              label: 'Armazéns',
+              label: t('menu.warehouses'),
+              menuKey: 'estoque-armazens',
               icon: Warehouse,
               children: [
-                { path: '/admin/estoque/categorias-armazem', icon: FolderTree, label: 'Categorias' },
-                { path: '/admin/estoque/armazens', icon: Warehouse, label: 'Armazéns' },
+                { path: '/admin/estoque/categorias-armazem', icon: FolderTree, label: t('menu.warehouseCategories') },
+                { path: '/admin/estoque/armazens', icon: Warehouse, label: t('menu.warehouses') },
               ]
             }
           ]
         },
         { path: '/admin/estoque/saldos', icon: BarChart3, label: t('menu.stockBalances') },
         { path: '/admin/estoque/movimentos', icon: ArrowLeftRight, label: t('menu.stockMovements') },
-        { path: '/admin/patrimonio/ativos', icon: Tag, label: 'Ativos (Patrimônio)' }, // New CRUD
+        { path: '/admin/patrimonio/ativos', icon: Tag, label: t('menu.assetsManagement') },
       ]
     },
     {
-      label: 'Comercial',
+      label: t('menu.registrations'),
+      menuKey: 'cadastros-geo',
+      icon: Globe,
+      children: [
+        { path: '/admin/cadastros/paises', icon: Globe, label: t('menu.countries') },
+        { path: '/admin/cadastros/departamentos', icon: MapPin, label: t('menu.departments') },
+        { path: '/admin/cadastros/cidades', icon: MapPin, label: t('menu.cities') },
+      ]
+    },
+    {
+      label: t('menu.commercial'),
+      menuKey: 'comercial',
       icon: TrendingUp,
       children: [
         { path: '/admin/comercial/clientes', icon: Users, label: t('menu.clients') },
@@ -197,7 +220,7 @@ export default function Layout({ children }: LayoutProps) {
     <div className="flex flex-col h-screen overflow-hidden relative">
       <HexagonBackground />
       {/* Header/Topbar */}
-      <div className="relative z-10">
+      <div className="relative z-20">
         <Header
           isSidebarCollapsed={isSidebarCollapsed}
           onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
@@ -221,7 +244,7 @@ export default function Layout({ children }: LayoutProps) {
                 {/* Top Level Section Header */}
                 <div
                   className="px-4 py-3 cursor-pointer select-none flex items-center justify-between"
-                  onClick={() => !isSidebarCollapsed && toggleMenu(section.label.toLowerCase().replace(/\s/g, '-'))}
+                  onClick={() => !isSidebarCollapsed && toggleMenu(section.menuKey || section.label.toLowerCase().replace(/\s/g, '-'))}
                   style={{ borderBottom: '1px solid var(--border-color)' }}
                 >
                   <div className="flex items-center gap-2">
@@ -231,7 +254,7 @@ export default function Layout({ children }: LayoutProps) {
                     )}
                   </div>
                   {!isSidebarCollapsed && (
-                    openMenus[section.label.toLowerCase().replace(/\s/g, '-')]
+                    openMenus[section.menuKey || section.label.toLowerCase().replace(/\s/g, '-')]
                       ? <ChevronDown className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
                       : <ChevronRight className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
                   )}
@@ -239,7 +262,7 @@ export default function Layout({ children }: LayoutProps) {
 
                 {/* Children */}
                 <div style={{
-                  display: (openMenus[section.label.toLowerCase().replace(/\s/g, '-')] || isSidebarCollapsed) ? 'block' : 'none',
+                  display: (openMenus[section.menuKey || section.label.toLowerCase().replace(/\s/g, '-')] || isSidebarCollapsed) ? 'block' : 'none',
                   padding: '0.5rem'
                 }}>
                   {section.children?.map((child, cIndex) => (

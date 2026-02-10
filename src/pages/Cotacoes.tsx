@@ -71,19 +71,19 @@ export default function Cotacoes() {
         event.preventDefault();
         setFormErrors({});
         if (!formData.moedaBaseId) {
-            setFormErrors({ moedaBase: 'Moeda base é obrigatória' });
+            setFormErrors({ moedaBase: t('exchangeRates.validation.requiredBase') });
             return;
         }
         if (!formData.moedaCotacaoId) {
-            setFormErrors({ moedaCotacao: 'Moeda de cotação é obrigatória' });
+            setFormErrors({ moedaCotacao: t('exchangeRates.validation.requiredQuote') });
             return;
         }
         if (formData.moedaBaseId === formData.moedaCotacaoId) {
-            setFormErrors({ moedaCotacao: 'Moeda base e moeda de cotação devem ser diferentes' });
+            setFormErrors({ moedaCotacao: t('exchangeRates.validation.sameCurrency') });
             return;
         }
         if (formData.taxaCompra <= 0 || formData.taxaVenda <= 0) {
-            setFormErrors({ taxas: 'Taxas devem ser maiores que zero' });
+            setFormErrors({ taxas: t('exchangeRates.validation.ratesPositive') });
             return;
         }
         try {
@@ -95,7 +95,7 @@ export default function Cotacoes() {
             fetchCotacoes();
             handleCloseModal();
         } catch (error: any) {
-            setFormErrors({ _global: error.response?.data?.message || 'Erro ao salvar' });
+            setFormErrors({ _global: error.response?.data?.message || t('exchangeRates.validation.saveFailed') });
         }
     };
 
@@ -120,22 +120,22 @@ export default function Cotacoes() {
 
     const columns: ColumnDef<Cotacao>[] = useMemo(() => [
         {
-            header: 'Par de Moedas',
+            header: t('exchangeRates.currencyPair'),
             accessorKey: 'moedaBaseCodigo',
             cell: ({ row }) => <span>{row.original.moedaBaseCodigo} / {row.original.moedaCotacaoCodigo}</span>
         },
         {
-            header: 'Taxa Compra',
+            header: t('exchangeRates.buyRate'),
             accessorKey: 'taxaCompra',
             cell: ({ row }) => row.original.taxaCompra.toFixed(4)
         },
         {
-            header: 'Taxa Venda',
+            header: t('exchangeRates.sellRate'),
             accessorKey: 'taxaVenda',
             cell: ({ row }) => row.original.taxaVenda.toFixed(4)
         },
         {
-            header: 'Data',
+            header: t('exchangeRates.date'),
             accessorKey: 'data',
             cell: ({ row }) => new Date(row.original.data).toLocaleDateString('pt-BR')
         },
@@ -162,11 +162,11 @@ export default function Cotacoes() {
     return (
         <div className="animate-fadeIn">
             <div style={{ marginBottom: '1.5rem' }}>
-                <h1 className="page-title">Cotações de Moedas</h1>
-                <p className="text-secondary">Cadastre e gerencie as taxas de câmbio entre moedas</p>
+                <h1 className="page-title">{t('exchangeRates.title')}</h1>
+                <p className="text-secondary">{t('exchangeRates.description')}</p>
                 <button onClick={() => handleOpenModal()} className="glass-button flex items-center gap-2 px-4 py-2.5" style={{ marginTop: '1rem' }}>
                     <Plus className="w-4 h-4" />
-                    <span>Nova Cotação</span>
+                    <span>{t('exchangeRates.newRate')}</span>
                 </button>
             </div>
 
@@ -176,7 +176,7 @@ export default function Cotacoes() {
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>
                     <div className="glass-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="glass-modal-header">
-                            <h2>{editingId ? 'Editar Cotação' : 'Nova Cotação'}</h2>
+                            <h2>{editingId ? t('exchangeRates.editRate') : t('exchangeRates.newRate')}</h2>
                             <button onClick={handleCloseModal}><X size={20} /></button>
                         </div>
                         <form onSubmit={handleSubmit}>
@@ -184,7 +184,7 @@ export default function Cotacoes() {
                                 {formErrors._global && <div className="glass-modal-error">{formErrors._global}</div>}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                     <div>
-                                        <label className="glass-modal-label">Moeda Base <span className="glass-modal-required">*</span></label>
+                                        <label className="glass-modal-label">{t('exchangeRates.baseCurrency')} <span className="glass-modal-required">*</span></label>
                                         <SearchSelect
                                             options={moedas}
                                             value={moedas.find(m => m.value === formData.moedaBaseId) || null}
@@ -194,7 +194,7 @@ export default function Cotacoes() {
                                         {formErrors.moedaBase && <div className="glass-modal-error">{formErrors.moedaBase}</div>}
                                     </div>
                                     <div>
-                                        <label className="glass-modal-label">Moeda Cotação <span className="glass-modal-required">*</span></label>
+                                        <label className="glass-modal-label">{t('exchangeRates.quoteCurrency')} <span className="glass-modal-required">*</span></label>
                                         <SearchSelect
                                             options={moedas}
                                             value={moedas.find(m => m.value === formData.moedaCotacaoId) || null}
@@ -206,17 +206,17 @@ export default function Cotacoes() {
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                     <div>
-                                        <label className="glass-modal-label">Taxa Compra <span className="glass-modal-required">*</span></label>
+                                        <label className="glass-modal-label">{t('exchangeRates.buyRate')} <span className="glass-modal-required">*</span></label>
                                         <input type="number" step="0.000001" className="glass-modal-input" value={formData.taxaCompra} onChange={(e) => setFormData({ ...formData, taxaCompra: parseFloat(e.target.value) || 0 })} />
                                     </div>
                                     <div>
-                                        <label className="glass-modal-label">Taxa Venda <span className="glass-modal-required">*</span></label>
+                                        <label className="glass-modal-label">{t('exchangeRates.sellRate')} <span className="glass-modal-required">*</span></label>
                                         <input type="number" step="0.000001" className="glass-modal-input" value={formData.taxaVenda} onChange={(e) => setFormData({ ...formData, taxaVenda: parseFloat(e.target.value) || 0 })} />
                                     </div>
                                 </div>
                                 {formErrors.taxas && <div className="glass-modal-error">{formErrors.taxas}</div>}
                                 <div>
-                                    <label className="glass-modal-label">Data <span className="glass-modal-required">*</span></label>
+                                    <label className="glass-modal-label">{t('exchangeRates.date')} <span className="glass-modal-required">*</span></label>
                                     <input type="date" className="glass-modal-input" value={formData.data} onChange={(e) => setFormData({ ...formData, data: e.target.value })} />
                                 </div>
                             </div>
@@ -237,7 +237,7 @@ export default function Cotacoes() {
                             <button onClick={handleCloseDelete}><X size={20} /></button>
                         </div>
                         <div className="glass-modal-body">
-                            <p>Deseja remover a cotação {deleteTarget.moedaBaseCodigo}/{deleteTarget.moedaCotacaoCodigo}?</p>
+                            <p>{t('exchangeRates.deleteConfirm', { pair: `${deleteTarget.moedaBaseCodigo}/${deleteTarget.moedaCotacaoCodigo}` })}</p>
                         </div>
                         <div className="glass-modal-footer">
                             <button type="button" className="glass-modal-button-secondary" onClick={handleCloseDelete}>{t('common.cancel')}</button>

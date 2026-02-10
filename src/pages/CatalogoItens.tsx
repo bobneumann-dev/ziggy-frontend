@@ -131,11 +131,11 @@ export default function CatalogoItens() {
         event.preventDefault();
         setFormErrors({});
         if (!formData.codigo.trim() || !formData.nome.trim()) {
-            setFormErrors({ codigo: !formData.codigo.trim() ? 'Código obrigatório' : '', nome: !formData.nome.trim() ? 'Nome obrigatório' : '' });
+            setFormErrors({ codigo: !formData.codigo.trim() ? t('catalog.validation.requiredCode') : '', nome: !formData.nome.trim() ? t('catalog.validation.requiredName') : '' });
             return;
         }
         if (formData.tipo === TipoItemCatalogo.Servico && (formData.estocavel || formData.serializado)) {
-            setFormErrors({ _global: 'Serviço não pode ser estocável ou serializado' });
+            setFormErrors({ _global: t('catalog.validation.serviceNotStockable') });
             return;
         }
         try {
@@ -148,7 +148,7 @@ export default function CatalogoItens() {
             fetchItens();
             handleCloseModal();
         } catch (error: any) {
-            setFormErrors({ _global: error.response?.data?.message || 'Erro ao salvar' });
+            setFormErrors({ _global: error.response?.data?.message || t('catalog.validation.saveFailed') });
         }
     };
 
@@ -191,14 +191,14 @@ export default function CatalogoItens() {
             }
         },
         {
-            header: 'Flags',
+            header: t('catalog.flags'),
             id: 'flags',
             cell: ({ row }) => (
                 <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                    {row.original.vendavel && <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>Vend</span>}
-                    {row.original.compravel && <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>Comp</span>}
-                    {row.original.estocavel && <span className="badge badge-warning" style={{ fontSize: '0.7rem' }}>Estq</span>}
-                    {row.original.serializado && <span className="badge badge-danger" style={{ fontSize: '0.7rem' }}>Ser</span>}
+                    {row.original.vendavel && <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>{t('catalog.badgeSellable')}</span>}
+                    {row.original.compravel && <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{t('catalog.badgePurchasable')}</span>}
+                    {row.original.estocavel && <span className="badge badge-warning" style={{ fontSize: '0.7rem' }}>{t('catalog.badgeStockable')}</span>}
+                    {row.original.serializado && <span className="badge badge-danger" style={{ fontSize: '0.7rem' }}>{t('catalog.badgeSerialized')}</span>}
                 </div>
             ),
         },
@@ -283,12 +283,12 @@ export default function CatalogoItens() {
                                         <input type="number" step="0.01" className="glass-modal-input" value={formData.precoBase} onChange={(e) => setFormData({ ...formData, precoBase: parseFloat(e.target.value) || 0 })} />
                                     </div>
                                     <div>
-                                        <label className="glass-modal-label">Preço Mínimo</label>
+                                        <label className="glass-modal-label">{t('catalog.minPrice')}</label>
                                         <input type="number" step="0.01" className="glass-modal-input" value={formData.precoMinimo} onChange={(e) => setFormData({ ...formData, precoMinimo: parseFloat(e.target.value) || 0 })} />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="glass-modal-label">Moeda</label>
+                                    <label className="glass-modal-label">{t('catalog.currency')}</label>
                                     <SearchSelect options={moedas} value={moedas.find(m => m.value === formData.moedaId) || null} onChange={(opt) => setFormData({ ...formData, moedaId: (opt?.value as string) || '' })} isClearable />
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '1rem' }}>

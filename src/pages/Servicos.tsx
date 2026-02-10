@@ -98,7 +98,7 @@ export default function Servicos() {
         event.preventDefault();
         setFormErrors({});
         if (!formData.codigo.trim() || !formData.nome.trim()) {
-            setFormErrors({ codigo: !formData.codigo.trim() ? 'Código obrigatório' : '', nome: !formData.nome.trim() ? 'Nome obrigatório' : '' });
+            setFormErrors({ codigo: !formData.codigo.trim() ? t('services.validation.requiredCode') : '', nome: !formData.nome.trim() ? t('services.validation.requiredName') : '' });
             return;
         }
         try {
@@ -124,7 +124,7 @@ export default function Servicos() {
             fetchItens();
             handleCloseModal();
         } catch (error: any) {
-            setFormErrors({ _global: error.response?.data?.message || 'Erro ao salvar' });
+            setFormErrors({ _global: error.response?.data?.message || t('services.validation.saveFailed') });
         }
     };
 
@@ -162,7 +162,7 @@ export default function Servicos() {
             }
         },
         {
-            header: t('table.actions'),
+            header: t('common.actions'),
             id: 'actions',
             cell: ({ row }) => (
                 <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -182,11 +182,11 @@ export default function Servicos() {
     return (
         <div className="animate-fadeIn">
             <div style={{ marginBottom: '1.5rem' }}>
-                <h1 className="page-title">Serviços</h1>
-                <p className="text-secondary">Gerencie os serviços oferecidos pela sua empresa</p>
+                <h1 className="page-title">{t('services.title')}</h1>
+                <p className="text-secondary">{t('services.description')}</p>
                 <button onClick={() => handleOpenModal()} className="glass-button flex items-center gap-2 px-4 py-2.5" style={{ marginTop: '1rem' }}>
                     <Plus className="w-4 h-4" />
-                    <span>Novo Serviço</span>
+                    <span>{t('services.newService')}</span>
                 </button>
             </div>
 
@@ -196,7 +196,7 @@ export default function Servicos() {
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>
                     <div className="glass-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
                         <div className="glass-modal-header">
-                            <h2>{editingId ? 'Editar Serviço' : 'Novo Serviço'}</h2>
+                            <h2>{editingId ? t('services.editService') : t('services.newService')}</h2>
                             <button onClick={handleCloseModal}><X size={20} /></button>
                         </div>
                         <form onSubmit={handleSubmit}>
@@ -228,12 +228,12 @@ export default function Servicos() {
                                         <input type="number" step="0.01" className="glass-modal-input" value={formData.precoBase} onChange={(e) => setFormData({ ...formData, precoBase: parseFloat(e.target.value) || 0 })} />
                                     </div>
                                     <div>
-                                        <label className="glass-modal-label">Preço Mínimo</label>
+                                        <label className="glass-modal-label">{t('services.minPrice')}</label>
                                         <input type="number" step="0.01" className="glass-modal-input" value={formData.precoMinimo} onChange={(e) => setFormData({ ...formData, precoMinimo: parseFloat(e.target.value) || 0 })} />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="glass-modal-label">Moeda</label>
+                                    <label className="glass-modal-label">{t('services.currency')}</label>
                                     <SearchSelect options={moedas} value={moedas.find(m => m.value === formData.moedaId) || null} onChange={(opt) => setFormData({ ...formData, moedaId: (opt?.value as string) || '' })} isClearable />
                                 </div>
                                 <div>
@@ -258,7 +258,7 @@ export default function Servicos() {
                             <button onClick={handleCloseDelete}><X size={20} /></button>
                         </div>
                         <div className="glass-modal-body">
-                            <p>Tem certeza que deseja excluir o serviço <strong>{deleteTarget.nome}</strong>?</p>
+                            <p>{t('services.deleteConfirm', { name: deleteTarget.nome })}</p>
                         </div>
                         <div className="glass-modal-footer">
                             <button type="button" className="glass-modal-button-secondary" onClick={handleCloseDelete}>{t('common.cancel')}</button>

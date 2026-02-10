@@ -23,6 +23,10 @@ import EstoqueSaldos from './pages/EstoqueSaldos';
 import EstoqueMovimentos from './pages/EstoqueMovimentos';
 import CategoriaArmazens from './pages/CategoriaArmazens';
 import Patrimonio from './pages/Patrimonio';
+// Registrations
+import Paises from './pages/Paises';
+import Departamentos from './pages/Departamentos';
+import Cidades from './pages/Cidades';
 // Commercial
 import ClientesFornecedores from './pages/ClientesFornecedores';
 import Oportunidades from './pages/Oportunidades';
@@ -123,6 +127,10 @@ function App() {
             <Route path="/admin/patrimonio/ativos" element={<PrivateRoute><Layout><Patrimonio /></Layout></PrivateRoute>} />
             {/* Assets Routes */}
             <Route path="/admin/patrimonio/itens" element={<PrivateRoute><Layout><PatrimonioItens /></Layout></PrivateRoute>} />
+            {/* Registration Routes */}
+            <Route path="/admin/cadastros/paises" element={<PrivateRoute><Layout><Paises /></Layout></PrivateRoute>} />
+            <Route path="/admin/cadastros/departamentos" element={<PrivateRoute><Layout><Departamentos /></Layout></PrivateRoute>} />
+            <Route path="/admin/cadastros/cidades" element={<PrivateRoute><Layout><Cidades /></Layout></PrivateRoute>} />
             {/* Commercial Routes */}
             <Route path="/admin/comercial/clientes" element={<PrivateRoute><Layout><ClientesFornecedores /></Layout></PrivateRoute>} />
             <Route path="/admin/comercial/oportunidades" element={<PrivateRoute><Layout><Oportunidades /></Layout></PrivateRoute>} />

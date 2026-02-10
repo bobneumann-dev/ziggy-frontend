@@ -92,19 +92,19 @@ export default function EstoqueMovimentos() {
         event.preventDefault();
         setFormErrors({});
         if (!formData.itemCatalogoId) {
-            setFormErrors({ itemCatalogoId: 'Item obrigatório' });
+            setFormErrors({ itemCatalogoId: t('stock.validation.requiredItem') });
             return;
         }
         if (formData.tipo === TipoMovimentoEstoque.Entrada && !formData.armazemDestinoId) {
-            setFormErrors({ armazemDestinoId: 'Armazém de destino obrigatório' });
+            setFormErrors({ armazemDestinoId: t('stock.validation.requiredDestination') });
             return;
         }
         if (formData.tipo === TipoMovimentoEstoque.Saida && !formData.armazemOrigemId) {
-            setFormErrors({ armazemOrigemId: 'Armazém de origem obrigatório' });
+            setFormErrors({ armazemOrigemId: t('stock.validation.requiredOrigin') });
             return;
         }
         if (formData.tipo === TipoMovimentoEstoque.Transferencia && (!formData.armazemOrigemId || !formData.armazemDestinoId)) {
-            setFormErrors({ _global: 'Origem e destino obrigatórios para transferência' });
+            setFormErrors({ _global: t('stock.validation.requiredBoth') });
             return;
         }
         try {
@@ -117,14 +117,14 @@ export default function EstoqueMovimentos() {
             fetchMovimentos();
             handleCloseModal();
         } catch (error: any) {
-            setFormErrors({ _global: error.response?.data?.message || 'Erro ao salvar' });
+            setFormErrors({ _global: error.response?.data?.message || t('stock.validation.saveFailed') });
         }
     };
 
     const columns: ColumnDef<MovimentoEstoque>[] = useMemo(() => [
-        { header: 'Data', accessorKey: 'dataCriacao', cell: ({ row }) => new Date(row.original.dataCriacao).toLocaleString('pt-BR') },
+        { header: t('stock.date'), accessorKey: 'dataCriacao', cell: ({ row }) => new Date(row.original.dataCriacao).toLocaleString() },
         {
-            header: t('stock.warehouse') + ' (Tipo)',
+            header: t('catalog.type'),
             accessorKey: 'tipo',
             cell: ({ row }) => {
                 const color = row.original.tipo === TipoMovimentoEstoque.Entrada ? 'success' : row.original.tipo === TipoMovimentoEstoque.Saida ? 'danger' : 'info';

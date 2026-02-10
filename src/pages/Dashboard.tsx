@@ -67,7 +67,7 @@ export default function Dashboard() {
       <div className="mb-6">
         <h1 className="page-title">{t('dashboard.title')}</h1>
         <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-          Visão geral do sistema de gestão
+          {t('dashboard.description')}
         </p>
       </div>
       

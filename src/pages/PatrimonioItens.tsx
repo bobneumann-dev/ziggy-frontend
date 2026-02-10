@@ -86,7 +86,7 @@ export default function Patrimonio() {
         event.preventDefault();
         setFormErrors({});
         if (!formData.codigo.trim() || !formData.nome.trim()) {
-            setFormErrors({ codigo: !formData.codigo.trim() ? 'Código obrigatório' : '', nome: !formData.nome.trim() ? 'Nome obrigatório' : '' });
+            setFormErrors({ codigo: !formData.codigo.trim() ? t('assetTypes.validation.requiredCode') : '', nome: !formData.nome.trim() ? t('assetTypes.validation.requiredName') : '' });
             return;
         }
         try {
@@ -113,7 +113,7 @@ export default function Patrimonio() {
             fetchItens();
             handleCloseModal();
         } catch (error: any) {
-            setFormErrors({ _global: error.response?.data?.message || 'Erro ao salvar' });
+            setFormErrors({ _global: error.response?.data?.message || t('assetTypes.validation.saveFailed') });
         }
     };
 
@@ -161,11 +161,11 @@ export default function Patrimonio() {
     return (
         <div className="animate-fadeIn">
             <div style={{ marginBottom: '1.5rem' }}>
-                <h1 className="page-title">Patrimônio</h1>
-                <p className="text-secondary">Gerencie ativos patrimoniais serializados da empresa</p>
+                <h1 className="page-title">{t('assetTypes.title')}</h1>
+                <p className="text-secondary">{t('assetTypes.description')}</p>
                 <button onClick={() => handleOpenModal()} className="glass-button flex items-center gap-2 px-4 py-2.5" style={{ marginTop: '1rem' }}>
                     <Plus className="w-4 h-4" />
-                    <span>Novo Ativo</span>
+                    <span>{t('assetTypes.newAsset')}</span>
                 </button>
             </div>
 
@@ -175,7 +175,7 @@ export default function Patrimonio() {
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>
                     <div className="glass-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
                         <div className="glass-modal-header">
-                            <h2>{editingId ? 'Editar Ativo' : 'Novo Ativo'}</h2>
+                            <h2>{editingId ? t('assetTypes.editAsset') : t('assetTypes.newAsset')}</h2>
                             <button onClick={handleCloseModal}><X size={20} /></button>
                         </div>
                         <form onSubmit={handleSubmit}>
@@ -198,7 +198,7 @@ export default function Patrimonio() {
                                     <SearchSelect options={categorias} value={categorias.find(c => c.value === formData.categoriaId) || null} onChange={(opt) => setFormData({ ...formData, categoriaId: (opt?.value as string) || '' })} isClearable />
                                 </div>
                                 <div>
-                                    <label className="glass-modal-label">Moeda</label>
+                                    <label className="glass-modal-label">{t('assetTypes.currency')}</label>
                                     <SearchSelect options={moedas} value={moedas.find(m => m.value === formData.moedaId) || null} onChange={(opt) => setFormData({ ...formData, moedaId: (opt?.value as string) || '' })} isClearable />
                                 </div>
                             </div>
@@ -219,7 +219,7 @@ export default function Patrimonio() {
                             <button onClick={handleCloseDelete}><X size={20} /></button>
                         </div>
                         <div className="glass-modal-body">
-                            <p>Tem certeza que deseja excluir o ativo <strong>{deleteTarget.nome}</strong>?</p>
+                            <p>{t('assetTypes.deleteConfirm', { name: deleteTarget.nome })}</p>
                         </div>
                         <div className="glass-modal-footer">
                             <button type="button" className="glass-modal-button-secondary" onClick={handleCloseDelete}>{t('common.cancel')}</button>

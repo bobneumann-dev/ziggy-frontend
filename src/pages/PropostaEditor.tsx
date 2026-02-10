@@ -34,21 +34,21 @@ function calcItemTotal(item: ItemForm) {
 
 function fmtMoney(v: number) { return `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`; }
 
-function tipoCobrancaLabel(t: number) {
-  switch (t) {
-    case TipoCobranca.Fixo: return 'Fixo';
-    case TipoCobranca.Parcelado: return 'Parcelado';
-    case TipoCobranca.Recorrente: return 'Recorrente';
+function tipoCobrancaLabel(tipo: number, t: (key: string) => string) {
+  switch (tipo) {
+    case TipoCobranca.Fixo: return t('proposals.billingFixed');
+    case TipoCobranca.Parcelado: return t('proposals.billingInstallments');
+    case TipoCobranca.Recorrente: return t('proposals.billingRecurring');
     default: return '';
   }
 }
 
-function statusLabel(s: number) {
+function statusLabel(s: number, t: (key: string) => string) {
   switch (s) {
-    case StatusProposta.Rascunho: return 'Rascunho';
-    case StatusProposta.Enviada: return 'Enviada';
-    case StatusProposta.Aprovada: return 'Aprovada';
-    case StatusProposta.Rejeitada: return 'Rejeitada';
+    case StatusProposta.Rascunho: return t('proposals.statusDraft');
+    case StatusProposta.Enviada: return t('proposals.statusSent');
+    case StatusProposta.Aprovada: return t('proposals.statusApproved');
+    case StatusProposta.Rejeitada: return t('proposals.statusRejected');
     default: return '';
   }
 }
@@ -215,11 +215,11 @@ export default function Propostas() {
     setFormErrors({});
 
     if (!clienteId) {
-      setFormErrors({ clienteId: 'Selecione um cliente' });
+      setFormErrors({ clienteId: t('proposals.validation.requiredClient') });
       return;
     }
     if (itens.length === 0) {
-      setFormErrors({ itens: 'Adicione pelo menos um item' });
+      setFormErrors({ itens: t('proposals.validation.requiredItems') });
       return;
     }
 
@@ -254,14 +254,14 @@ export default function Propostas() {
       fetchPropostas();
       handleCloseModal();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao salvar';
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || t('proposals.validation.saveFailed');
       setFormErrors({ _global: msg });
     }
     setSaving(false);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Deseja excluir esta proposta?')) return;
+    if (!confirm(t('proposals.deleteConfirm'))) return;
     try {
       await api.delete(`/api/propostas/${id}`);
       fetchPropostas();
@@ -270,27 +270,27 @@ export default function Propostas() {
 
   // ── Table columns ──
   const columns: ColumnDef<Proposta>[] = useMemo(() => [
-    { header: 'Cliente', accessorKey: 'clienteNome' },
-    { header: 'Título', accessorKey: 'titulo', cell: ({ row }) => row.original.titulo || '—' },
+    { header: t('proposals.client'), accessorKey: 'clienteNome' },
+    { header: t('proposals.titleField'), accessorKey: 'titulo', cell: ({ row }) => row.original.titulo || '—' },
     {
-      header: 'Status', accessorKey: 'status',
+      header: t('proposals.status'), accessorKey: 'status',
       cell: ({ row }) => (
         <span className={`badge badge-${statusBadge(row.original.status)}`}>
-          {statusLabel(row.original.status)}
+          {statusLabel(row.original.status, t)}
         </span>
       ),
     },
     {
-      header: 'Total', accessorKey: 'total',
+      header: t('proposals.total'), accessorKey: 'total',
       cell: ({ row }) => fmtMoney(row.original.total),
     },
     {
-      header: 'Itens', id: 'itensCount',
-      cell: ({ row }) => `${row.original.itens.length} itens`,
+      header: t('proposals.items'), id: 'itensCount',
+      cell: ({ row }) => t('proposals.itemsCount', { count: row.original.itens.length }),
     },
     {
-      header: 'Criado em', accessorKey: 'createdAt',
-      cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString('pt-BR'),
+      header: t('proposals.createdAt'), accessorKey: 'createdAt',
+      cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString(),
     },
     {
       header: t('common.actions'), id: 'actions',
@@ -313,11 +313,11 @@ export default function Propostas() {
   return (
     <div className="animate-fadeIn">
       <div style={{ marginBottom: '1.5rem' }}>
-        <h1 className="page-title">Propostas / Orçamentos</h1>
-        <p className="text-secondary">Gerencie propostas comerciais com itens, valores e tipos de cobrança.</p>
+        <h1 className="page-title">{t('proposals.title')}</h1>
+        <p className="text-secondary">{t('proposals.description')}</p>
         <button onClick={handleOpenCreate} className="glass-button flex items-center gap-2 px-4 py-2.5" style={{ marginTop: '1rem' }}>
           <Plus className="w-4 h-4" />
-          <span>Nova Proposta</span>
+          <span>{t('proposals.newProposal')}</span>
         </button>
       </div>
 
@@ -328,7 +328,7 @@ export default function Propostas() {
         <div className="glass-modal-backdrop" onClick={handleCloseModal}>
           <div className="glass-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 960, width: '95vw' }}>
             <div className="glass-modal-header">
-              <h2>{editingId ? 'Editar Proposta' : 'Nova Proposta'}</h2>
+              <h2>{editingId ? t('proposals.editProposal') : t('proposals.newProposal')}</h2>
               <button onClick={handleCloseModal}><X size={20} /></button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -337,38 +337,38 @@ export default function Propostas() {
 
                 {/* ── Header Fields ── */}
                 <div style={{ marginBottom: '1rem' }}>
-                  <label className="glass-modal-label">Título</label>
-                  <input type="text" className="glass-modal-input" value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Ex: Proposta Instalação CFTV" />
+                  <label className="glass-modal-label">{t('proposals.titleField')}</label>
+                  <input type="text" className="glass-modal-input" value={titulo} onChange={e => setTitulo(e.target.value)} />
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '1rem', marginBottom: '1rem' }}>
                   <div>
-                    <label className="glass-modal-label">Cliente <span className="glass-modal-required">*</span></label>
+                    <label className="glass-modal-label">{t('proposals.client')} <span className="glass-modal-required">*</span></label>
                     <SearchSelect
                       options={clientes}
                       value={clientes.find(c => c.value === clienteId) || null}
                       onChange={(opt) => setClienteId((opt?.value as string) || '')}
-                      placeholder="Selecione o cliente..."
+                      placeholder={t('proposals.selectClient')}
                     />
                     {formErrors.clienteId && <div className="glass-modal-error">{formErrors.clienteId}</div>}
                   </div>
                   <div>
-                    <label className="glass-modal-label">Validade</label>
+                    <label className="glass-modal-label">{t('proposals.validity')}</label>
                     <input type="date" className="glass-modal-input" value={validaAte} onChange={e => setValidaAte(e.target.value)} />
                   </div>
                 </div>
 
                 <div style={{ marginBottom: '1rem' }}>
-                  <label className="glass-modal-label">Observações</label>
-                  <textarea className="glass-modal-input" value={observacoes} onChange={e => setObservacoes(e.target.value)} placeholder="Notas internas..." rows={3} style={{ resize: 'vertical' }} />
+                  <label className="glass-modal-label">{t('proposals.notes')}</label>
+                  <textarea className="glass-modal-input" value={observacoes} onChange={e => setObservacoes(e.target.value)} rows={3} style={{ resize: 'vertical' }} />
                 </div>
 
                 {/* ── Items ── */}
                 <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Itens / Serviços</h3>
+                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>{t('proposals.itemsServices')}</h3>
                     <button type="button" className="glass-button" onClick={() => setShowItemModal(true)} style={{ padding: '6px 12px', fontSize: '0.9rem' }}>
-                      <Plus size={14} /> Adicionar
+                      <Plus size={14} /> {t('proposals.add')}
                     </button>
                   </div>
                   {formErrors.itens && <div className="glass-modal-error" style={{ marginBottom: '0.5rem' }}>{formErrors.itens}</div>}
@@ -381,9 +381,9 @@ export default function Propostas() {
                         return (
                           <div key={item.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', borderRadius: '0.375rem', borderBottom: idx < itens.length - 1 ? '1px solid var(--border-light)' : 'none', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'} onClick={() => handleEditItem(item.key)}>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{idx + 1}. {item.itemNome || 'Item sem nome'}</div>
+                              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{idx + 1}. {item.itemNome || t('proposals.itemNoName')}</div>
                               <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                {item.quantidade} {item.unidade} × {fmtMoney(item.valorUnitario)} {item.tipoCobranca !== TipoCobranca.Fixo && `(${tipoCobrancaLabel(item.tipoCobranca)})`}
+                                {item.quantidade} {item.unidade} × {fmtMoney(item.valorUnitario)} {item.tipoCobranca !== TipoCobranca.Fixo && `(${tipoCobrancaLabel(item.tipoCobranca, t)})`}
                               </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -398,13 +398,13 @@ export default function Propostas() {
                     </div>
                   ) : (
                     <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)', fontSize: '0.9rem', background: 'var(--bg-secondary)', borderRadius: '0.5rem', marginBottom: '1rem' }}>
-                      Nenhum item adicionado. Clique em "Adicionar" para começar.
+                      {t('proposals.noItems')}
                     </div>
                   )}
 
                   {/* Desconto Global */}
                   <div style={{ marginBottom: '1rem' }}>
-                    <label className="glass-modal-label">Desconto Global</label>
+                    <label className="glass-modal-label">{t('proposals.globalDiscount')}</label>
                     <div style={{ display: 'flex', gap: '6px', maxWidth: '300px' }}>
                       <input type="number" step="0.01" className="glass-modal-input" value={descontoGlobal} onChange={e => setDescontoGlobal(Number(e.target.value))} style={{ flex: 1 }} />
                       <select className="glass-modal-input" value={descontoGlobalPercentual ? '%' : 'V'} onChange={e => setDescontoGlobalPercentual(e.target.value === '%')} style={{ width: 65 }}>
@@ -419,23 +419,23 @@ export default function Propostas() {
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                       <div style={{ minWidth: 260, background: 'var(--bg-secondary)', borderRadius: '0.5rem', padding: '0.75rem 1rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: '0.9rem' }}>
-                          <span className="text-secondary">Subtotal:</span>
+                          <span className="text-secondary">{t('proposals.subtotal')}:</span>
                           <span>{fmtMoney(totais.subtotal)}</span>
                         </div>
                         {totais.descontoItens > 0 && (
                           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: '0.9rem', color: 'var(--accent-danger)' }}>
-                            <span>Desc. Itens:</span>
+                            <span>{t('proposals.itemDiscount')}:</span>
                             <span>- {fmtMoney(totais.descontoItens)}</span>
                           </div>
                         )}
                         {totais.descGlobal > 0 && (
                           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: '0.9rem', color: 'var(--accent-danger)' }}>
-                            <span>Desc. Global:</span>
+                            <span>{t('proposals.globalDiscountLabel')}:</span>
                             <span>- {fmtMoney(totais.descGlobal)}</span>
                           </div>
                         )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderTop: '2px solid var(--border-light)', fontWeight: 700, fontSize: '1.05rem', marginTop: '4px' }}>
-                          <span>Total:</span>
+                          <span>{t('proposals.total')}:</span>
                           <span>{fmtMoney(totais.total)}</span>
                         </div>
                       </div>
@@ -447,7 +447,7 @@ export default function Propostas() {
               <div className="glass-modal-footer">
                 <button type="button" className="glass-modal-button-secondary" onClick={handleCloseModal}>{t('common.cancel')}</button>
                 <button type="submit" className="glass-modal-button-primary" disabled={saving}>
-                  {saving ? 'Salvando...' : t('common.save')}
+                  {saving ? t('proposals.saving') : t('common.save')}
                 </button>
               </div>
             </form>
@@ -462,7 +462,7 @@ export default function Propostas() {
           <div className="glass-modal-backdrop" onClick={() => { setShowItemModal(false); setEditingItemKey(null); }} style={{ zIndex: 1001 }}>
             <div className="glass-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 600, width: '90vw' }}>
               <div className="glass-modal-header">
-                <h2>{editingItem ? 'Editar Item / Serviço' : 'Adicionar Item / Serviço'}</h2>
+                <h2>{editingItem ? t('proposals.editItemService') : t('proposals.addItemService')}</h2>
                 <button onClick={() => { setShowItemModal(false); setEditingItemKey(null); }}><X size={20} /></button>
               </div>
               <div className="glass-modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
@@ -470,7 +470,7 @@ export default function Propostas() {
                   // Edit mode
                   <>
                     <div style={{ marginBottom: '1rem' }}>
-                      <label className="glass-modal-label">Item / Serviço <span className="glass-modal-required">*</span></label>
+                      <label className="glass-modal-label">{t('proposals.itemService')} <span className="glass-modal-required">*</span></label>
                       <SearchSelect
                         options={catalogoOptions}
                         value={catalogoOptions.find(o => o.value === editingItem.itemCatalogoId) || null}
@@ -479,22 +479,22 @@ export default function Propostas() {
                             updateItem(editingItem.key, 'itemCatalogoId', opt.value as string);
                           }
                         }}
-                        placeholder="Selecione..."
+                        placeholder={t('proposals.searchItem')}
                       />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                       <div>
-                        <label className="glass-modal-label">Quantidade</label>
+                        <label className="glass-modal-label">{t('proposals.quantity')}</label>
                         <input type="number" step="0.01" min="0.01" className="glass-modal-input" value={editingItem.quantidade} onChange={e => updateItem(editingItem.key, 'quantidade', Number(e.target.value))} />
                       </div>
                       <div>
-                        <label className="glass-modal-label">Valor Unitário</label>
+                        <label className="glass-modal-label">{t('proposals.unitPrice')}</label>
                         <input type="number" step="0.01" className="glass-modal-input" value={editingItem.valorUnitario} onChange={e => updateItem(editingItem.key, 'valorUnitario', Number(e.target.value))} />
                       </div>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                       <div>
-                        <label className="glass-modal-label">Desconto</label>
+                        <label className="glass-modal-label">{t('proposals.discount')}</label>
                         <div style={{ display: 'flex', gap: '6px' }}>
                           <input type="number" step="0.01" className="glass-modal-input" value={editingItem.desconto} onChange={e => updateItem(editingItem.key, 'desconto', Number(e.target.value))} style={{ flex: 1 }} />
                           <select className="glass-modal-input" value={editingItem.descontoPercentual ? '%' : 'V'} onChange={e => updateItem(editingItem.key, 'descontoPercentual', e.target.value === '%')} style={{ width: 65 }}>
@@ -504,23 +504,23 @@ export default function Propostas() {
                         </div>
                       </div>
                       <div>
-                        <label className="glass-modal-label">Tipo de Cobrança</label>
+                        <label className="glass-modal-label">{t('proposals.billingType')}</label>
                         <select className="glass-modal-input" value={editingItem.tipoCobranca} onChange={e => updateItem(editingItem.key, 'tipoCobranca', Number(e.target.value))}>
-                          <option value={TipoCobranca.Fixo}>Fixo</option>
-                          <option value={TipoCobranca.Parcelado}>Parcelado</option>
-                          <option value={TipoCobranca.Recorrente}>Recorrente</option>
+                          <option value={TipoCobranca.Fixo}>{t('proposals.billingFixed')}</option>
+                          <option value={TipoCobranca.Parcelado}>{t('proposals.billingInstallments')}</option>
+                          <option value={TipoCobranca.Recorrente}>{t('proposals.billingRecurring')}</option>
                         </select>
                       </div>
                     </div>
                     {editingItem.tipoCobranca === TipoCobranca.Parcelado && (
                       <div style={{ marginBottom: '1rem' }}>
-                        <label className="glass-modal-label">Número de Parcelas</label>
+                        <label className="glass-modal-label">{t('proposals.installments')}</label>
                         <input type="number" min="1" className="glass-modal-input" value={editingItem.numeroParcelas} onChange={e => updateItem(editingItem.key, 'numeroParcelas', Number(e.target.value))} />
                       </div>
                     )}
                     <div style={{ background: 'var(--bg-secondary)', borderRadius: '0.5rem', padding: '1rem', marginTop: '1rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, fontSize: '1.05rem' }}>
-                        <span>Total do Item:</span>
+                        <span>{t('proposals.itemTotal')}:</span>
                         <span>{fmtMoney(calcItemTotal(editingItem).total)}</span>
                       </div>
                     </div>
@@ -529,7 +529,7 @@ export default function Propostas() {
                   // Add mode
                   <>
                     <div style={{ marginBottom: '1rem' }}>
-                      <label className="glass-modal-label">Item / Serviço <span className="glass-modal-required">*</span></label>
+                      <label className="glass-modal-label">{t('proposals.itemService')} <span className="glass-modal-required">*</span></label>
                       <SearchSelect
                         options={catalogoOptions}
                         value={null}
@@ -555,19 +555,19 @@ export default function Propostas() {
                             }
                           }
                         }}
-                        placeholder="Buscar item ou serviço..."
+                        placeholder={t('proposals.searchItem')}
                       />
                     </div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '0.5rem' }}>
-                      💡 Selecione um item ou serviço do catálogo para adicionar à proposta.
+                      💡 {t('proposals.catalogHint')}
                     </div>
                   </>
                 )}
               </div>
               <div className="glass-modal-footer">
-                <button type="button" className="glass-modal-button-secondary" onClick={() => { setShowItemModal(false); setEditingItemKey(null); }}>Fechar</button>
+                <button type="button" className="glass-modal-button-secondary" onClick={() => { setShowItemModal(false); setEditingItemKey(null); }}>{t('proposals.close')}</button>
                 {editingItem && (
-                  <button type="button" className="glass-modal-button-primary" onClick={() => { setShowItemModal(false); setEditingItemKey(null); }}>Salvar</button>
+                  <button type="button" className="glass-modal-button-primary" onClick={() => { setShowItemModal(false); setEditingItemKey(null); }}>{t('common.save')}</button>
                 )}
               </div>
             </div>

@@ -148,9 +148,9 @@ export default function Usuarios() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const errors: Record<string, string> = {};
-    if (!formData.login.trim()) errors.login = 'Informe o login.';
-    if (!formData.roles.trim()) errors.roles = 'Informe o perfil/roles.';
-    if (!editingUsuarioId && !formData.password.trim()) errors.password = 'Informe a senha.';
+    if (!formData.login.trim()) errors.login = t('users.validation.requiredLogin');
+    if (!formData.roles.trim()) errors.roles = t('users.validation.requiredRoles');
+    if (!editingUsuarioId && !formData.password.trim()) errors.password = t('users.validation.requiredPassword');
     if (Object.keys(errors).length) {
       setFormErrors(errors);
       return;
@@ -184,7 +184,7 @@ export default function Usuarios() {
       handleCloseModal();
     } catch (error) {
       console.error('Erro ao salvar usuario:', error);
-      setFormErrors(prev => ({ ...prev, geral: 'Nao foi possivel salvar o usuario.' }));
+      setFormErrors(prev => ({ ...prev, geral: t('users.validation.saveFailed') }));
     } finally {
       setLoading(false);
     }
@@ -262,7 +262,7 @@ export default function Usuarios() {
             type="button"
             className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full transition-colors ${getStatusColor(status)}`}
             onClick={() => handleOpenStatus(usuario)}
-            title="Ativar/Desativar"
+            title={t('users.toggleTitle')}
           >
             {getStatusLabel(status)}
           </button>
@@ -462,7 +462,7 @@ export default function Usuarios() {
           <div className="glass-modal glass-modal-confirm" onClick={e => e.stopPropagation()}>
             <div className="glass-modal-header">
               <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-                Confirmar alteracao de status
+                {t('users.toggleStatus')}
               </h2>
               <button className="glass-modal-close" onClick={handleCloseStatus} aria-label={t('common.cancel')}>
                 <X className="w-5 h-5" />
@@ -470,14 +470,14 @@ export default function Usuarios() {
             </div>
             <div className="glass-modal-body">
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Deseja {statusTarget.status === StatusUsuario.Ativo ? 'desativar' : 'ativar'} o usuario "{statusTarget.login}"?
+                {statusTarget.status === StatusUsuario.Ativo ? t('users.toggleStatusDeactivate', { name: statusTarget.login }) : t('users.toggleStatusActivate', { name: statusTarget.login })}
               </p>
               <div className="glass-modal-footer">
                 <button type="button" onClick={handleCloseStatus} className="glass-modal-button-secondary">
                   {t('common.cancel')}
                 </button>
                 <button type="button" onClick={handleConfirmStatus} className="glass-modal-button-primary">
-                  Confirmar
+                  {t('common.confirm')}
                 </button>
               </div>
             </div>

@@ -1,4 +1,5 @@
 ﻿import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import ReactFlow, {
   type Node,
   type Edge,
@@ -38,6 +39,7 @@ export default function SetorOrgChart({
   onEdit,
   onDelete,
 }: SetorOrgChartProps) {
+  const { t } = useTranslation();
   const addChildRef = useRef<(setor: Setor) => void | Promise<void> | undefined>(undefined);
   const editRef = useRef<(setor: Setor) => void | Promise<void> | undefined>(undefined);
   const deleteRef = useRef<(setor: Setor) => void | Promise<void> | undefined>(undefined);
@@ -81,7 +83,7 @@ export default function SetorOrgChart({
                       event.stopPropagation();
                       editRef.current?.(setor);
                     }}
-                    title="Editar setor"
+                    title={t('orgChart.editSector')}
                   >
                     <Edit className="w-3.5 h-3.5" />
                   </button>
@@ -91,7 +93,7 @@ export default function SetorOrgChart({
                       event.stopPropagation();
                       deleteRef.current?.(setor);
                     }}
-                    title="Excluir setor"
+                    title={t('orgChart.deleteSector')}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -101,16 +103,16 @@ export default function SetorOrgChart({
                       event.stopPropagation();
                       addChildRef.current?.(setor);
                     }}
-                    title="Adicionar setor filho"
+                    title={t('orgChart.addChildSector')}
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
               <div className="org-node-meta">
-                <span>{setor.quantidadeCargos} cargos</span>
+                <span>{setor.quantidadeCargos} {t('orgChart.positions')}</span>
                 <span>•</span>
-                <span>{setor.quantidadePessoas} pessoas</span>
+                <span>{setor.quantidadePessoas} {t('orgChart.people')}</span>
               </div>
             </div>
           ),
@@ -227,7 +229,7 @@ export default function SetorOrgChart({
         };
 
         if (wouldCreateCycle(connection.source!, connection.target!)) {
-          alert('Esta conexão criaria um ciclo, o que não é permitido em uma estrutura hierárquica.');
+          alert(t('orgChart.cycleError'));
           return;
         }
 
@@ -293,18 +295,18 @@ export default function SetorOrgChart({
         onHierarchyUpdate();
       }
 
-      alert('Hierarquia atualizada com sucesso!');
+      alert(t('orgChart.hierarchySaved'));
       return true;
     } catch (error) {
       console.error('Erro ao salvar hierarquia:', error);
-      alert('Ocorreu um erro ao salvar a hierarquia.');
+      alert(t('orgChart.hierarchySaveError'));
       return false;
     }
   }
 
   async function requestSaveIfModified() {
     if (!isModified) return true;
-    const shouldSave = window.confirm('Há alterações pendentes. Deseja salvar antes de adicionar um setor?');
+    const shouldSave = window.confirm(t('orgChart.pendingChanges'));
     if (!shouldSave) return false;
     return await saveHierarchy();
   }
@@ -367,10 +369,10 @@ export default function SetorOrgChart({
             <button
               className="org-canvas-add"
               onClick={handleAddRoot}
-              title="Adicionar setor"
+              title={t('orgChart.addSector')}
             >
               <Plus className="w-4 h-4" />
-              <span>Novo setor</span>
+              <span>{t('orgChart.newSector')}</span>
             </button>
             {isModified && (
               <button
@@ -382,7 +384,7 @@ export default function SetorOrgChart({
                   setIsModified(false);
                   setLastRemovedEdge(null);
                 }}
-                title="Reiniciar alterações"
+                title={t('orgChart.resetChanges')}
               >
                 <RefreshCcw className="w-4 h-4" />
               </button>
@@ -393,7 +395,7 @@ export default function SetorOrgChart({
               disabled={!isModified}
             >
               <Save className="w-4 h-4" />
-              <span>Salvar Alterações</span>
+              <span>{t('orgChart.saveChanges')}</span>
             </button>
           </div>
         </Panel>
@@ -402,7 +404,7 @@ export default function SetorOrgChart({
             className={`org-canvas-undo ${lastRemovedEdge ? '' : 'is-disabled'}`}
             onClick={handleUndoRemove}
             disabled={!lastRemovedEdge}
-            title="Desfazer (Ctrl+Z)"
+            title={t('orgChart.undo')}
           >
             <Undo2 className="w-4 h-4" />
           </button>

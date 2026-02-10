@@ -1,4 +1,5 @@
 ﻿import { useCallback, useMemo, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import ReactFlow, {
   type Node,
   type Edge,
@@ -62,6 +63,7 @@ function CargoOrgChartInner({
   onEdit,
   onDelete,
 }: CargoOrgChartProps) {
+  const { t } = useTranslation();
   const [isUnassignedOpen, setIsUnassignedOpen] = useState(false);
 
   const setorOptions = useMemo<SearchSelectOption[]>(
@@ -121,7 +123,7 @@ function CargoOrgChartInner({
                   event.stopPropagation();
                   onAddForSetor?.(setor);
                 }}
-                title="Adicionar cargo"
+                title={t('orgChart.addPosition')}
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -172,7 +174,7 @@ function CargoOrgChartInner({
                         event.stopPropagation();
                         onEdit?.(cargo);
                       }}
-                      title="Editar cargo"
+                      title={t('orgChart.editPosition')}
                     >
                       <Edit className="w-3.5 h-3.5" />
                     </button>
@@ -182,7 +184,7 @@ function CargoOrgChartInner({
                         event.stopPropagation();
                         onDelete?.(cargo);
                       }}
-                      title="Excluir cargo"
+                      title={t('orgChart.deletePosition')}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -192,20 +194,20 @@ function CargoOrgChartInner({
                         event.stopPropagation();
                         onAddChild?.(cargo);
                       }}
-                      title="Adicionar cargo filho"
+                      title={t('orgChart.addChildPosition')}
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
                 <div className="org-node-meta">
-                  <span>{cargo.quantidadePessoas} pessoas</span>
+                  <span>{cargo.quantidadePessoas} {t('orgChart.people')}</span>
                   <span>•</span>
-                  <span>{cargo.quantidadeAtribuicoes} atribuições</span>
+                  <span>{cargo.quantidadeAtribuicoes} {t('orgChart.attributions')}</span>
                 </div>
                 <div className="org-cargo-people">
                   {pessoasDoCargo.length === 0 ? (
-                    <span className="org-cargo-empty">Sem pessoas</span>
+                    <span className="org-cargo-empty">{t('orgChart.noPeople')}</span>
                   ) : (
                     pessoasDoCargo.map(pessoa => (
                       <div
@@ -323,7 +325,7 @@ function CargoOrgChartInner({
       }
 
       if (sourceData.cargo?.setorId !== targetData.cargo?.setorId) {
-        alert('Não é permitido conectar cargos de setores diferentes.');
+        alert(t('orgChart.crossSectorError'));
         return;
       }
 
@@ -349,7 +351,7 @@ function CargoOrgChartInner({
       };
 
       if (wouldCreateCycle(connection.source!, connection.target!)) {
-        alert('Esta conexão criaria um ciclo, o que não é permitido em uma estrutura hierárquica.');
+        alert(t('orgChart.cycleError'));
         return;
       }
 
@@ -401,10 +403,10 @@ function CargoOrgChartInner({
         onHierarchyUpdate();
       }
 
-      alert('Hierarquia atualizada com sucesso!');
+      alert(t('orgChart.hierarchySaved'));
     } catch (error) {
       console.error('Erro ao salvar hierarquia:', error);
-      alert('Ocorreu um erro ao salvar a hierarquia.');
+      alert(t('orgChart.hierarchySaveError'));
     }
   }, [edges, nodes, onHierarchyUpdate]);
 
@@ -445,7 +447,7 @@ function CargoOrgChartInner({
                 options={setorOptions}
                 value={setorOptions.find(option => option.value === (selectedSetorId ?? '')) ?? null}
                 onChange={(option) => onSelectedSetorChange?.(option ? String(option.value) : '')}
-                placeholder="Todos os setores"
+                placeholder={t('orgChart.allSectors')}
               />
               <button
                 className={`flex items-center space-x-2 px-3 py-2 rounded-md ${isModified ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-800 opacity-50 cursor-not-allowed'}`}
@@ -453,7 +455,7 @@ function CargoOrgChartInner({
                 disabled={!isModified}
               >
                 <Save className="w-4 h-4" />
-                <span>Salvar Alterações</span>
+                <span>{t('orgChart.saveChanges')}</span>
               </button>
             </div>
             <div className="org-people-panel">
@@ -462,7 +464,7 @@ function CargoOrgChartInner({
                 onClick={() => setIsUnassignedOpen(prev => !prev)}
               >
                 <Users className="w-4 h-4" />
-                <span>Sem vínculo</span>
+                <span>{t('orgChart.unassigned')}</span>
               </button>
               {isUnassignedOpen && (
                 <div
@@ -491,7 +493,7 @@ function CargoOrgChartInner({
                       ))}
                     </div>
                   ) : (
-                    <span className="org-cargo-empty">Vazio</span>
+                    <span className="org-cargo-empty">{t('orgChart.empty')}</span>
                   )}
                 </div>
               )}

@@ -4,35 +4,22 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Edit, Trash2, X } from 'lucide-react';
 import api from '../lib/api';
 
+import { type AtivoPatrimonio, StatusAtivo } from '../types';
 import { DataTable } from '../components/DataTable';
 import SearchSelect, { type SearchSelectOption } from '../components/SearchSelect';
 import type { ColumnDef } from '@tanstack/react-table';
 import LoadingState from '../components/LoadingState';
 
-// Define specialized types locally if not yet in global types
-interface AtivoPatrimonio {
-    id: string;
-    serial: string;
-    itemCatalogoId: string;
-    itemCatalogoNome: string;
-    itemCatalogoCodigo: string;
-    armazemAtualId: string;
-    armazemAtualNome: string;
-    status: number;
-    clienteNome?: string;
-    colaboradorNome?: string;
-}
-
-const statusOptions = [
-    { value: 1, label: 'Disponível' },
-    { value: 2, label: 'Reservado' },
-    { value: 3, label: 'Em Uso' },
-    { value: 4, label: 'Manutenção' },
-    { value: 5, label: 'Baixado' },
-];
-
 export default function AtivosPatrimonio() {
     const { t } = useTranslation();
+
+    const statusOptions = useMemo(() => [
+        { label: t('assets.statusAvailable'), value: String(StatusAtivo.Disponivel) },
+        { label: t('assets.statusReserved'), value: String(StatusAtivo.Reservado) },
+        { label: t('assets.statusInUse'), value: String(StatusAtivo.EmUso) },
+        { label: t('assets.statusMaintenance'), value: String(StatusAtivo.Manutencao) },
+        { label: t('assets.statusDecommissioned'), value: String(StatusAtivo.Baixado) },
+    ], [t]);
     const [ativos, setAtivos] = useState<AtivoPatrimonio[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -114,15 +101,15 @@ export default function AtivosPatrimonio() {
         setFormErrors({});
 
         if (!formData.serial.trim()) {
-            setFormErrors({ serial: 'Serial é obrigatório' });
+            setFormErrors({ serial: t('assets.validation.requiredSerial') });
             return;
         }
         if (!formData.itemCatalogoId) {
-            setFormErrors({ itemCatalogoId: 'Item é obrigatório' });
+            setFormErrors({ itemCatalogoId: t('assets.validation.requiredItem') });
             return;
         }
         if (!formData.armazemAtualId) {
-            setFormErrors({ armazemAtualId: 'Armazém é obrigatório' });
+            setFormErrors({ armazemAtualId: t('assets.validation.requiredWarehouse') });
             return;
         }
 
@@ -135,7 +122,7 @@ export default function AtivosPatrimonio() {
             fetchAtivos();
             handleCloseModal();
         } catch (error: any) {
-            setFormErrors({ _global: error.response?.data?.message || 'Erro ao salvar' });
+            setFormErrors({ _global: error.response?.data?.message || t('assets.validation.saveFailed') });
         }
     };
 
@@ -163,15 +150,15 @@ export default function AtivosPatrimonio() {
     };
 
     const columns: ColumnDef<AtivoPatrimonio>[] = useMemo(() => [
-        { header: 'Serial', accessorKey: 'serial' },
-        { header: 'Item', accessorKey: 'itemCatalogoNome', cell: ({ row }) => `${row.original.itemCatalogoCodigo} - ${row.original.itemCatalogoNome}` },
-        { header: 'Armazém', accessorKey: 'armazemAtualNome' },
+        { header: t('assets.serial'), accessorKey: 'serial' },
+        { header: t('assets.item'), accessorKey: 'itemCatalogoNome', cell: ({ row }) => `${row.original.itemCatalogoCodigo} - ${row.original.itemCatalogoNome}` },
+        { header: t('assets.warehouse'), accessorKey: 'armazemAtualNome' },
         {
-            header: 'Status',
+            header: t('assets.status'),
             accessorKey: 'status',
             cell: ({ row }) => <span className="badge badge-info">{getStatusLabel(row.original.status)}</span>
         },
-        { header: 'Cliente/Colaborador', id: 'holder', cell: ({ row }) => row.original.clienteNome || row.original.colaboradorNome || '-' },
+        { header: t('assets.clientEmployee'), accessorKey: 'clienteNome', cell: ({ row }) => row.original.clienteNome || row.original.colaboradorNome || '-' },
         {
             header: t('table.actions'),
             id: 'actions',
@@ -193,11 +180,11 @@ export default function AtivosPatrimonio() {
     return (
         <div className="animate-fadeIn">
             <div style={{ marginBottom: '1.5rem' }}>
-                <h1 className="page-title">Gestão de Ativos (Patrimônio)</h1>
-                <p className="text-secondary">Gerencie os ativos individualizados e sua localização</p>
+                <h1 className="page-title">{t('assets.assetsTitle')}</h1>
+                <p className="text-secondary">{t('assets.assetsDescription')}</p>
                 <button onClick={() => handleOpenModal()} className="glass-button flex items-center gap-2 px-4 py-2.5" style={{ marginTop: '1rem' }}>
                     <Plus className="w-4 h-4" />
-                    <span>Novo Ativo</span>
+                    <span>{t('assets.newAsset')}</span>
                 </button>
             </div>
 
@@ -207,7 +194,7 @@ export default function AtivosPatrimonio() {
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>
                     <div className="glass-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
                         <div className="glass-modal-header">
-                            <h2>{editingId ? 'Editar Ativo' : 'Novo Ativo'}</h2>
+                            <h2>{editingId ? t('assets.editAsset') : t('assets.newAsset')}</h2>
                             <button onClick={handleCloseModal}><X size={20} /></button>
                         </div>
                         <form onSubmit={handleSubmit}>
@@ -215,13 +202,13 @@ export default function AtivosPatrimonio() {
                                 {formErrors._global && <div className="glass-modal-error">{formErrors._global}</div>}
 
                                 <div>
-                                    <label className="glass-modal-label">Serial <span className="glass-modal-required">*</span></label>
+                                    <label className="glass-modal-label">{t('assets.serial')} <span className="glass-modal-required">*</span></label>
                                     <input type="text" className="glass-modal-input" value={formData.serial} onChange={(e) => setFormData({ ...formData, serial: e.target.value })} />
                                     {formErrors.serial && <div className="glass-modal-error">{formErrors.serial}</div>}
                                 </div>
 
                                 <div>
-                                    <label className="glass-modal-label">Item de Patrimônio <span className="glass-modal-required">*</span></label>
+                                    <label className="glass-modal-label">{t('assets.assetItem')} <span className="glass-modal-required">*</span></label>
                                     <SearchSelect
                                         options={itensCatalogo}
                                         value={itensCatalogo.find(i => i.value === formData.itemCatalogoId) || null}
@@ -233,7 +220,7 @@ export default function AtivosPatrimonio() {
                                 </div>
 
                                 <div>
-                                    <label className="glass-modal-label">Armazém Atual <span className="glass-modal-required">*</span></label>
+                                    <label className="glass-modal-label">{t('assets.warehouse')} <span className="glass-modal-required">*</span></label>
                                     <SearchSelect
                                         options={armazens}
                                         value={armazens.find(a => a.value === formData.armazemAtualId) || null}
@@ -244,7 +231,7 @@ export default function AtivosPatrimonio() {
                                 </div>
 
                                 <div>
-                                    <label className="glass-modal-label">Status</label>
+                                    <label className="glass-modal-label">{t('assets.status')}</label>
                                     <select
                                         className="glass-modal-input"
                                         value={formData.status}
@@ -274,7 +261,7 @@ export default function AtivosPatrimonio() {
                             <button onClick={handleCloseDelete}><X size={20} /></button>
                         </div>
                         <div className="glass-modal-body">
-                            <p>Tem certeza que deseja excluir o ativo serial <strong>{deleteTarget.serial}</strong>?</p>
+                            <p>{t('assets.deleteConfirm', { serial: deleteTarget.serial })}</p>
                         </div>
                         <div className="glass-modal-footer">
                             <button type="button" className="glass-modal-button-secondary" onClick={handleCloseDelete}>{t('common.cancel')}</button>

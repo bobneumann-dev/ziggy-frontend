@@ -53,15 +53,15 @@ export default function Moedas() {
         event.preventDefault();
         setFormErrors({});
         if (!formData.nome.trim()) {
-            setFormErrors({ nome: 'Nome é obrigatório' });
+            setFormErrors({ nome: t('currencies.validation.requiredName') });
             return;
         }
         if (!formData.codigo.trim() || formData.codigo.length !== 3) {
-            setFormErrors({ codigo: 'Código deve ter 3 caracteres (ex: BRL, USD, EUR)' });
+            setFormErrors({ codigo: t('currencies.validation.requiredCode') });
             return;
         }
         if (!formData.simbolo.trim()) {
-            setFormErrors({ simbolo: 'Símbolo é obrigatório' });
+            setFormErrors({ simbolo: t('currencies.validation.requiredSymbol') });
             return;
         }
         try {
@@ -73,7 +73,7 @@ export default function Moedas() {
             fetchMoedas();
             handleCloseModal();
         } catch (error: any) {
-            setFormErrors({ _global: error.response?.data?.message || 'Erro ao salvar' });
+            setFormErrors({ _global: error.response?.data?.message || t('currencies.validation.saveFailed') });
         }
     };
 
@@ -97,9 +97,9 @@ export default function Moedas() {
     };
 
     const columns: ColumnDef<Moeda>[] = useMemo(() => [
-        { header: 'Código', accessorKey: 'codigo' },
-        { header: 'Nome', accessorKey: 'nome' },
-        { header: 'Símbolo', accessorKey: 'simbolo' },
+        { header: t('currencies.code'), accessorKey: 'codigo' },
+        { header: t('currencies.name'), accessorKey: 'nome' },
+        { header: t('currencies.symbol'), accessorKey: 'simbolo' },
         {
             header: t('common.status'),
             accessorKey: 'ativo',
@@ -132,11 +132,11 @@ export default function Moedas() {
     return (
         <div className="animate-fadeIn">
             <div style={{ marginBottom: '1.5rem' }}>
-                <h1 className="page-title">Moedas</h1>
-                <p className="text-secondary">Cadastre e gerencie as moedas utilizadas no sistema</p>
+                <h1 className="page-title">{t('currencies.title')}</h1>
+                <p className="text-secondary">{t('currencies.description')}</p>
                 <button onClick={() => handleOpenModal()} className="glass-button flex items-center gap-2 px-4 py-2.5" style={{ marginTop: '1rem' }}>
                     <Plus className="w-4 h-4" />
-                    <span>Nova Moeda</span>
+                    <span>{t('currencies.newCurrency')}</span>
                 </button>
             </div>
 
@@ -146,14 +146,14 @@ export default function Moedas() {
                 <div className="glass-modal-backdrop" onClick={handleCloseModal}>
                     <div className="glass-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="glass-modal-header">
-                            <h2>{editingId ? 'Editar Moeda' : 'Nova Moeda'}</h2>
+                            <h2>{editingId ? t('currencies.editCurrency') : t('currencies.newCurrency')}</h2>
                             <button onClick={handleCloseModal}><X size={20} /></button>
                         </div>
                         <form onSubmit={handleSubmit}>
                             <div className="glass-modal-body">
                                 {formErrors._global && <div className="glass-modal-error">{formErrors._global}</div>}
                                 <div>
-                                    <label className="glass-modal-label">Código ISO <span className="glass-modal-required">*</span></label>
+                                    <label className="glass-modal-label">{t('currencies.isoCode')} <span className="glass-modal-required">*</span></label>
                                     <input
                                         type="text"
                                         className="glass-modal-input"
@@ -165,19 +165,19 @@ export default function Moedas() {
                                     {formErrors.codigo && <div className="glass-modal-error">{formErrors.codigo}</div>}
                                 </div>
                                 <div>
-                                    <label className="glass-modal-label">Nome <span className="glass-modal-required">*</span></label>
+                                    <label className="glass-modal-label">{t('currencies.name')} <span className="glass-modal-required">*</span></label>
                                     <input type="text" className="glass-modal-input" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} placeholder="Real Brasileiro, Dólar Americano" />
                                     {formErrors.nome && <div className="glass-modal-error">{formErrors.nome}</div>}
                                 </div>
                                 <div>
-                                    <label className="glass-modal-label">Símbolo <span className="glass-modal-required">*</span></label>
+                                    <label className="glass-modal-label">{t('currencies.symbol')} <span className="glass-modal-required">*</span></label>
                                     <input type="text" className="glass-modal-input" value={formData.simbolo} onChange={(e) => setFormData({ ...formData, simbolo: e.target.value })} placeholder="R$, $, €" />
                                     {formErrors.simbolo && <div className="glass-modal-error">{formErrors.simbolo}</div>}
                                 </div>
                                 <div>
                                     <label className="glass-modal-label">
                                         <input type="checkbox" checked={formData.ativo} onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })} style={{ marginRight: '0.5rem' }} />
-                                        Ativo
+                                        {t('common.active')}
                                     </label>
                                 </div>
                             </div>
@@ -198,7 +198,7 @@ export default function Moedas() {
                             <button onClick={handleCloseDelete}><X size={20} /></button>
                         </div>
                         <div className="glass-modal-body">
-                            <p>Deseja remover a moeda {deleteTarget.codigo} - {deleteTarget.nome}?</p>
+                            <p>{t('currencies.deleteConfirm', { code: deleteTarget.codigo, name: deleteTarget.nome })}</p>
                         </div>
                         <div className="glass-modal-footer">
                             <button type="button" className="glass-modal-button-secondary" onClick={handleCloseDelete}>{t('common.cancel')}</button>
