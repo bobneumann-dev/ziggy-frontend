@@ -27,6 +27,8 @@ import Patrimonio from './pages/Patrimonio';
 import Paises from './pages/Paises';
 import Departamentos from './pages/Departamentos';
 import Cidades from './pages/Cidades';
+// Company
+import Empresas from './pages/Empresas';
 // Commercial
 import ClientesFornecedores from './pages/ClientesFornecedores';
 import Oportunidades from './pages/Oportunidades';
@@ -35,6 +37,7 @@ import ModelosContrato from './pages/ModelosContrato';
 import Propostas from './pages/PropostaEditor';
 import ModeloContratoEditor from './pages/ModeloContratoEditor';
 import ContratoDocumentoViewer from './pages/ContratoDocumentoViewer';
+import PropostaViewer from './pages/PropostaViewer';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { usuario, loading } = useAuth();
@@ -131,12 +134,15 @@ function App() {
             <Route path="/admin/cadastros/paises" element={<PrivateRoute><Layout><Paises /></Layout></PrivateRoute>} />
             <Route path="/admin/cadastros/departamentos" element={<PrivateRoute><Layout><Departamentos /></Layout></PrivateRoute>} />
             <Route path="/admin/cadastros/cidades" element={<PrivateRoute><Layout><Cidades /></Layout></PrivateRoute>} />
+            {/* Company Routes */}
+            <Route path="/admin/empresa/dados" element={<PrivateRoute><Layout><Empresas /></Layout></PrivateRoute>} />
             {/* Commercial Routes */}
             <Route path="/admin/comercial/clientes" element={<PrivateRoute><Layout><ClientesFornecedores /></Layout></PrivateRoute>} />
             <Route path="/admin/comercial/oportunidades" element={<PrivateRoute><Layout><Oportunidades /></Layout></PrivateRoute>} />
             <Route path="/admin/comercial/contratos" element={<PrivateRoute><Layout><ContratosComercial /></Layout></PrivateRoute>} />
             <Route path="/admin/comercial/modelos-contrato" element={<PrivateRoute><Layout><ModelosContrato /></Layout></PrivateRoute>} />
             <Route path="/admin/comercial/propostas" element={<PrivateRoute><Layout><Propostas /></Layout></PrivateRoute>} />
+            <Route path="/admin/comercial/propostas/:id" element={<PrivateRoute><Layout><PropostaViewer /></Layout></PrivateRoute>} />
             <Route path="/admin/comercial/modelos-contrato/editor" element={<PrivateRoute><Layout><ModeloContratoEditor /></Layout></PrivateRoute>} />
             <Route path="/admin/comercial/documentos" element={<PrivateRoute><Layout><ContratoDocumentoViewer /></Layout></PrivateRoute>} />
             <Route path="/" element={<Navigate to="/admin" />} />

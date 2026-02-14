@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Trash2, Edit, X } from 'lucide-react';
+import { Plus, Trash2, Edit, X, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { type Proposta, type ItemCatalogo, StatusProposta, TipoCobranca } from '../types';
 import { DataTable } from '../components/DataTable';
@@ -64,6 +65,7 @@ function statusBadge(s: number) {
 
 export default function Propostas() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const [propostas, setPropostas] = useState<Proposta[]>([]);
   const [loading, setLoading] = useState(true);
@@ -296,6 +298,9 @@ export default function Propostas() {
       header: t('common.actions'), id: 'actions',
       cell: ({ row }) => (
         <div className="action-button-group">
+          <button className="action-button" onClick={() => navigate(`/admin/comercial/propostas/${row.original.id}`)} title={t('common.view')}>
+            <Eye size={16} />
+          </button>
           <button className="action-button" onClick={() => handleOpenEdit(row.original)} title={t('common.edit')}>
             <Edit size={16} />
           </button>
@@ -367,7 +372,7 @@ export default function Propostas() {
                 <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                     <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>{t('proposals.itemsServices')}</h3>
-                    <button type="button" className="glass-button" onClick={() => setShowItemModal(true)} style={{ padding: '6px 12px', fontSize: '0.9rem' }}>
+                    <button type="button" className="glass-button" onClick={() => setShowItemModal(true)} style={{ padding: '6px 12px', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                       <Plus size={14} /> {t('proposals.add')}
                     </button>
                   </div>
@@ -480,6 +485,7 @@ export default function Propostas() {
                           }
                         }}
                         placeholder={t('proposals.searchItem')}
+                        menuPortalTarget={document.body}
                       />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
@@ -556,6 +562,7 @@ export default function Propostas() {
                           }
                         }}
                         placeholder={t('proposals.searchItem')}
+                        menuPortalTarget={document.body}
                       />
                     </div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '0.5rem' }}>

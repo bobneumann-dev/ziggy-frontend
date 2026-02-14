@@ -146,19 +146,19 @@ export default function AtivosPatrimonio() {
     };
 
     const getStatusLabel = (status: number) => {
-        return statusOptions.find(s => s.value === status)?.label || '-';
+        return statusOptions.find(s => Number(s.value) === status)?.label || '-';
     };
 
     const columns: ColumnDef<AtivoPatrimonio>[] = useMemo(() => [
         { header: t('assets.serial'), accessorKey: 'serial' },
-        { header: t('assets.item'), accessorKey: 'itemCatalogoNome', cell: ({ row }) => `${row.original.itemCatalogoCodigo} - ${row.original.itemCatalogoNome}` },
+        { header: t('assets.item'), accessorKey: 'itemCatalogoNome', cell: ({ row }) => `${row.original.itemCatalogoId} - ${row.original.itemCatalogoNome}` },
         { header: t('assets.warehouse'), accessorKey: 'armazemAtualNome' },
         {
             header: t('assets.status'),
             accessorKey: 'status',
             cell: ({ row }) => <span className="badge badge-info">{getStatusLabel(row.original.status)}</span>
         },
-        { header: t('assets.clientEmployee'), accessorKey: 'clienteNome', cell: ({ row }) => row.original.clienteNome || row.original.colaboradorNome || '-' },
+        { header: t('assets.clientEmployee'), accessorKey: 'clienteNome', cell: ({ row }) => row.original.clienteNome || '-' },
         {
             header: t('table.actions'),
             id: 'actions',

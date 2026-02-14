@@ -114,19 +114,32 @@ export default function Layout({ children }: LayoutProps) {
     return (
       <Link
         to={item.path!}
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150"
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 relative"
         style={{
           paddingLeft: `${(depth * 12) + 12}px`,
           backgroundColor: isActive ? 'var(--sidebar-active)' : 'transparent',
-          color: isActive ? 'var(--accent-primary)' : 'var(--sidebar-text)',
-          borderLeft: isActive ? '3px solid var(--accent-primary)' : '3px solid transparent',
+          color: isActive ? 'var(--text-primary)' : 'var(--sidebar-text)',
         }}
         onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)'; }}
         onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'; }}
         title={isSidebarCollapsed ? item.label : undefined}
       >
+        {isActive && (
+          <span
+            style={{
+              position: 'absolute',
+              left: '4px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: '3px',
+              height: '16px',
+              borderRadius: '9999px',
+              background: 'var(--accent-primary)',
+            }}
+          />
+        )}
         {Icon && <Icon className="w-4 h-4 min-w-[16px]" style={{ color: isActive ? 'var(--accent-primary)' : 'var(--text-muted)' }} />}
-        {!isSidebarCollapsed && <span className="text-sm font-medium truncate">{item.label}</span>}
+        {!isSidebarCollapsed && <span className={`text-sm truncate ${isActive ? 'font-semibold' : 'font-medium'}`}>{item.label}</span>}
       </Link>
     );
   };
@@ -138,6 +151,7 @@ export default function Layout({ children }: LayoutProps) {
       icon: Building2,
       children: [
         { path: '/admin', icon: LayoutDashboard, label: t('menu.dashboard') },
+        { path: '/admin/empresa/dados', icon: Building2, label: t('menu.companyData') },
         { path: '/admin/usuarios', icon: Users, label: t('menu.users') },
         { path: '/admin/pessoas', icon: UserCircle, label: t('menu.people') },
         { path: '/admin/setores', icon: Building2, label: t('menu.sectors') },

@@ -433,4 +433,38 @@ export interface Cotacao {
   createdAt: string;
 }
 
+// === EMPRESA ===
+export interface Empresa {
+  id: string;
+  matrizFilialId: string;
+  matrizFilialNome?: string;
+  nomeRazaoSocial: string;
+  nomeCurto: string;
+  documento?: string;
+  tipoDocumento?: TipoDocumento;
+  logoUrl?: string;
+  logoSmallUrl?: string;
+  logoDarkUrl?: string;
+  website?: string;
+  slogan?: string;
+  corPrimaria?: string;
+  corSecundaria?: string;
+  telefone?: string;
+  celular?: string;
+  email?: string;
+  whatsApp?: string;
+  logradouro1?: string;
+  logradouro2?: string;
+  cep?: string;
+  cidadeId?: number;
+  cidadeNome?: string;
+  departamentoNome?: string;
+  paisNome?: string;
+  dataCriacao: string;
+}
 
+export interface Filial {
+  id: string;
+  nome: string;
+  tipo: number;
+}

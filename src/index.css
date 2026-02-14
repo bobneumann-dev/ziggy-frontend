@@ -1004,6 +1004,14 @@ body {
   transform: scale(1.05);
 }
 
+/* ===== GOLD GRADIENT TEXT ===== */
+.gold-gradient-text {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 /* ===== UTILITY CLASSES ===== */
 .text-primary {
   color: var(--text-primary);

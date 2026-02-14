@@ -15,6 +15,7 @@ type SearchSelectProps = {
   isSearchable?: boolean;
   hasError?: boolean;
   className?: string;
+  menuPortalTarget?: HTMLElement | null;
 };
 
 export default function SearchSelect({
@@ -27,6 +28,7 @@ export default function SearchSelect({
   isSearchable = true,
   hasError = false,
   className,
+  menuPortalTarget,
 }: SearchSelectProps) {
   return (
     <Select
@@ -39,6 +41,8 @@ export default function SearchSelect({
       isDisabled={isDisabled}
       isClearable={isClearable}
       isSearchable={isSearchable}
+      menuPortalTarget={menuPortalTarget}
+      menuPosition={menuPortalTarget ? 'fixed' : undefined}
       styles={{
         container: (base) => ({
           ...base,
@@ -71,7 +75,11 @@ export default function SearchSelect({
           backgroundColor: 'var(--card-bg)',
           border: '1px solid var(--border-light)',
           boxShadow: '0 12px 24px rgba(0, 0, 0, 0.18)',
-          zIndex: 30,
+          zIndex: 9999,
+        }),
+        menuPortal: (base) => ({
+          ...base,
+          zIndex: 9999,
         }),
         option: (base, state) => ({
           ...base,
